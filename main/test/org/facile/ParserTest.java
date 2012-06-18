@@ -1,18 +1,18 @@
-package com.easyjava;
+package org.facile;
 
-import static com.easyjava.Parser2.*;
-import static com.easyjava.EasyJava.*;
+import static org.facile.Facile.*;
+import static org.facile.Parser.*;
 import static org.junit.Assert.*;
 
 import java.util.List;
 
+import org.facile.Parser.Match;
+import org.facile.Parser.Rule;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.easyjava.Parser2.Match;
-import com.easyjava.Parser2.Rule;
 
-public class Parser2Test {
+public class ParserTest {
 
 	Rule firstName = null, personalPart = null, initial = null,
 			lastName = null, suffix = null, zipCode = null, houseNum, apt, streetName, street;

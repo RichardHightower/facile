@@ -1,9 +1,10 @@
 package com.examples;
 
-import static com.easyjava.EasyJava.*;
+import static org.facile.Facile.*;
+
 import java.util.*;
 
-public class Example {
+public class Prototype {
 
 	public static void main(String[] args) {
 
@@ -91,7 +92,7 @@ public class Example {
 		// Output True
 
 		// tel = dict([('sape', 4139), ('guido', 4127), ('jack', 4098)])
-		tel = dict(kv("sape", 4139), kv("guido", 4127), kv("jack", 4098)); // get
+		tel = mp(kv("sape", 4139), kv("guido", 4127), kv("jack", 4098)); // get
 																			// unchecked
 																			// exception
 																			// for
@@ -106,7 +107,7 @@ public class Example {
 		// Output {'sape': 4139, 'jack': 4098, 'guido': 4127}
 
 		// List Comprehension
-		Class<?> c = Example.class;
+		Class<?> c = Prototype.class;
 
 		// print( dict([(x, x**2) for x in (2, 4, 6)]) ) # use a list
 		// comprehension

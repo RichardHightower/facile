@@ -1,12 +1,11 @@
-package com.easyjava;
+package org.facile;
 
-import static com.easyjava.EasyJava.*;
+import static org.facile.Facile.*;
 
 import java.util.Arrays;
 import java.util.List;
-import org.hamcrest.core.IsSame;
 
-public class Parser2 {
+public class Parser {
 
 	enum Cardinality {
 		ONCE, ONE_OR_MORE, ZERO_OR_MORE, SOME
@@ -37,7 +36,7 @@ public class Parser2 {
 		private String name;
 		private RuleType type = RuleType.CHAR_RANGE;
 
-		Rule times(int times) {
+		public Rule times(int times) {
 			if (times == 1) {
 				return once();
 			} else if (times > 1) {
@@ -46,7 +45,7 @@ public class Parser2 {
 			throw new IllegalStateException("times must be greater than one");
 		}
 
-		Rule times(int min, int max) {
+		public Rule times(int min, int max) {
 			if (min > max) {
 				throw new IllegalStateException("min is greater than max");
 			}
