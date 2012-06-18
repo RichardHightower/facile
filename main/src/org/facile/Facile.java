@@ -87,6 +87,16 @@ public class Facile {
 		System.out.println(builder);
 	}
 	
+	public static class PrintEnumerate implements Enumerate<Object>{
+
+		@Override
+		public void visit(int index, Object object) {
+			print (object);
+		} 
+		
+	}
+	public static PrintEnumerate printEnum = new PrintEnumerate();
+	
 	public static String sprint(Object... items) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object item : items) {
@@ -857,59 +867,132 @@ public class Facile {
 			e.visit(index, t);
 			index++;
 		}
+
+	}
+
+	public static <T> void enumerate(Enumerate<T> e, T [] c) {
+		int index = 0;
+		for (T t : c) {
+			e.visit(index, t);
+			index++;
+		}
+	}
+
+	public static void enumerate(Object func, Object methodName, Collection<?> c) {
+		enumerate(fn(func, methodName), c);
+	}
+
+	public static void enumerate(Object func, Object[] c) {
+		enumerate(f(func), c);
 	}
 	
-	public static void enumerate(Object func, Object methodName, Collection<?> c) {
+	public static void enumerate(Object func, Object methodName, Object[] c) {
 		enumerate(fn(func, methodName), c);
 	}
 
 	public static void enumerate(Object func, Collection<?> c) {
 		enumerate(f(func), c);
 	}
+	
 
-	public static void enumerate(Function<?> f, Collection<?> c) {
+	public static  void enumerate(Function<?> f, Collection<?> c) {
 		int index = 0;
 		for (Object o : c) {
 			f.execute(index, o);
 			index++;
 		}
 	}
-
-	public static Collection<?> filter(Function<?> f, List<?> l) {
-		return gfilter(f, l);
+	
+	public static void enumerate(Function<?> f, Object [] c) {
+		int index = 0;
+		for (Object t : c) {
+			f.execute(index, t);
+			index++;
+		}
 	}
+
+	public interface Filter <T> {
+		boolean filter(T t);
+	}
+
 
 	public static Collection<?> filter(Function<?> f, Collection<?> c) {
 		return gfilter(f, c);
 	}
 
-	public static <T> Collection<T> gfilter(Function<?> f, List<T> l) {
-		ListIterator<?> listIterator = l.listIterator();
+	public static Collection<?> filter(Function<?> f, Object[] c) {
+		return gfilter(f, c);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Collection<?> filter(Filter f, Collection c) {
+		return gfilter(f, c);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Collection<?> filter(Filter f, Object[] c) {
+		return gfilter(f, c);
+	}
+	
+	public static Collection<?> filter(Object f, Object[] in) {
+		return doGfilter(f(f), list(in));
+	}
+
+	public static Collection<?> filter(Object f, Object name, Collection<?> in) {
+		return doGfilter(fn(f,name), list(in));
+	}
+
+
+	private static <T> Collection<T> doGfilter(Function<?> f, List<T> in) {
+		ListIterator<T> listIterator = in.listIterator();
 		while (listIterator.hasNext()) {
 			Boolean b = (Boolean) f.execute(listIterator.next());
 			if (!b) {
 				listIterator.remove();
 			}
 		}
-		return l;
+		return in;
+	}
+
+	private static <T> Collection<T> doGfilter(Filter<T> f, List<T> in) {
+		ListIterator<T> listIterator = in.listIterator();
+		while (listIterator.hasNext()) {
+			boolean b = f.filter(listIterator.next());
+			if (!b) {
+				listIterator.remove();
+			}
+		}
+		return in;
+	}
+
+	public static <T> Collection<T> gfilter(Object f, T[] in) {
+		return doGfilter(f(f), list(in));
+	}
+
+	public static <T> Collection<T> gfilter(Object f, Object name, Collection<T> in) {
+		return doGfilter(fn(f,name), list(in));
+	}
+
+	public static <T> Collection<T> gfilter(Function<?> f, T[] in) {
+		return doGfilter(f, list(in));
 	}
 
 	public static <T> Collection<T> gfilter(Function<?> f, Collection<T> in) {
-		ArrayList<Object> removeList = new ArrayList<Object>(in.size());
-		ArrayList<T> c = new ArrayList<T>(in);
-
-		for (Object o : in) {
-			Boolean b = (Boolean) f.execute(0);
-			if (!b) {
-				removeList.add(o);
-			}
-		}
-		for (Object o : removeList) {
-			c.remove(o);
-		}
-		return c;
+		return doGfilter(f, list(in));
 	}
 
+	public static <T> Collection<T> gfilter(Filter<T> f, T[] in) {
+		return doGfilter(f, list(in));
+	}
+
+	public static <T> Collection<T> gfilter(Filter<T> f, Collection<T> in) {
+		return doGfilter(f, list(in));
+	}
+	
+	public interface Converter<TO, FROM> {
+		TO convert (FROM from);
+	}
+	
 	public static List<?> map(Function<?> f, List<?>... cols) {
 		return gmap(f, cols);
 	}
@@ -945,9 +1028,6 @@ public class Facile {
 		return mapList;
 	}
 	
-	public interface Converter<TO, FROM> {
-		TO convert (FROM from);
-	}
 	
 	public static <TO, FROM> List<TO> map(Converter<TO, FROM> converter, List<FROM> fromList) {
 
@@ -963,16 +1043,53 @@ public class Facile {
 	public static List<?> map(Function<?> f, Collection<?> c) {
 		return gmap(f, c);
 	}
+	
+	public static List<?> map(Function<?> f, Object[] array) {
+		return gmap(f, list(array));
+	}
+
 
 	public static List<?> map(Object that, String methodName, Collection<?> c) {
 		return gmap(fn(that,methodName), c);
 	}
-	
+
+	public static List<?> map(Object that, String methodName, Object[] array) {
+		return gmap(fn(that,methodName), list(array));
+	}
+
 	public static List<?> map(Object that, Collection<?> c) {
 		return gmap(f(that), c);
 	}
 
+	public static List<?> map(Object that, Object[] array) {
+		return gmap(f(that), list(array));
+	}
 
+
+	@SuppressWarnings("unchecked")
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, Object name, IN[] c) {
+		return gmap((Function<OUT>)fn(that,name), list(c));
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, IN[] c) {
+		return gmap((Function<OUT>)f(that), list(c));
+	}
+	
+	public static <IN, OUT> List<OUT> gmap(Function<OUT> f, IN[] c) {
+		return gmap(f, c);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, Object name, Collection<IN> c) {
+		return gmap((Function<OUT>)fn(that,name), c);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, Collection<IN> c) {
+		return gmap((Function<OUT>)f(that), c);
+	}
+	
 	public static <IN, OUT> List<OUT> gmap(Function<OUT> f, Collection<IN> c) {
 		ArrayList<OUT> mapList = new ArrayList<OUT>(c.size());
 		for (Object o : c) {
@@ -991,6 +1108,11 @@ public class Facile {
 		return greduce(f, list(array));
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> T greduce(Function<?> f, T array) {
+		return greduce(f, list(array));
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static <T> T greduce(Function<?> f, Collection<T> c) {
 		T accumulo = null;

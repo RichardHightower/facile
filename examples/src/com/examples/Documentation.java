@@ -272,6 +272,9 @@ Python, Groovy, Perl and Ruby are a source of many ideas for this projects.
 
 		enumerate(P.class, list);
 		
+		enumerate(printEnum, list);
+
+		
 	//Ignore	
 	}
 
