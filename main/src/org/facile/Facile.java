@@ -2,6 +2,7 @@ package org.facile;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -806,6 +807,19 @@ public class Facile {
 			Object name) {
 		try {
 			Method[] methods = clazz(that).getDeclaredMethods();
+			if (that instanceof Class) {
+				Constructor<?> constructor = ((Class<?>)that).getDeclaredConstructors()[0];
+				constructor.setAccessible(true);
+				that = constructor.newInstance((Object[])null);
+			}
+			if (methods.length==1) {
+				methods[0].setAccessible(true);
+				if (Modifier.isStatic(methods[0].getModifiers())) {
+					return new FunctionImpl<T>(returnType, methods[0], null);
+				} else {
+					return new FunctionImpl<T>(returnType, methods[0], that);
+				}				
+			}
 			for (Method m : methods) {
 					if (m.getName().equals(name.toString())) {
 						m.setAccessible(true);
@@ -818,14 +832,21 @@ public class Facile {
 			}
 		} catch (Exception ex) {
 			log.log(Level.SEVERE, String.format(
-					"Unable to find function that=%s, name=%s, args=%s", that,
+					"Unable to find function that=%s, name=%s", that,
 					name), ex);
 		}
-		die("Unable to find function that=%s, name=%s, args=%s", that, name);
+		die("Unable to find function that=%s, name=%s", that, name);
 		return null;
 	}
 
-	
+
+	public static interface func  {
+		
+	}
+	public static interface f  {
+		
+	}
+
 	public static interface Enumerate <T> {
 		void visit(int index, T t);
 	}

@@ -1,5 +1,9 @@
 package com.examples;
 
+/* doc
+ * Facile makes working with lists, maps and functional programming a lot closer to Python and Ruby in Java.
+ */
+
 import static org.facile.Facile.*;
 
 import java.util.List;
@@ -22,7 +26,8 @@ public class Documentation {
 		mapAndListLiterals2(out);
 		listComprehensionAndMaps(out);
 		functionalProgramming(out);
-
+		functionalProgramming2(out);
+		
 		print ("test output" + mul(20, "*"));
 		print(out);
 	}
@@ -239,8 +244,35 @@ Python, Groovy, Perl and Ruby are a source of many ideas for this projects.
 		 * Enumerate over the list.
 		 */
 		enumerate(printItems, list);
-	
+		
+		
+		/* doc
+		 * You can also create a function object on the fly as follows:
+		 */
+		enumerate(new func() { void printIt(int i, String s){ print('a', i,s); } }, list);
+		
+		/* doc
+		 * If you wanted to be even more terse.
+		 */
+		enumerate(new f() { void f(int i, String s){ print('z',i,s); } }, list);
+
+
 	//Ignore
+	}
+
+	/* doc
+	 * Or how about this.
+	 */
+
+	static class P { void p(int i, String s) {print('b', i, s); } }
+	//Ignore
+	private static void functionalProgramming2(StringBuilder out) {
+		//Ignore
+		List<String> list = list("tic", "tac", "toe");
+
+		enumerate(P.class, list);
+		
+	//Ignore	
 	}
 
 /*
