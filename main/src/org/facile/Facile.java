@@ -2,6 +2,7 @@ package org.facile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -1483,7 +1484,7 @@ public class Facile {
 	}
 	
 	public static String[] toLines(final char [] buffer) {
-		List<String> list = new ArrayList<String>(25);
+		List<String> list = new ArrayList<String>(100);
 		StringBuilder builder = new StringBuilder(256);
 		String str = null;
 		
@@ -1491,11 +1492,13 @@ public class Facile {
 		for (int index = 0; index<buffer.length; index++){
 			char c = buffer[index];
 			if (c == '\r') {
-				index++;
 				if (index<buffer.length) {
+					index++;
 					c = buffer[index];
 					if (c!='\n') {
 						index--;
+					} else {
+						c = buffer[index];						
 					}
 				}
 				str = builder.toString();
@@ -1624,4 +1627,38 @@ public class Facile {
 	public static FileObject <String> open(File file) {
 		return IO.open(file);
 	}
+	
+	public static FileObject <String> openString(String str) {
+		return IO.openString(str);
+	}
+	
+
+	public static FileObject <String> open(char [] buffer) {
+		return IO.open(buffer);
+	}
+	
+	public static String[] readLines(File file) {
+		return IO.open(file).readLines();
+	}
+
+	public static String[] readAll(File file) {
+		return IO.open(file).readLines();
+	}
+
+	public static String[] readLinesFromFile(String file) {
+		return IO.open(new File(file)).readLines();
+	}
+
+	public static String[] readLinesAllFromFile(String file) {
+		return IO.open(new File(file)).readLines();
+	}
+	
+	public static FileObject<String> open(InputStream inputStream) {
+		return IO.open(inputStream);
+	}
+	
+	public static FileObject<String> open(Class<?>clz, String resource) {
+		return IO.open(clz, resource);
+	}
+
 }

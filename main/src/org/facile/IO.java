@@ -1,95 +1,104 @@
 package org.facile;
 
+import java.io.CharArrayReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Flushable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.Iterator;
 
 import static org.facile.Facile.*;
 
 public class IO {
-	
-	enum Mode {
-		read_text,
-		read_binary,
 
-		readwrite_text,
-		readwrite_binary,
-		
-		write_binary,
-		write_text
-		
+	enum Mode {
+		read_text, read_binary,
+
+		readwrite_text, readwrite_binary,
+
+		write_binary, write_text
+
 	}
-	
+
 	// File
 	// File
-	public static interface FileObject<T> extends Closeable, Flushable, Iterable<T>{
+	public static interface FileObject<T> extends Closeable, Flushable,
+			Iterable<T> {
 		String read(int size);
-		int read(char [] buffer);
+
+		int read(char[] buffer);
+
 		char read();
+
 		String readLine();
+
 		String[] readLines();
-		
+
 		boolean eof();
-	
+
 		byte[] input(long size);
-		int input(byte [] buffer);
+
+		int input(byte[] buffer);
+
 		byte input();
-		
+
 		Iterator<T> iterator();
-		
+
 		long tell();
-		void seek (long pos);
-		
+
+		void seek(long pos);
+
 		void close();
+
 		void flush();
-		
+
 		String readAll();
 
 	}
-	
+
 	@SuppressWarnings("serial")
-	public static class InputOutputException extends RuntimeException{
-		InputOutputException (Throwable t) {
-			super (t);
+	public static class InputOutputException extends RuntimeException {
+		InputOutputException(Throwable t) {
+			super(t);
 		}
 	}
-	
-	private static void  handle(IOException ex) {
+
+	private static void handle(IOException ex) {
 		throw new InputOutputException(ex);
 	}
-	
+
 	public static class FileTextReader implements FileObject<String> {
 		Reader reader;
-		char [] buffer = new char[256];
+		char[] buffer = new char[256];
 		int bufferSize = 256;
 		int position = 0;
-		
+
 		public FileTextReader(Reader reader) {
 			this.reader = reader;
 		}
-		
+
 		public void increaseBufferSize() {
 			bufferSize = bufferSize * 2;
 		}
-		
 
 		@Override
 		public String read(int size) {
-			int count=0;
+			int count = 0;
 			try {
 				count = reader.read(buffer, 0, (int) size);
 			} catch (IOException e) {
 				handle(e);
 			}
-			if (count==-1) {
+			if (count == -1) {
 				return null;
 			}
-			position+=count;
+			position += count;
 			return string(0, count, buffer);
 		}
 
@@ -106,13 +115,13 @@ public class IO {
 		}
 
 		boolean eof;
-		
+
 		@Override
 		public char read() {
 			char c = 0;
 			try {
 				int i = reader.read();
-				if (i==-1) {
+				if (i == -1) {
 					eof = true;
 					c = 0;
 				} else {
@@ -126,42 +135,82 @@ public class IO {
 			}
 			return c;
 		}
-		
-		boolean lastCharCarriageReturn=false;
-		
+
+		//boolean lastCharCarriageReturn = false;
+
+		// @Override
+		// public String readLine() {
+		// if(eof) {
+		// return null;
+		// }
+		//
+		// StringBuilder buf = new StringBuilder(bufferSize);
+		// char ch = read();
+		// if(eof) {
+		// return null;
+		// }
+		//
+		//
+		// if (ch=='\n' && lastCharCarriageReturn){
+		// lastCharCarriageReturn = false;
+		// ch = read();
+		// }
+		//
+		// while (!eof) {
+		//
+		// if (ch!='\r' && ch !='\n') {
+		// buf.append(ch);
+		// } else {
+		// break;
+		// }
+		// ch = read();
+		// }
+		//
+		// if (ch=='\r') {
+		// lastCharCarriageReturn = true;
+		// }
+		// return buf.toString();
+		//
+		// }
+
 		@Override
 		public String readLine() {
-			if(eof) {
-				return null;
-			}
-			
 			StringBuilder buf = new StringBuilder(bufferSize);
-			char ch =  read();
-			if(eof) {
+			char ch = read();
+			if (eof) {
 				return null;
 			}
-			
-			
-			if (ch=='\n' && lastCharCarriageReturn){
-				lastCharCarriageReturn = false;
-				ch = read();
-			}
-			
+
 			while (!eof) {
-				
-				if (ch!='\r' && ch !='\n') {
-					buf.append(ch);
-				} else {
+
+				if (ch == '\r') {
+					if (this.reader.markSupported()) {
+						try {
+								reader.mark(4);
+								ch = read();
+								if (ch != '\n') {
+									reader.reset();
+								}
+						} catch (IOException e) {
+							handle(e);
+						}
+					} else {
+						ch = read();
+						if (ch != '\n') {
+							continue;
+						}
+					}
 					break;
+				} else if (ch=='\n') {
+					break;
+				} else {
+					buf.append(ch);
 				}
 				ch = read();
 			}
-			
-			if (ch=='\r') {
-				lastCharCarriageReturn = true;
-			}
+
 			return buf.toString();
-				
+
 		}
 
 		@Override
@@ -193,11 +242,11 @@ public class IO {
 			return new Iterator<String>() {
 
 				String readLine;
-				
+
 				@Override
 				public boolean hasNext() {
 					readLine = readLine();
-					if (readLine==null) {
+					if (readLine == null) {
 						return false;
 					} else {
 						return true;
@@ -234,7 +283,7 @@ public class IO {
 		public void close() {
 			try {
 				reader.close();
-			} catch(IOException e) {
+			} catch (IOException e) {
 				handle(e);
 			}
 		}
@@ -246,22 +295,22 @@ public class IO {
 		@Override
 		public String readAll() {
 			try {
-				final int size = this.bufferSize*10;
-				final char buffer [] = new char[size];
+				final int size = this.bufferSize * 10;
+				final char buffer[] = new char[size];
 				final StringBuilder buf = new StringBuilder(size);
 				while (true) {
 					try {
 						int count = reader.read(buffer);
 						buf.append(buffer);
-						
+
 						if (count < size) {
 							break;
 						}
 					} catch (IOException e) {
 						handle(e);
 					}
-			}
-			return buf.toString();
+				}
+				return buf.toString();
 			} finally {
 				close();
 			}
@@ -271,20 +320,36 @@ public class IO {
 		public boolean eof() {
 			return eof;
 		}
-		
+
 	}
 
-	public static FileObject <String> open(File file) {
-		FileReader fis = null;
+	public static FileObject<String> open(File file) {
+		FileReader reader = null;
 		try {
-			fis = new FileReader(file);
+			reader = new FileReader(file);
 		} catch (FileNotFoundException e) {
 			handle(e);
 		}
-		FileTextReader textReader = new FileTextReader(fis);
+		FileTextReader textReader = new FileTextReader(reader);
 		return textReader;
 	}
-	
+
+	public static FileObject<String> openFile(String str) {
+		return open(new File(str));
+	}
+
+	public static FileObject<String> openString(String str) {
+		StringReader reader = new StringReader(str);
+		FileTextReader textReader = new FileTextReader(reader);
+		return textReader;
+	}
+
+	public static FileObject<String> open(char buffer[]) {
+		CharArrayReader reader = new CharArrayReader(buffer);
+		FileTextReader textReader = new FileTextReader(reader);
+		return textReader;
+	}
+
 	public static String[] readLines(File file) {
 		return open(file).readLines();
 	}
@@ -292,7 +357,7 @@ public class IO {
 	public static String[] readAll(File file) {
 		return open(file).readLines();
 	}
-	
+
 	public static String[] readLinesFromFile(String file) {
 		return open(new File(file)).readLines();
 	}
@@ -300,6 +365,15 @@ public class IO {
 	public static String[] readLinesAllFromFile(String file) {
 		return open(new File(file)).readLines();
 	}
+		
+	public static FileObject<String> open(InputStream inputStream) {
+		FileTextReader textReader = new FileTextReader(new InputStreamReader(inputStream));
+		return textReader;	
+	}
 
+	public static FileObject<String> open(Class<?>clz, String resource) {
+		FileTextReader textReader = new FileTextReader(new InputStreamReader(clz.getResourceAsStream(resource)));
+		return textReader;	
+	}
 
 }
