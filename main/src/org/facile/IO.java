@@ -2,6 +2,7 @@ package org.facile;
 
 import java.io.CharArrayReader;
 import java.io.Closeable;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -76,9 +77,145 @@ public class IO {
 		throw new InputOutputException(ex);
 	}
 
+	public static class FileBinary implements FileObject<String> {
+		
+		private InputStream stream;
+		private DataInputStream dataInput;
+		private Reader reader;
+		private boolean eof;
+		
+
+
+		public FileBinary() {
+		}
+
+		public FileBinary(InputStream stream) {
+			init(stream);
+		}
+
+		private void init(InputStream stream) {
+			this.stream = stream;
+			this.dataInput = new DataInputStream(this.stream);
+			this.reader = new InputStreamReader(dataInput);
+		}
+
+		@Override
+		public String read(int size) {
+			return doRead(reader, size);
+		}
+
+		@Override
+		public int read(char[] buffer) {
+			notSupported();
+			return 0;
+		}
+
+		@Override
+		public char read() {
+			try {
+				return dataInput.readChar();
+			} catch (IOException e) {
+				handle(e);
+			}
+			return 0;
+		}
+
+		@Override
+		public String readLine() {
+//			try {
+//				return reader.read();
+//			} catch (IOException e) {
+//				handle(e);
+//			}
+//			return "";
+			return null;
+		}
+
+		@Override
+		public String[] readLines() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean eof() {
+			// TODO Auto-generated method stub
+			return eof;
+		}
+
+		@Override
+		public byte[] input(long size) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public int input(byte[] buffer) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public byte input() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public Iterator<String> iterator() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public long tell() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public void seek(long pos) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void close() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void flush() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public String readAll() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	}
+	
+	private static String doRead(Reader reader, int size) {
+		int count = 0;
+		char[] buffer = new char[size];
+
+		try {
+			count = reader.read(buffer, 0, (int) size);
+		} catch (IOException e) {
+			handle(e);
+		}
+		if (count == -1) {
+			return null;
+		}
+		return string(0, count, buffer);
+	}
+
 	public static class FileTextReader implements FileObject<String> {
 		Reader reader;
-		char[] buffer = new char[256];
 		int bufferSize = 256;
 		int position = 0;
 
@@ -99,17 +236,9 @@ public class IO {
 
 		@Override
 		public String read(int size) {
-			int count = 0;
-			try {
-				count = reader.read(buffer, 0, (int) size);
-			} catch (IOException e) {
-				handle(e);
-			}
-			if (count == -1) {
-				return null;
-			}
-			position += count;
-			return string(0, count, buffer);
+			String string = doRead(reader, size);
+			position += string.length();
+			return string;
 		}
 
 		@Override
@@ -215,19 +344,28 @@ public class IO {
 			return new Iterator<String>() {
 
 				String readLine;
+				int has = 0;
+				int next = 0;
 
 				@Override
 				public boolean hasNext() {
 					readLine = readLine();
+					has++;
 					if (readLine == null) {
+						close();
 						return false;
 					} else {
 						return true;
 					}
+					
 				}
 
 				@Override
 				public String next() {
+					next++;
+					if ( has < next ) {
+						hasNext();
+					}
 					return readLine;
 				}
 
