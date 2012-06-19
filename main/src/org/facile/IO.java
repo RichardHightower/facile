@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Iterator;
 
@@ -87,7 +89,6 @@ public class IO {
 			init(reader);
 		}
 
-
 		private void init(Reader reader) {
 			this.reader = reader;
 		}
@@ -145,7 +146,6 @@ public class IO {
 			return c;
 		}
 
-
 		@Override
 		public String readLine() {
 			StringBuilder buf = new StringBuilder(bufferSize);
@@ -159,11 +159,11 @@ public class IO {
 				if (ch == '\r') {
 					if (this.reader.markSupported()) {
 						try {
-								reader.mark(4);
-								ch = read();
-								if (ch != '\n') {
-									reader.reset();
-								}
+							reader.mark(4);
+							ch = read();
+							if (ch != '\n') {
+								reader.reset();
+							}
 						} catch (IOException e) {
 							handle(e);
 						}
@@ -174,7 +174,7 @@ public class IO {
 						}
 					}
 					break;
-				} else if (ch=='\n') {
+				} else if (ch == '\n') {
 					break;
 				} else {
 					buf.append(ch);
@@ -338,27 +338,70 @@ public class IO {
 	public static String[] readLinesAllFromFile(String file) {
 		return open(new File(file)).readLines();
 	}
-		
+
 	public static FileObject<String> open(InputStream inputStream) {
-		FileTextReader textReader = new FileTextReader(new InputStreamReader(inputStream));
-		return textReader;	
+		FileTextReader textReader = new FileTextReader(new InputStreamReader(
+				inputStream));
+		return textReader;
 	}
-	
+
 	public static FileObject<String> open(URL url) {
-		
+
 		FileTextReader textReader = null;
 		try {
-			textReader = new FileTextReader(new InputStreamReader(url.openStream()));
+			textReader = new FileTextReader(new InputStreamReader(
+					url.openStream()));
 		} catch (IOException e) {
 			handle(e);
 		}
-		return textReader;	
+		return textReader;
 	}
 
+	public static FileObject<String> open(Class<?> clz, String resource) {
+		FileTextReader textReader = new FileTextReader(new InputStreamReader(
+				clz.getResourceAsStream(resource)));
+		return textReader;
+	}
 
-	public static FileObject<String> open(Class<?>clz, String resource) {
-		FileTextReader textReader = new FileTextReader(new InputStreamReader(clz.getResourceAsStream(resource)));
-		return textReader;	
+	public static FileObject<String> open(String suri) {
+		URI uri = URI.create(suri);
+		String scheme = uri.getScheme();
+		if (scheme == null) {
+			try {
+				File file = new File(suri);
+				if (file.exists() || file.getParentFile().exists()) {
+					return open(file);
+				}
+			} catch (Exception ex) {
+				handle(new IOException(ex));
+				return null;
+			}
+		} else if (scheme.equals("classpath")) {
+			ClassLoader contextClassLoader = Thread.currentThread()
+					.getContextClassLoader();
+			
+			URL resource = contextClassLoader.getResource(uri.getPath());
+			
+			if (resource == null) {
+				resource = ClassLoader.getSystemResource(uri.getPath());
+			}
+
+			if (resource == null) {
+				resource = IO.class.getResource(uri.getPath());
+			}
+			return open(resource);
+
+		} else {
+			try {
+				return open(uri.toURL());
+			} catch (MalformedURLException e) {
+				handle(e);
+				return null;
+			}
+		}
+
+		return null;
+
 	}
 
 }

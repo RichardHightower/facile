@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1627,7 +1628,7 @@ public class Facile {
 	public static FileObject <String> open(File file) {
 		return IO.open(file);
 	}
-	
+		
 	public static FileObject <String> openString(String str) {
 		return IO.openString(str);
 	}
@@ -1661,4 +1662,10 @@ public class Facile {
 		return IO.open(clz, resource);
 	}
 
+	public static FileObject<String> open(URL url) {
+		return IO.open(url);
+	}
+	public static FileObject <String> open(String suri) {
+		return IO.open(suri);
+	}
 }

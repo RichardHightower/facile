@@ -7,12 +7,14 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 import org.facile.IO.FileObject;
 import org.junit.Test;
 
 public class IOTest {
 
+	
 	@Test
 	public void testFile() throws IOException {
 		File f = new File(".");
@@ -95,7 +97,41 @@ public class IOTest {
 		assertEquals("Line 4", file.readLines()[3]);
 	}
 
+	@Test
+	public void testURL() throws IOException {
+		FileObject<String> file = open(new URL("https://raw.github.com/RichardHightower/facile/master/main/test/org/facile/test.txt"));
+		
+		testSimpleRead(file);
+		testReadLine(file);		
+		testReadLines(file);				
+
+	}
+
+	@Test
+	public void testClassResourceURL() throws IOException {
+		URL resource = this.getClass().getResource("test.txt");
+		print(resource);
+		FileObject<String> file = open(resource);
+		
+		testSimpleRead(file);
+		testReadLine(file);		
+		testReadLines(file);				
+
+	}
+
+	@Test
+	public void testClassResourceURL2() throws IOException {
+		
+		FileObject<String> file = open("classpath:/org/facile/test.txt");
+		
+		testSimpleRead(file);
+		testReadLine(file);		
+		testReadLines(file);				
+
+	}
 	
+	 
+
 
 
 }
