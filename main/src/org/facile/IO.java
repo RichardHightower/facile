@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URL;
 import java.util.Iterator;
 
 import static org.facile.Facile.*;
@@ -79,7 +80,15 @@ public class IO {
 		int bufferSize = 256;
 		int position = 0;
 
+		public FileTextReader() {
+		}
+
 		public FileTextReader(Reader reader) {
+			init(reader);
+		}
+
+
+		private void init(Reader reader) {
 			this.reader = reader;
 		}
 
@@ -136,42 +145,6 @@ public class IO {
 			return c;
 		}
 
-		//boolean lastCharCarriageReturn = false;
-
-		// @Override
-		// public String readLine() {
-		// if(eof) {
-		// return null;
-		// }
-		//
-		// StringBuilder buf = new StringBuilder(bufferSize);
-		// char ch = read();
-		// if(eof) {
-		// return null;
-		// }
-		//
-		//
-		// if (ch=='\n' && lastCharCarriageReturn){
-		// lastCharCarriageReturn = false;
-		// ch = read();
-		// }
-		//
-		// while (!eof) {
-		//
-		// if (ch!='\r' && ch !='\n') {
-		// buf.append(ch);
-		// } else {
-		// break;
-		// }
-		// ch = read();
-		// }
-		//
-		// if (ch=='\r') {
-		// lastCharCarriageReturn = true;
-		// }
-		// return buf.toString();
-		//
-		// }
 
 		@Override
 		public String readLine() {
@@ -370,6 +343,18 @@ public class IO {
 		FileTextReader textReader = new FileTextReader(new InputStreamReader(inputStream));
 		return textReader;	
 	}
+	
+	public static FileObject<String> open(URL url) {
+		
+		FileTextReader textReader = null;
+		try {
+			textReader = new FileTextReader(new InputStreamReader(url.openStream()));
+		} catch (IOException e) {
+			handle(e);
+		}
+		return textReader;	
+	}
+
 
 	public static FileObject<String> open(Class<?>clz, String resource) {
 		FileTextReader textReader = new FileTextReader(new InputStreamReader(clz.getResourceAsStream(resource)));
