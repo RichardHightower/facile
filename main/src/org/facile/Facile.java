@@ -1,5 +1,6 @@
 package org.facile;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
@@ -20,6 +21,8 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Date;
+import org.facile.IO;
+import org.facile.IO.FileObject;
 
 import static org.facile.Templating.*;
 
@@ -1128,14 +1131,9 @@ public class Facile {
 		return accumulo;
 	}
 
-	// File
-	// File
-	public static interface File {
-		String read(String path);
-
-		String[] readLines(String path);
-	}
-
+	
+	
+	
 	// String
 	// String
 
@@ -1484,11 +1482,54 @@ public class Facile {
 		return "'" + c + "'";
 	}
 	
+	public static String[] toLines(final char [] buffer) {
+		List<String> list = new ArrayList<String>(25);
+		StringBuilder builder = new StringBuilder(256);
+		String str = null;
+		
+		
+		for (int index = 0; index<buffer.length; index++){
+			char c = buffer[index];
+			if (c == '\r') {
+				index++;
+				if (index<buffer.length) {
+					c = buffer[index];
+					if (c!='\n') {
+						index--;
+					}
+				}
+				str = builder.toString();
+				builder.setLength(0);
+				list.add(str);
+				continue;
+			} else if (c == '\n') {
+				str = builder.toString();
+				builder.setLength(0);
+				list.add(str);
+				continue;				
+			} else {
+				builder.append(c);
+			}
+		}
+		
+		return list.toArray(new String[list.size()]);
 	
+	}
 
 	public static String[] toLines(String str) {
-		return str.split("[\r\n]");
+		return toLines(str.toCharArray());
 	}
+	
+	public static String[] toLines(StringBuilder b) {
+		char [] buf = new char[b.length()];
+		b.getChars(0, buf.length, buf, 0);
+		return toLines(buf);
+	}
+
+	public static String[] toLines(CharSequence cs) {
+		return toLines(cs.toString());
+	}
+
 	public static String str (char... chars) {
 		return string(chars);
 	}
@@ -1574,5 +1615,13 @@ public class Facile {
 				throw new IllegalArgumentException(" nulls arguments are not allowed ");
 			}
 		}
+	}
+	
+	public static void notSupported() {
+		throw new UnsupportedOperationException();
+	}
+	
+	public static FileObject <String> open(File file) {
+		return IO.open(file);
 	}
 }
