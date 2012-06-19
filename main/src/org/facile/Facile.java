@@ -402,7 +402,46 @@ public class Facile {
 	public static <V> List<V> ls(final V... array) {
 		return list(array);
 	}
-	
+
+	public static List<Double> ls(final double... array) {
+		return list(array);
+	}
+	public static List<Double> list(final double... array) {
+		List<Double> list = new ArrayList<Double>();
+		for (double d : array) {
+			list.add(d);
+		}
+		return list;
+	}
+	public static List<Float> list(final float... array) {
+		List<Float> list = new ArrayList<Float>();
+		for (float x : array) {
+			list.add(x);
+		}
+		return list;
+	}
+	public static List<Integer> list(final int... array) {
+		List<Integer> list = new ArrayList<Integer>();
+		for (int x : array) {
+			list.add(x);
+		}
+		return list;
+	}
+	public static List<Byte> list(final byte... array) {
+		List<Byte> list = new ArrayList<Byte>();
+		for (byte x : array) {
+			list.add(x);
+		}
+		return list;
+	}
+	public static List<Short> list(final short... array) {
+		List<Short> list = new ArrayList<Short>();
+		for (short x : array) {
+			list.add(x);
+		}
+		return list;
+	}
+
 	public static <V> List<V> lsRange(int start, int finish, final V... array) {
 		List <V> list = new ArrayList<V>(finish-start);
 		for (;start<finish; start++) {
@@ -919,7 +958,124 @@ public class Facile {
 	public interface Filter <T> {
 		boolean filter(T t);
 	}
+	public interface dFilter  {
+		boolean filter(double x);
+	}
+	public interface iFilter  {
+		boolean filter(int x);
+	}
+	public interface fFilter  {
+		boolean filter(float x);
+	}
+	public interface bFilter  {
+		boolean filter(byte x);
+	}
+	public interface sFilter  {
+		boolean filter(short x);
+	}
 
+	public interface cFilter  {
+		boolean filter(char x);
+	}
+
+	public static double[] filter(dFilter f, double... array) {
+		double [] items = new double [array.length];
+		int newIndex=0;
+		for (int index=0; index < array.length; index++) {
+			double value = array[index];
+			if (f.filter(value)) {
+				items[newIndex]=value;
+				newIndex++;
+			}
+		}
+		
+		double [] results = new double [newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+		return results;
+		
+	}
+	public static float[] filter(fFilter f, float... array) {
+		float [] items = new float [array.length];
+		int newIndex=0;
+		for (int index=0; index < array.length; index++) {
+			float value = array[index];
+			if (f.filter(value)) {
+				items[newIndex]=value;
+				newIndex++;
+			}
+		}
+		
+		float [] results = new float [newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+		return results;
+		
+	}
+	
+	public static int[] filter(iFilter f, int... array) {
+		int [] items = new int [array.length];
+		int newIndex=0;
+		for (int index=0; index < array.length; index++) {
+			int value = array[index];
+			if (f.filter(value)) {
+				items[newIndex]=value;
+				newIndex++;
+			}
+		}
+		
+		int [] results = new int [newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+		return results;
+		
+	}
+
+	public static short[] filter(sFilter f, short... array) {
+		short [] items = new short [array.length];
+		int newIndex=0;
+		for (short index=0; index < array.length; index++) {
+			short value = array[index];
+			if (f.filter(value)) {
+				items[newIndex]=value;
+				newIndex++;
+			}
+		}
+		
+		short [] results = new short [newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+		return results;
+		
+	}
+	public static byte[] filter(bFilter f, byte... array) {
+		byte [] items = new byte [array.length];
+		int newIndex=0;
+		for (short index=0; index < array.length; index++) {
+			byte value = array[index];
+			if (f.filter(value)) {
+				items[newIndex]=value;
+				newIndex++;
+			}
+		}
+		
+		byte [] results = new byte [newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+		return results;
+		
+	}
+	public static char[] filter(cFilter f, char... array) {
+		char [] items = new char [array.length];
+		int newIndex=0;
+		for (short index=0; index < array.length; index++) {
+			char value = array[index];
+			if (f.filter(value)) {
+				items[newIndex]=value;
+				newIndex++;
+			}
+		}
+		
+		char [] results = new char [newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+		return results;
+		
+	}
 
 	public static Collection<?> filter(Function<?> f, Collection<?> c) {
 		return gfilter(f, c);
