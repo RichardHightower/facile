@@ -1,11 +1,22 @@
 package org.facile;
 import static org.facile.Facile.*;
 
+import java.util.Collection;
+
 
 import org.junit.Test;
-
-public class Filter {
+@SuppressWarnings("unused")
+public class FilterTest {
 	
+	Filter<Double> under100D = new Filter<Double>()  {
+
+		@Override
+		public boolean filter(Double x) {
+			return x<100;
+		}
+		
+	};
+
 	dFilter under100d = new dFilter() {
 		
 		@Override
@@ -13,6 +24,15 @@ public class Filter {
 			return x<100;
 		}
 	};
+	
+	lFilter under100l = new lFilter() {
+		
+		@Override
+		public boolean filter(long x) {
+			return x<100;
+		}
+	};
+
 	
 	fFilter under100f = new fFilter() {
 		
@@ -51,11 +71,49 @@ public class Filter {
 	@Test
 	public void testD() {
 		double[] items = filter(under100d, 10, 20, 30, 40, 50, 500, 1000, 1);
-		print(ls(items));
 		expect("", 50.0, items[4]);
 		expect("", 1.0, items[5]);
 		
 	}
+
+	@Test
+	public void testBigD() {
+		Double[] items = gfilter(under100D, 10d, 20d, 30d, 40d, 50d, 500d, 1000d, 1d);	
+		expect("", 50d, items[4]);
+		expect("", 1d, items[5]);
+
+	}
+
+	@Test
+	public void testD2() {
+		double[] items = dfilter(new f() { boolean f(double d){ return d<100;}}, 10, 20, 30, 40, 50, 500, 1000, 1);
+		expect("", 50.0, items[4]);
+		expect("", 1.0, items[5]);
+		
+	}
+	
+	@Test
+	public void testD3() {
+		class Under100 {
+			boolean under100(double d) {
+				return d < 100;
+			}
+		}
+		double[] items = dfilter(new Under100(), "under100", 10, 20, 30, 40, 50, 500, 1000, 1);
+		expect("", 50.0, items[4]);
+		expect("", 1.0, items[5]);
+		
+	}
+
+
+	@Test
+	public void testL() {
+		long[] items = filter(under100l, 10l, 20l, 30l, 40l, 50l, 500l, 1000l, 1l);
+		expect("", 50l, items[4]);
+		expect("", 1l, items[5]);
+		
+	}
+
 
 	@Test
 	public void testF() {
