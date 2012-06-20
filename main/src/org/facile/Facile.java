@@ -541,6 +541,65 @@ public class Facile {
 		}
 	}
 
+	public static double[] darray(List<Double> list) {
+		double [] array = new double[list.size()];
+		Double [] org = list.toArray(new Double[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+	public static float[] farray(List<Float> list) {
+		float [] array = new float[list.size()];
+		Float [] org = list.toArray(new Float[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+
+	public static long[] larray(List<Long> list) {
+		long [] array = new long[list.size()];
+		Long [] org = list.toArray(new Long[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+	public static int[] iarray(List<Integer> list) {
+		int [] array = new int[list.size()];
+		Integer [] org = list.toArray(new Integer[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+	public static short[] sarray(List<Short> list) {
+		short [] array = new short[list.size()];
+		Short [] org = list.toArray(new Short[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+	public static byte[] barray(List<Byte> list) {
+		byte [] array = new byte[list.size()];
+		Byte [] org = list.toArray(new Byte[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+	public static char[] carray(List<Character> list) {
+		char [] array = new char[list.size()];
+		Character [] org = list.toArray(new Character[list.size()]);
+		for (int index=0;index<array.length;index++) {
+			array[index] = org[index];
+		}
+		return array;
+	}
+
+	
 	public static <V> V[] ary(List<V> list) {
 		return array(list);
 	}
@@ -598,7 +657,7 @@ public class Facile {
 	}
 
 	public static String copy(final String str) {
-		return new String(str);
+		return str.toString();
 	}
 
 	public static StringBuilder copy(final StringBuilder str) {
@@ -923,6 +982,107 @@ public class Facile {
 	public static interface Enumerate<T> {
 		void visit(int index, T t);
 	}
+	public static interface dEnumerate {
+		void visit(int index, double x);
+	}
+	public static interface fEnumerate {
+		void visit(int index, float x);
+	}
+	public static interface lEnumerate {
+		void visit(int index, long x);
+	}
+	public static interface iEnumerate {
+		void visit(int index, int x);
+	}
+	public static interface sEnumerate {
+		void visit(int index, short x);
+	}
+	public static interface bEnumerate {
+		void visit(int index, byte x);
+	}
+	public static interface cEnumerate {
+		void visit(int index, char x);
+	}
+
+	private static class dEnumerateInvoker implements dEnumerate {
+		Function<?> f;
+
+		dEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, double x) {
+			f.execute(index, x);
+		}
+	}
+	private static class fEnumerateInvoker implements fEnumerate {
+		Function<?> f;
+
+		fEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, float x) {
+			f.execute(index, x);
+		}
+	}
+	private static class lEnumerateInvoker implements lEnumerate {
+		Function<?> f;
+
+		lEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, long x) {
+			f.execute(index, x);
+		}
+	}
+	private static class iEnumerateInvoker implements iEnumerate {
+		Function<?> f;
+
+		iEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, int x) {
+			f.execute(index, x);
+		}
+	}
+
+	private static class sEnumerateInvoker implements sEnumerate {
+		Function<?> f;
+
+		sEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, short x) {
+			f.execute(index, x);
+		}
+	}
+	private static class bEnumerateInvoker implements bEnumerate {
+		Function<?> f;
+
+		bEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, byte x) {
+			f.execute(index, x);
+		}
+	}
+	private static class cEnumerateInvoker implements cEnumerate {
+		Function<?> f;
+
+		cEnumerateInvoker (Function<?> f) {
+			this.f = f;
+		}
+		@Override
+		public void visit(int index, char x) {
+			f.execute(index, x);
+		}
+	}
+
 
 	public static <T> void enumerate(Enumerate<T> e, Collection<T> c) {
 		int index = 0;
@@ -932,8 +1092,114 @@ public class Facile {
 		}
 
 	}
+	public static void enumerate(dEnumerate e, Collection<Double> c) {
+		int index = 0;
+		for (double i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
+	public static void enumerate(fEnumerate e, Collection<Float> c) {
+		int index = 0;
+		for (float i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
+	public static void enumerate(lEnumerate e, Collection<Long> c) {
+		int index = 0;
+		for (long i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
+	public static void enumerate(iEnumerate e, Collection<Integer> c) {
+		int index = 0;
+		for (int i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
+	public static void enumerate(sEnumerate e, Collection<Short> c) {
+		int index = 0;
+		for (short i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
+	public static void enumerate(bEnumerate e, Collection<Byte> c) {
+		int index = 0;
+		for (byte i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
+	public static void enumerate(cEnumerate e, Collection<Character> c) {
+		int index = 0;
+		for (char i : c) {
+			e.visit(index, i);
+			index++;
+		}
+	}
 
-	public static <T> void enumerate(Enumerate<T> e, T[] c) {
+	public static void enumerate(dEnumerate e, List<Double> l) {
+		 enumerate(e, darray(l));
+	}
+	public static void enumerate(fEnumerate e, List<Float> l) {
+		 enumerate(e, farray(l));
+	}
+	public static void enumerate(lEnumerate e, List<Long> l) {
+		 enumerate(e, larray(l));
+	}
+	public static void enumerate(iEnumerate e, List<Integer> l) {
+		 enumerate(e, iarray(l));
+	}
+	public static void enumerate(sEnumerate e, List<Short> l) {
+		 enumerate(e, sarray(l));
+	}
+	public static void enumerate(bEnumerate e, List<Byte> l) {
+		 enumerate(e, barray(l));
+	}
+	public static void enumerate(cEnumerate e, List<Character> l) {
+		 enumerate(e, carray(l));
+	}
+
+	public static void enumerate(dEnumerate e, double...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static void enumerate(fEnumerate e, float...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static void enumerate(lEnumerate e, long...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static void enumerate(iEnumerate e, int...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static void enumerate(sEnumerate e, short...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static void enumerate(bEnumerate e, byte...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static void enumerate(cEnumerate e, char...array) {
+		for (int index=0; index<array.length; index++) {
+			e.visit(index, array[index]);
+		}
+	}
+	public static <T> void enumerate(Enumerate<T> e, T... c) {
 		int index = 0;
 		for (T t : c) {
 			e.visit(index, t);
@@ -941,15 +1207,74 @@ public class Facile {
 		}
 	}
 
+	public static void enumerate(Object func, double...array) {
+		dEnumerateInvoker dEnumerateInvoker = new dEnumerateInvoker(f(func));
+		enumerate(dEnumerateInvoker, array);
+	}
+	public static void enumerate(Object func, float...array) {
+		fEnumerateInvoker fEnumerateInvoker = new fEnumerateInvoker(f(func));
+		enumerate(fEnumerateInvoker, array);
+	}
+	public static void enumerate(Object func, long...array) {
+		lEnumerateInvoker lEnumerateInvoker = new lEnumerateInvoker(f(func));
+		enumerate(lEnumerateInvoker, array);
+	}
+	public static void enumerate(Object func, int...array) {
+		iEnumerateInvoker iEnumerateInvoker = new iEnumerateInvoker(f(func));
+		enumerate(iEnumerateInvoker, array);
+	}
+	public static void enumerate(Object func, short...array) {
+		sEnumerateInvoker inv = new sEnumerateInvoker(f(func));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, byte...array) {
+		bEnumerateInvoker inv = new bEnumerateInvoker(f(func));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, char...array) {
+		cEnumerateInvoker inv = new cEnumerateInvoker(f(func));
+		enumerate(inv, array);
+	}
+
+	public static void enumerate(Object func, String funcName, double...array) {
+		dEnumerateInvoker inv = new dEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, String funcName, float...array) {
+		dEnumerateInvoker inv = new dEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, String funcName, long...array) {
+		lEnumerateInvoker inv = new lEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, String funcName, int...array) {
+		iEnumerateInvoker inv = new iEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, String funcName, short...array) {
+		sEnumerateInvoker inv = new sEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, String funcName, byte...array) {
+		bEnumerateInvoker inv = new bEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+	public static void enumerate(Object func, String funcName, char...array) {
+		cEnumerateInvoker inv = new cEnumerateInvoker(fn(func, funcName));
+		enumerate(inv, array);
+	}
+
+	
 	public static void enumerate(Object func, Object methodName, Collection<?> c) {
 		enumerate(fn(func, methodName), c);
 	}
 
-	public static void enumerate(Object func, Object[] c) {
+	public static void enumerate(Object func, Object...c) {
 		enumerate(f(func), c);
 	}
 
-	public static void enumerate(Object func, Object methodName, Object[] c) {
+	public static void enumerate(Object func, Object methodName, Object... c) {
 		enumerate(fn(func, methodName), c);
 	}
 
@@ -1994,6 +2319,27 @@ public class Facile {
 			return new char[0];
 		}
 	}
+	
+	public static char[] chars(CharSequence str) {
+		if (str != null) {
+			return str.toString().toCharArray();
+		} else {
+			return new char[0];
+		}
+	}
+
+	
+	public static char[] chars(StringBuilder str) {
+		if (str != null) {
+			final int length = str.length();
+			char [] chars = new char[length];
+			str.getChars(0, length, chars, length);
+			return chars;
+		} else {
+			return new char[0];
+		}
+	}
+
 
 	public static char[] chars(char... chars) {
 		return str(chars).toCharArray();
