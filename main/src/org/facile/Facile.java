@@ -30,8 +30,7 @@ import org.facile.IO.FileObject;
 import static org.facile.Templating.*;
 
 public class Facile {
-	private static final Logger log = Logger
-			.getLogger(Facile.class.getName());
+	private static final Logger log = Logger.getLogger(Facile.class.getName());
 	private static final Logger appLog = Logger.getLogger(sprop(
 			pkey(Facile.class, "appLog"), "genericLog"));
 
@@ -43,9 +42,8 @@ public class Facile {
 	public static final boolean debug;
 	public static final PrintStream OUT = System.out;
 	public static final PrintStream ERR = System.err;
-	
-	Class<Facile> easy = Facile.class;
 
+	Class<Facile> easy = Facile.class;
 
 	static {
 		debug = sbprop(pkey(Facile.class, "debug"));
@@ -92,17 +90,18 @@ public class Facile {
 		}
 		System.out.println(builder);
 	}
-	
-	public static class PrintEnumerate implements Enumerate<Object>{
+
+	public static class PrintEnumerate implements Enumerate<Object> {
 
 		@Override
 		public void visit(int index, Object object) {
-			print (object);
-		} 
-		
+			print(object);
+		}
+
 	}
+
 	public static PrintEnumerate printEnum = new PrintEnumerate();
-	
+
 	public static String sprint(Object... items) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object item : items) {
@@ -115,6 +114,7 @@ public class Facile {
 	public static void debug(Object... items) {
 		db(items);
 	}
+
 	public static void db(Object... items) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object item : items) {
@@ -124,15 +124,13 @@ public class Facile {
 		fprintln(ERR, str(builder));
 	}
 
-
 	public static void printf(String fmt, Object... args) {
 		System.out.printf(fmt, args);
 	}
-	
-	public static void println(String fmt, Object... args) {
-		System.out.printf(fmt+"\n", args);
-	}
 
+	public static void println(String fmt, Object... args) {
+		System.out.printf(fmt + "\n", args);
+	}
 
 	public static String sprintf(String fmt, Object... args) {
 		return String.format(fmt, args);
@@ -145,9 +143,9 @@ public class Facile {
 		}
 		log.info(String.format(fmt, args));
 	}
-	
 
-	public static void fprintf(StringBuilder builder, String fmt, Object... args) {
+	public static void fprintf(StringBuilder builder, String fmt,
+			Object... args) {
 		builder.append((String.format(fmt, args)));
 	}
 
@@ -163,15 +161,16 @@ public class Facile {
 		}
 	}
 
-	
 	public static void fprintln(PrintStream out, String fmt, Object... args) {
 		out.append((String.format(fmt + "\n", args)));
 	}
 
-	public static void fprintln(StringBuilder builder, String fmt, Object... args) {
+	public static void fprintln(StringBuilder builder, String fmt,
+			Object... args) {
 		builder.append((String.format(fmt, args)));
 		builder.append("\n");
 	}
+
 	public static void fprintln(Appendable out, String fmt, Object... args) {
 		try {
 			out.append((String.format(fmt, args)));
@@ -181,18 +180,20 @@ public class Facile {
 		}
 	}
 
-
 	// Logging
 	// Logging
 	// Logging
-	public static void warning(Logger log, Throwable ex, String fmt, Object... args) {
+	public static void warning(Logger log, Throwable ex, String fmt,
+			Object... args) {
 		if (debug) {
 			printf(fmt, args);
 			return;
 		}
 		log.log(Level.WARNING, String.format(fmt, args), ex);
 	}
-	public static void error(Logger log, Throwable ex, String fmt, Object... args) {
+
+	public static void error(Logger log, Throwable ex, String fmt,
+			Object... args) {
 		if (debug) {
 			printf(fmt, args);
 			return;
@@ -200,7 +201,8 @@ public class Facile {
 		log.log(Level.SEVERE, String.format(fmt, args), ex);
 	}
 
-	public static void info(Logger log, Throwable ex, String fmt, Object... args) {
+	public static void info(Logger log, Throwable ex, String fmt,
+			Object... args) {
 		if (debug) {
 			printf(fmt, args);
 			return;
@@ -209,7 +211,8 @@ public class Facile {
 
 	}
 
-	public static void debug(Logger log, Throwable ex, String fmt, Object... args) {
+	public static void debug(Logger log, Throwable ex, String fmt,
+			Object... args) {
 		if (debug) {
 			printf(fmt, args);
 			return;
@@ -218,14 +221,15 @@ public class Facile {
 
 	}
 
-	public static void trace(Logger log, Throwable ex, String fmt, Object... args) {
+	public static void trace(Logger log, Throwable ex, String fmt,
+			Object... args) {
 		if (debug) {
 			printf(fmt, args);
 			return;
 		}
 		log.log(Level.FINEST, String.format(fmt, args), ex);
 	}
-	
+
 	public static void warning(Logger log, String fmt, Object... args) {
 		if (debug) {
 			printf(fmt, args);
@@ -233,7 +237,7 @@ public class Facile {
 		}
 		log.warning(String.format(fmt, args));
 	}
-	
+
 	public static void error(Logger log, String fmt, Object... args) {
 		if (debug) {
 			printf(fmt, args);
@@ -289,7 +293,6 @@ public class Facile {
 		}
 		appLog.info(String.format(fmt, args));
 	}
-
 
 	public static void debug(String fmt, Object... args) {
 		if (debug) {
@@ -404,9 +407,6 @@ public class Facile {
 		return list(array);
 	}
 
-	public static List<Double> lsd(final double... array) {
-		return dlist(array);
-	}
 	public static List<Double> dlist(final double... array) {
 		List<Double> list = new ArrayList<Double>();
 		for (double d : array) {
@@ -414,13 +414,23 @@ public class Facile {
 		}
 		return list;
 	}
-	public static List<Float> flist(final float... array) {
+
+	public static List<Long> flist(final long... array) {
+		List<Long> list = new ArrayList<Long>();
+		for (long d : array) {
+			list.add(d);
+		}
+		return list;
+	}
+
+	public static List<Float> llist(final float... array) {
 		List<Float> list = new ArrayList<Float>();
 		for (float x : array) {
 			list.add(x);
 		}
 		return list;
 	}
+
 	public static List<Integer> ilist(final int... array) {
 		List<Integer> list = new ArrayList<Integer>();
 		for (int x : array) {
@@ -428,6 +438,7 @@ public class Facile {
 		}
 		return list;
 	}
+
 	public static List<Byte> blist(final byte... array) {
 		List<Byte> list = new ArrayList<Byte>();
 		for (byte x : array) {
@@ -435,6 +446,7 @@ public class Facile {
 		}
 		return list;
 	}
+
 	public static List<Short> slist(final short... array) {
 		List<Short> list = new ArrayList<Short>();
 		for (short x : array) {
@@ -444,15 +456,14 @@ public class Facile {
 	}
 
 	public static <V> List<V> lsRange(int start, int finish, final V... array) {
-		List <V> list = new ArrayList<V>(finish-start);
-		for (;start<finish; start++) {
+		List<V> list = new ArrayList<V>(finish - start);
+		for (; start < finish; start++) {
 			list.add(array[start]);
 		}
 		return list;
 	}
 
-	
-	public static List<Integer> noZeroList(int [] array) {
+	public static List<Integer> noZeroList(int[] array) {
 		List<Integer> arrayList = new ArrayList<Integer>(array.length);
 		for (int i : array) {
 			arrayList.add(i);
@@ -460,14 +471,13 @@ public class Facile {
 		return arrayList;
 	}
 
-	
 	public static boolean isEqual(List<?> left, List<?> right) {
-		if (left.size()!=right.size()) {
+		if (left.size() != right.size()) {
 			return false;
 		}
 		int index = 0;
 		for (Object it : left) {
-			if(!right.get(index).equals(it)) {
+			if (!right.get(index).equals(it)) {
 				return false;
 			}
 			index++;
@@ -476,15 +486,17 @@ public class Facile {
 	}
 
 	public static boolean debugEqual(List<?> left, List<?> right) {
-		print (left, right);
-		if (left.size()!=right.size()) {
-			print ("size not equal");
+		print(left, right);
+		if (left.size() != right.size()) {
+			print("size not equal");
 			return false;
 		}
 		int index = 0;
 		for (Object it : left) {
-			if(!right.get(index).equals(it)) {
-				print ("item not equal at index", index, "#"+it +"#", "%"+right.get(index)+"%", it.getClass(), right.get(index).getClass());
+			if (!right.get(index).equals(it)) {
+				print("item not equal at index", index, "#" + it + "#", "%"
+						+ right.get(index) + "%", it.getClass(),
+						right.get(index).getClass());
 				return false;
 			}
 			index++;
@@ -518,10 +530,11 @@ public class Facile {
 
 	@SuppressWarnings("unchecked")
 	public static <V> V[] array(List<V> list) {
-		if (list.size()>0) {
+		if (list.size() > 0) {
 			print();
-			Object newInstance = Array.newInstance(list.get(0).getClass(), list.size());
-			return (V[]) list.toArray((V[])newInstance);
+			Object newInstance = Array.newInstance(list.get(0).getClass(),
+					list.size());
+			return (V[]) list.toArray((V[]) newInstance);
 		} else {
 			complain("array(list): The list has to have at least one item in it");
 			return null;
@@ -808,8 +821,6 @@ public class Facile {
 		return map;
 	}
 
-
-
 	//
 	// Functional
 	//
@@ -870,46 +881,46 @@ public class Facile {
 		try {
 			Method[] methods = clazz(that).getDeclaredMethods();
 			if (that instanceof Class) {
-				Constructor<?> constructor = ((Class<?>)that).getDeclaredConstructors()[0];
+				Constructor<?> constructor = ((Class<?>) that)
+						.getDeclaredConstructors()[0];
 				constructor.setAccessible(true);
-				that = constructor.newInstance((Object[])null);
+				that = constructor.newInstance((Object[]) null);
 			}
-			if (methods.length==1) {
+			if (methods.length == 1) {
 				methods[0].setAccessible(true);
 				if (Modifier.isStatic(methods[0].getModifiers())) {
 					return new FunctionImpl<T>(returnType, methods[0], null);
 				} else {
 					return new FunctionImpl<T>(returnType, methods[0], that);
-				}				
+				}
 			}
 			for (Method m : methods) {
-					if (m.getName().equals(name.toString())) {
-						m.setAccessible(true);
-						if (Modifier.isStatic(m.getModifiers())) {
-							return new FunctionImpl<T>(returnType, m, null);
-						} else {
-							return new FunctionImpl<T>(returnType, m, that);
-						}
+				if (m.getName().equals(name.toString())) {
+					m.setAccessible(true);
+					if (Modifier.isStatic(m.getModifiers())) {
+						return new FunctionImpl<T>(returnType, m, null);
+					} else {
+						return new FunctionImpl<T>(returnType, m, that);
 					}
+				}
 			}
 		} catch (Exception ex) {
 			log.log(Level.SEVERE, String.format(
-					"Unable to find function that=%s, name=%s", that,
-					name), ex);
+					"Unable to find function that=%s, name=%s", that, name), ex);
 		}
 		die("Unable to find function that=%s, name=%s", that, name);
 		return null;
 	}
 
+	public static interface func {
 
-	public static interface func  {
-		
-	}
-	public static interface f  {
-		
 	}
 
-	public static interface Enumerate <T> {
+	public static interface f {
+
+	}
+
+	public static interface Enumerate<T> {
 		void visit(int index, T t);
 	}
 
@@ -922,7 +933,7 @@ public class Facile {
 
 	}
 
-	public static <T> void enumerate(Enumerate<T> e, T [] c) {
+	public static <T> void enumerate(Enumerate<T> e, T[] c) {
 		int index = 0;
 		for (T t : c) {
 			e.visit(index, t);
@@ -937,7 +948,7 @@ public class Facile {
 	public static void enumerate(Object func, Object[] c) {
 		enumerate(f(func), c);
 	}
-	
+
 	public static void enumerate(Object func, Object methodName, Object[] c) {
 		enumerate(fn(func, methodName), c);
 	}
@@ -945,17 +956,16 @@ public class Facile {
 	public static void enumerate(Object func, Collection<?> c) {
 		enumerate(f(func), c);
 	}
-	
 
-	public static  void enumerate(Function<?> f, Collection<?> c) {
+	public static void enumerate(Function<?> f, Collection<?> c) {
 		int index = 0;
 		for (Object o : c) {
 			f.execute(index, o);
 			index++;
 		}
 	}
-	
-	public static void enumerate(Function<?> f, Object [] c) {
+
+	public static void enumerate(Function<?> f, Object[] c) {
 		int index = 0;
 		for (Object t : c) {
 			f.execute(index, t);
@@ -963,284 +973,355 @@ public class Facile {
 		}
 	}
 
-	public interface Filter <T> {
+	public interface Filter<T> {
 		boolean filter(T x);
 	}
-	public interface dFilter  {
+
+	public interface dFilter {
 		boolean filter(double x);
 	}
-	public interface fFilter  {
+
+	public interface fFilter {
 		boolean filter(float x);
 	}
-	public interface lFilter  {
+
+	public interface lFilter {
 		boolean filter(long x);
 	}
-	public interface iFilter  {
+
+	public interface iFilter {
 		boolean filter(int x);
 	}
-	public interface bFilter  {
+
+	public interface bFilter {
 		boolean filter(byte x);
 	}
-	public interface sFilter  {
+
+	public interface sFilter {
 		boolean filter(short x);
 	}
-	public interface cFilter  {
+
+	public interface cFilter {
 		boolean filter(char x);
 	}
+
 	private static class dFilterInvoker implements dFilter {
-		Function <?> f;
-		private dFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private dFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(double x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
+
 	private static class fFilterInvoker implements fFilter {
-		Function <?> f;
-		private fFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private fFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(float x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
+
 	private static class lFilterInvoker implements lFilter {
-		Function <?> f;
-		private lFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private lFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(long x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
+
 	private static class iFilterInvoker implements iFilter {
-		Function <?> f;
-		private iFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private iFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(int x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
+
 	private static class sFilterInvoker implements sFilter {
-		Function <?> f;
-		private sFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private sFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(short x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
+
 	private static class bFilterInvoker implements bFilter {
-		Function <?> f;
-		private bFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private bFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(byte x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
+
 	private static class cFilterInvoker implements cFilter {
-		Function <?> f;
-		private cFilterInvoker(FunctionImpl <?> f) {
+		Function<?> f;
+
+		private cFilterInvoker(FunctionImpl<?> f) {
 			this.f = f;
 		}
+
 		@Override
 		public boolean filter(char x) {
-			return (Boolean)f.execute(x);
+			return (Boolean) f.execute(x);
 		}
 	}
 
-	public static double[] filter(Function<?> f, double... array) {
-		return filter(new dFilterInvoker((FunctionImpl<?>) f), array);
-	}
-	public static float[] filter(Function<?> f, float... array) {
-		return filter(new fFilterInvoker((FunctionImpl<?>) f), array);
-	}
-	public static long[] filter(Function<?> f, long... array) {
-		return filter(new lFilterInvoker((FunctionImpl<?>) f), array);
-	}
-	public static int[] filter(Function<?> f, int... array) {
-		return filter(new iFilterInvoker((FunctionImpl<?>) f), array);
-	}
-	public static short[] filter(Function<?> f, short... array) {
-		return filter(new sFilterInvoker((FunctionImpl<?>) f), array);
-	}
-	public static byte[] filter(Function<?> f, byte... array) {
-		return filter(new bFilterInvoker((FunctionImpl<?>) f), array);
-	}
-	public static char[] filter(Function<?> f, char... array) {
-		return filter(new cFilterInvoker((FunctionImpl<?>) f), array);
+	public static double[] dfilter(Function<?> f, double... array) {
+		return dfilter(new dFilterInvoker((FunctionImpl<?>) f), array);
 	}
 
+	public static float[] ffilter(Function<?> f, float... array) {
+		return ffilter(new fFilterInvoker((FunctionImpl<?>) f), array);
+	}
+
+	public static long[] lfilter(Function<?> f, long... array) {
+		return lfilter(new lFilterInvoker((FunctionImpl<?>) f), array);
+	}
+
+	public static int[] ifilter(Function<?> f, int... array) {
+		return ifilter(new iFilterInvoker((FunctionImpl<?>) f), array);
+	}
+
+	public static short[] sfilter(Function<?> f, short... array) {
+		return sfilter(new sFilterInvoker((FunctionImpl<?>) f), array);
+	}
+
+	public static byte[] bfilter(Function<?> f, byte... array) {
+		return bfilter(new bFilterInvoker((FunctionImpl<?>) f), array);
+	}
+
+	public static char[] cfilter(Function<?> f, char... array) {
+		return cfilter(new cFilterInvoker((FunctionImpl<?>) f), array);
+	}
 
 	public static double[] dfilter(Object func, String name, double... array) {
-		return filter(fn(func, name), array);
-	}
-	public static float[] ffilter(Object func, String name, float... array) {
-		return filter(fn(func, name), array);
-	}
-	public static long[] lfilter(Object func, String name, long... array) {
-		return filter(fn(func, name), array);
-	}
-	public static int[] ifilter(Object func, String name, int... array) {
-		return filter(fn(func, name), array);
-	}
-	public static short[] sfilter(Object func, String name, short... array) {
-		return filter(fn(func, name), array);
-	}
-	public static byte[] bfilter(Object func, String name, byte... array) {
-		return filter(fn(func, name), array);
-	}
-	public static char[] cfilter(Object func, String name, char... array) {
-		return filter(fn(func, name), array);
+		return dfilter(fn(func, name), array);
 	}
 
+	public static float[] ffilter(Object func, String name, float... array) {
+		return ffilter(fn(func, name), array);
+	}
+
+	public static long[] lfilter(Object func, String name, long... array) {
+		return lfilter(fn(func, name), array);
+	}
+
+	public static int[] ifilter(Object func, String name, int... array) {
+		return ifilter(fn(func, name), array);
+	}
+
+	public static short[] sfilter(Object func, String name, short... array) {
+		return sfilter(fn(func, name), array);
+	}
+
+	public static byte[] bfilter(Object func, String name, byte... array) {
+		return bfilter(fn(func, name), array);
+	}
+
+	public static char[] cfilter(Object func, String name, char... array) {
+		return cfilter(fn(func, name), array);
+	}
 
 	public static double[] dfilter(Object func, double... array) {
-		return filter(f(func), array);
+		return dfilter(f(func), array);
 	}
+
 	public static float[] ffilter(Object func, float... array) {
-		return filter(f(func), array);
+		return ffilter(f(func), array);
 	}
+
 	public static long[] lfilter(Object func, long... array) {
-		return filter(f(func), array);
+		return lfilter(f(func), array);
 	}
+
 	public static int[] ifilter(Object func, int... array) {
-		return filter(f(func), array);
+		return ifilter(f(func), array);
 	}
+
 	public static short[] sfilter(Object func, short... array) {
-		return filter(f(func), array);
+		return sfilter(f(func), array);
 	}
+
 	public static byte[] bfilter(Object func, byte... array) {
-		return filter(f(func), array);
+		return bfilter(f(func), array);
 	}
+
 	public static char[] cfilter(Object func, char... array) {
-		return filter(f(func), array);
+		return cfilter(f(func), array);
 	}
 
+	public static double[] dfilter(dFilter f, double... array) {
+		double[] items = new double[array.length];
+		double value;
 
-
-	
-	public static double[] filter(dFilter f, double... array) {
-		double [] items = new double [array.length];
-		int newIndex=0;
-		for (int index=0; index < array.length; index++) {
-			double value = array[index];
+		int newIndex = 0;
+		for (int index = 0; index < array.length; index++) {
+			value = array[index];
 			if (f.filter(value)) {
-				items[newIndex]=value;
+				items[newIndex] = value;
 				newIndex++;
 			}
 		}
-		
-		double [] results = new double [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+
+		double[] results = new double[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
 		return results;
-		
+
 	}
-	public static long[] filter(lFilter f, long... array) {
-		long [] items = new long [array.length];
-		int newIndex=0;
-		for (int index=0; index < array.length; index++) {
+	
+
+
+	public static long[] lfilter(lFilter f, long... array) {
+		long[] items = new long[array.length];
+		int newIndex = 0;
+		for (int index = 0; index < array.length; index++) {
 			long value = array[index];
 			if (f.filter(value)) {
-				items[newIndex]=value;
+				items[newIndex] = value;
 				newIndex++;
 			}
 		}
-		
-		long [] results = new long [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+
+		long[] results = new long[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
 		return results;
-		
-	}
-	public static float[] filter(fFilter f, float... array) {
-		float [] items = new float [array.length];
-		int newIndex=0;
-		for (int index=0; index < array.length; index++) {
-			float value = array[index];
-			if (f.filter(value)) {
-				items[newIndex]=value;
-				newIndex++;
-			}
-		}
-		
-		float [] results = new float [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
-		return results;
-		
-	}
-	public static int[] filter(iFilter f, int... array) {
-		int [] items = new int [array.length];
-		int newIndex=0;
-		for (int index=0; index < array.length; index++) {
-			int value = array[index];
-			if (f.filter(value)) {
-				items[newIndex]=value;
-				newIndex++;
-			}
-		}
-		
-		int [] results = new int [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
-		return results;
-		
+
 	}
 
-	public static short[] filter(sFilter f, short... array) {
-		short [] items = new short [array.length];
-		int newIndex=0;
-		for (short index=0; index < array.length; index++) {
+	public static float[] ffilter(fFilter f, float... array) {
+		float[] items = new float[array.length];
+		int newIndex = 0;
+		for (int index = 0; index < array.length; index++) {
+			float value = array[index];
+			if (f.filter(value)) {
+				items[newIndex] = value;
+				newIndex++;
+			}
+		}
+
+		float[] results = new float[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
+		return results;
+
+	}
+
+	public static int[] ifilter(iFilter f, int... array) {
+		int[] items = new int[array.length];
+		int newIndex = 0;
+		for (int index = 0; index < array.length; index++) {
+			int value = array[index];
+			if (f.filter(value)) {
+				items[newIndex] = value;
+				newIndex++;
+			}
+		}
+
+		int[] results = new int[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
+		return results;
+
+	}
+
+	public static short[] sfilter(sFilter f, short... array) {
+		short[] items = new short[array.length];
+		int newIndex = 0;
+		for (short index = 0; index < array.length; index++) {
 			short value = array[index];
 			if (f.filter(value)) {
-				items[newIndex]=value;
+				items[newIndex] = value;
 				newIndex++;
 			}
 		}
-		
-		short [] results = new short [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+
+		short[] results = new short[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
 		return results;
-		
+
 	}
-	public static byte[] filter(bFilter f, byte... array) {
-		byte [] items = new byte [array.length];
-		int newIndex=0;
-		for (short index=0; index < array.length; index++) {
+
+	public static byte[] bfilter(bFilter f, byte... array) {
+		byte[] items = new byte[array.length];
+		int newIndex = 0;
+		for (short index = 0; index < array.length; index++) {
 			byte value = array[index];
 			if (f.filter(value)) {
-				items[newIndex]=value;
+				items[newIndex] = value;
 				newIndex++;
 			}
 		}
-		
-		byte [] results = new byte [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+
+		byte[] results = new byte[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
 		return results;
-		
+
 	}
-	public static char[] filter(cFilter f, char... array) {
-		char [] items = new char [array.length];
-		int newIndex=0;
-		for (short index=0; index < array.length; index++) {
+
+	public static char[] cfilter(cFilter f, char... array) {
+		char[] items = new char[array.length];
+		int newIndex = 0;
+		for (short index = 0; index < array.length; index++) {
 			char value = array[index];
 			if (f.filter(value)) {
-				items[newIndex]=value;
+				items[newIndex] = value;
 				newIndex++;
 			}
 		}
-		
-		char [] results = new char [newIndex];
-		System.arraycopy(items, 0, results, 0, newIndex); //Is arraycopy faster than a good for loop, good benchmark test
+
+		char[] results = new char[newIndex];
+		System.arraycopy(items, 0, results, 0, newIndex); // Is arraycopy faster
+															// than a good for
+															// loop, good
+															// benchmark test
 		return results;
-		
+
 	}
 
 	public static Collection<?> filter(Function<?> f, Collection<?> c) {
@@ -1260,15 +1341,14 @@ public class Facile {
 	public static Object[] filter(Filter f, Object... c) {
 		return gfilter(f, c);
 	}
-	
+
 	public static Collection<?> filter(Object f, Object[] in) {
 		return doGfilter(f(f), list(in));
 	}
 
 	public static Collection<?> filter(Object f, Object name, Collection<?> in) {
-		return doGfilter(fn(f,name), list(in));
+		return doGfilter(fn(f, name), list(in));
 	}
-
 
 	private static <T> Collection<T> doGfilter(Function<?> f, List<T> in) {
 		ListIterator<T> listIterator = in.listIterator();
@@ -1291,17 +1371,19 @@ public class Facile {
 		}
 		return in;
 	}
-	
+
 	private static <T> T[] doGfilterAsArray(Filter<T> f, List<T> in) {
-			List<T> list = doGfilter(f, in);
-			return array(list);
+		List<T> list = doGfilter(f, in);
+		return array(list);
 	}
+
 	public static <T> Collection<T> gfilter(Object f, T[] in) {
 		return doGfilter(f(f), list(in));
 	}
 
-	public static <T> Collection<T> gfilter(Object f, Object name, Collection<T> in) {
-		return doGfilter(fn(f,name), list(in));
+	public static <T> Collection<T> gfilter(Object f, Object name,
+			Collection<T> in) {
+		return doGfilter(fn(f, name), list(in));
 	}
 
 	public static <T> Collection<T> gfilter(Function<?> f, T[] in) {
@@ -1312,18 +1394,18 @@ public class Facile {
 		return doGfilter(f, list(in));
 	}
 
-	public static <T> T [] gfilter(Filter<T> f, T... in) {
+	public static <T> T[] gfilter(Filter<T> f, T... in) {
 		return doGfilterAsArray(f, list(in));
 	}
 
 	public static <T> Collection<T> gfilter(Filter<T> f, Collection<T> in) {
 		return doGfilter(f, list(in));
 	}
-	
+
 	public interface Converter<TO, FROM> {
-		TO convert (FROM from);
+		TO convert(FROM from);
 	}
-	
+
 	public static List<?> map(Function<?> f, List<?>... cols) {
 		return gmap(f, cols);
 	}
@@ -1358,34 +1440,33 @@ public class Facile {
 
 		return mapList;
 	}
-	
-	
-	public static <TO, FROM> List<TO> map(Converter<TO, FROM> converter, List<FROM> fromList) {
+
+	public static <TO, FROM> List<TO> map(Converter<TO, FROM> converter,
+			List<FROM> fromList) {
 
 		ArrayList<TO> toList = new ArrayList<TO>(fromList.size());
-		
+
 		for (FROM from : fromList) {
 			toList.add(converter.convert(from));
 		}
-		
+
 		return toList;
 	}
 
 	public static List<?> map(Function<?> f, Collection<?> c) {
 		return gmap(f, c);
 	}
-	
+
 	public static List<?> map(Function<?> f, Object[] array) {
 		return gmap(f, list(array));
 	}
 
-
 	public static List<?> map(Object that, String methodName, Collection<?> c) {
-		return gmap(fn(that,methodName), c);
+		return gmap(fn(that, methodName), c);
 	}
 
 	public static List<?> map(Object that, String methodName, Object[] array) {
-		return gmap(fn(that,methodName), list(array));
+		return gmap(fn(that, methodName), list(array));
 	}
 
 	public static List<?> map(Object that, Collection<?> c) {
@@ -1396,31 +1477,34 @@ public class Facile {
 		return gmap(f(that), list(array));
 	}
 
-
 	@SuppressWarnings("unchecked")
-	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, Object name, IN[] c) {
-		return gmap((Function<OUT>)fn(that,name), list(c));
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
+			Object name, IN[] c) {
+		return gmap((Function<OUT>) fn(that, name), list(c));
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, IN[] c) {
-		return gmap((Function<OUT>)f(that), list(c));
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
+			IN[] c) {
+		return gmap((Function<OUT>) f(that), list(c));
 	}
-	
+
 	public static <IN, OUT> List<OUT> gmap(Function<OUT> f, IN[] c) {
 		return gmap(f, c);
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, Object name, Collection<IN> c) {
-		return gmap((Function<OUT>)fn(that,name), c);
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
+			Object name, Collection<IN> c) {
+		return gmap((Function<OUT>) fn(that, name), c);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that, Collection<IN> c) {
-		return gmap((Function<OUT>)f(that), c);
+	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
+			Collection<IN> c) {
+		return gmap((Function<OUT>) f(that), c);
 	}
-	
+
 	public static <IN, OUT> List<OUT> gmap(Function<OUT> f, Collection<IN> c) {
 		ArrayList<OUT> mapList = new ArrayList<OUT>(c.size());
 		for (Object o : c) {
@@ -1443,7 +1527,7 @@ public class Facile {
 	public static <T> T greduce(Function<?> f, T array) {
 		return greduce(f, list(array));
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static <T> T greduce(Function<?> f, Collection<T> c) {
 		T accumulo = null;
@@ -1459,9 +1543,6 @@ public class Facile {
 		return accumulo;
 	}
 
-	
-	
-	
 	// String
 	// String
 
@@ -1682,8 +1763,8 @@ public class Facile {
 
 	public static <T> T index(List<T> lst, int index) {
 		final int length = lst.size();
-		
-		if (length==0) {
+
+		if (length == 0) {
 			return null;
 		}
 
@@ -1727,13 +1808,11 @@ public class Facile {
 		}
 
 		if (ex == null && v != null) {
-			fprintf(out,
-					"expected was null, but value was %s", v);
+			fprintf(out, "expected was null, but value was %s", v);
 		}
 
 		if (!ex.equals(v)) {
-			fprintf(out,
-					"expected was %s, but value was %s", ex, v);
+			fprintf(out, "expected was %s, but value was %s", ex, v);
 		}
 
 	}
@@ -1761,17 +1840,15 @@ public class Facile {
 		}
 
 		if (ex == null && v != null) {
-			fprintf(out,
-					"%s | expected null, but value was #%s#", msg, v);
+			fprintf(out, "%s | expected null, but value was #%s#", msg, v);
 		}
 
 		if (!ex.equals(v)) {
-			fprintf(out,
-					"%s | expected \n#%s#, but value was \n#%s#", msg, ex, v);
+			fprintf(out, "%s | expected \n#%s#, but value was \n#%s#", msg, ex,
+					v);
 		}
 
 	}
-
 
 	public static String fmt(String str, Object... args) {
 		return format(str, args);
@@ -1792,40 +1869,47 @@ public class Facile {
 		}
 	}
 
-	
 	public static char[] range(char start, char end) {
 		StringBuilder builder = new StringBuilder();
-		for (char c = start; c <=end; c++) {
+		for (char c = start; c <= end; c++) {
 			builder.append(c);
 		}
 		return builder.toString().toCharArray();
 	}
-	
-	
+
 	public static String[] split(String str, String splitBy) {
-		return str.split(splitBy);
+		char[] array = str.toCharArray();
+		char[] split = splitBy.toCharArray();
+		String[] strings = split(array,split);
+		return strings;
 	}
 	
+	public static String[] split(String str, char c) {
+		char[] array = str.toCharArray();
+		String[] strings = split(array,c);
+		return strings;
+	}
+
+
 	public static String repr(char c) {
 		return "'" + c + "'";
 	}
-	
-	public static String[] toLines(final char [] buffer) {
+
+	public static String[] toLines(final char[] buffer) {
 		List<String> list = new ArrayList<String>(100);
 		StringBuilder builder = new StringBuilder(256);
 		String str = null;
-		
-		
-		for (int index = 0; index<buffer.length; index++){
+
+		for (int index = 0; index < buffer.length; index++) {
 			char c = buffer[index];
 			if (c == '\r') {
-				if (index<buffer.length) {
+				if (index < buffer.length) {
 					index++;
 					c = buffer[index];
-					if (c!='\n') {
+					if (c != '\n') {
 						index--;
 					} else {
-						c = buffer[index];						
+						c = buffer[index];
 					}
 				}
 				str = builder.toString();
@@ -1836,22 +1920,61 @@ public class Facile {
 				str = builder.toString();
 				builder.setLength(0);
 				list.add(str);
-				continue;				
+				continue;
 			} else {
 				builder.append(c);
 			}
 		}
-		
+
 		return list.toArray(new String[list.size()]);
+
+	}
 	
+	public static String[] split(final char[] buffer, final char split) {
+		List<String> list = new ArrayList<String>(100);
+		StringBuilder builder = new StringBuilder(256);
+		String str = null;
+		for (int index = 0; index < buffer.length; index++) {
+			char c = buffer[index];
+			if (c == split) {
+				str = builder.toString();
+				builder.setLength(0);
+				list.add(str);
+				continue;
+			} else {
+				builder.append(c);
+			}
+		}
+		return list.toArray(new String[list.size()]);
+	}
+
+	public static String[] split(final char[] buffer, final char[] split) {
+		List<String> list = new ArrayList<String>(100);
+		StringBuilder builder = new StringBuilder(256);
+		String str = null;
+		for (int index = 0; index < buffer.length; index++) {
+			char c = buffer[index];
+			if (isIn(c,split)) {
+				str = builder.toString();
+				builder.setLength(0);
+				list.add(str);
+				while(isIn(c, split) && index < buffer.length) {
+					index++;
+				}
+				continue;
+			} else {
+				builder.append(c);
+			}
+		}
+		return list.toArray(new String[list.size()]);
 	}
 
 	public static String[] toLines(String str) {
 		return toLines(str.toCharArray());
 	}
-	
+
 	public static String[] toLines(StringBuilder b) {
-		char [] buf = new char[b.length()];
+		char[] buf = new char[b.length()];
 		b.getChars(0, buf.length, buf, 0);
 		return toLines(buf);
 	}
@@ -1860,34 +1983,35 @@ public class Facile {
 		return toLines(cs.toString());
 	}
 
-	public static String str (char... chars) {
+	public static String str(char... chars) {
 		return string(chars);
 	}
-	
+
 	public static char[] chars(String str) {
-		if (str!=null) {
+		if (str != null) {
 			return str.toCharArray();
 		} else {
 			return new char[0];
 		}
 	}
+
 	public static char[] chars(char... chars) {
 		return str(chars).toCharArray();
 	}
 
 	public static String string(char... chars) {
-		if (chars!=null) {
-			return String.valueOf(chars);			
-		}else {
+		if (chars != null) {
+			return String.valueOf(chars);
+		} else {
 			return "";
 		}
 
 	}
-	
+
 	public static String string(int start, int stop, char... chars) {
-		if (chars!=null) {
-			return String.valueOf(chars, start, stop);	
-		}else {
+		if (chars != null) {
+			return String.valueOf(chars, start, stop);
+		} else {
 			return "";
 		}
 
@@ -1896,31 +2020,31 @@ public class Facile {
 	public static String str(Object obj) {
 		return string(obj);
 	}
+
 	public static String string(Object obj) {
 		return obj.toString();
 	}
-	
-	public static boolean isIn (char c, char... array) {
+
+	public static boolean isIn(char c, char... array) {
 		for (int index = 0; index < array.length; index++) {
-			if (c==array[index]) {
+			if (c == array[index]) {
 				return true;
 			}
 		}
 		return false;
-		
+
 	}
 
-	
 	public static List<Character> list(char... chars) {
 		return ls(chars);
 	}
-	
-	public static char[] add(char [] chars, char...chars2) {
+
+	public static char[] add(char[] chars, char... chars2) {
 		List<Character> list = ls(chars);
 		list.addAll(ls(chars2));
-		char [] chars3 = new char[chars.length + chars2.length];
-		int index=0;
-		for (char c : list){
+		char[] chars3 = new char[chars.length + chars2.length];
+		int index = 0;
+		for (char c : list) {
 			chars3[index] = c;
 			index++;
 		}
@@ -1929,46 +2053,46 @@ public class Facile {
 
 	public static List<Character> ls(char... chars) {
 		List<Character> ls = new ArrayList<Character>();
-		for (char c: chars) {
+		for (char c : chars) {
 			ls.add(c);
 		}
 		return ls;
 	}
-	
+
 	public static <T> void checkArgumentsForNulls(T... objects) {
-		if (objects==null) {
-			throw new IllegalArgumentException(" nulls arguments are not allowed ");
-			
+		if (objects == null) {
+			throw new IllegalArgumentException(
+					" nulls arguments are not allowed ");
+
 		}
 		for (Object obj : objects) {
-			if (obj==null) {
-				throw new IllegalArgumentException(" nulls arguments are not allowed ");
+			if (obj == null) {
+				throw new IllegalArgumentException(
+						" nulls arguments are not allowed ");
 			}
 		}
 	}
-	
+
 	public static void notSupported() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	public static void complain(String msg) {
 		throw new UnsupportedOperationException(msg);
 	}
 
-	
-	public static FileObject <String> open(File file) {
+	public static FileObject<String> open(File file) {
 		return IO.open(file);
 	}
-		
-	public static FileObject <String> openString(String str) {
+
+	public static FileObject<String> openString(String str) {
 		return IO.openString(str);
 	}
-	
 
-	public static FileObject <String> open(char [] buffer) {
+	public static FileObject<String> open(char[] buffer) {
 		return IO.open(buffer);
 	}
-	
+
 	public static String[] readLines(File file) {
 		return IO.open(file).readLines();
 	}
@@ -1984,19 +2108,28 @@ public class Facile {
 	public static String[] readLinesAllFromFile(String file) {
 		return IO.open(new File(file)).readLines();
 	}
-	
+
 	public static FileObject<String> open(InputStream inputStream) {
 		return IO.open(inputStream);
 	}
-	
-	public static FileObject<String> open(Class<?>clz, String resource) {
+
+	public static FileObject<String> open(Class<?> clz, String resource) {
 		return IO.open(clz, resource);
 	}
 
 	public static FileObject<String> open(URL url) {
 		return IO.open(url);
 	}
-	public static FileObject <String> open(String suri) {
+
+	public static FileObject<String> open(String suri) {
 		return IO.open(suri);
+	}
+	
+	public static double sum(double...items) {
+		double total = 0d;
+		for (int index=0 ; index < items.length; index++){
+			total += items[index];
+		}
+		return total;
 	}
 }
