@@ -17,6 +17,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Iterator;
 
+import org.facile.ContextParser.Ctx;
+
 import static org.facile.Facile.*;
 
 public class IO {
@@ -218,8 +220,19 @@ public class IO {
 		Reader reader;
 		int bufferSize = 256;
 		int position = 0;
+		Ctx ctx;
+		
+		public void ctx(Ctx ctx) {
+			this.ctx = ctx;
+		}
+		
+		public Ctx ctx() {
+			return ctx;
+		}
+
 
 		public FileTextReader() {
+			init(null);
 		}
 
 		public FileTextReader(Reader reader) {
@@ -228,6 +241,8 @@ public class IO {
 
 		private void init(Reader reader) {
 			this.reader = reader;
+			ctx = new Ctx();
+
 		}
 
 		public void increaseBufferSize() {
@@ -237,6 +252,7 @@ public class IO {
 		@Override
 		public String read(int size) {
 			String string = doRead(reader, size);
+			ctx.$_ = string;
 			position += string.length();
 			return string;
 		}
@@ -254,6 +270,7 @@ public class IO {
 		}
 
 		boolean eof;
+		private Iterator<String> iterator;
 
 		@Override
 		public char read() {
@@ -311,7 +328,9 @@ public class IO {
 				ch = read();
 			}
 
-			return buf.toString();
+			String line = buf.toString();
+			ctx.$_ = line;
+			return line;
 
 		}
 
@@ -423,14 +442,25 @@ public class IO {
 				}
 				return buf.toString();
 			} finally {
+				this.eof = true;
 				close();
 			}
 		}
 
+
+		public void startIteration() {
+			iterator = this.iterator();
+		}
 		@Override
 		public boolean eof() {
-			return eof;
+			if (iterator==null) {
+				return eof;
+			} else {
+				iterator.hasNext();
+				return eof;
+			}
 		}
+
 
 	}
 

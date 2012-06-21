@@ -2478,4 +2478,8 @@ public class Facile {
 		}
 		return total;
 	}
+	
+	public static FileObject<String> openFile(String file) {
+		return IO.openFile(file);
+	}
 }
