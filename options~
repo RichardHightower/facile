@@ -1,0 +1,2 @@
+-d main-classes -g  -sourcepath ./main/src/org/facile/
+
