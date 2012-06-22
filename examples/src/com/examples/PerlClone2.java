@@ -66,6 +66,12 @@ public class PerlClone2 {
 				print( $5());
 			}
 			
+			
+			if (ok("http://([^/?#]*)(.*)")) {
+				print("here", $_());
+				print("domain", $1(), "path", $2());
+				print ("regex", "http://([^/?#]*)(.*)");
+			}
 
 
 			print($_());

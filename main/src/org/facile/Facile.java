@@ -3,6 +3,7 @@ package org.facile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -23,14 +24,22 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.Date;
 import org.facile.IO;
 import org.facile.IO.FileObject;
+import org.facile.ProcessIO.ProcessOut;
 
 import static org.facile.Templating.*;
 
 public class Facile {
-	private static final Logger log = Logger.getLogger(Facile.class.getName());
+	private static final Logger log = log(Facile.class);
+
+	public static Logger log(Class<?> clzz) {
+		return Logger.getLogger(clzz.getName());
+	}
+	
 	private static final Logger appLog = Logger.getLogger(sprop(
 			pkey(Facile.class, "appLog"), "genericLog"));
 
@@ -61,6 +70,37 @@ public class Facile {
 			return that.getClass();
 		}
 	}
+	
+	public static String cwd () {
+		return IO.cwd();
+	}
+	
+	public static File cwf () {
+		return IO.cwf();
+	}
+	
+	public static File file (String file) {
+		return IO.file(file);
+	}
+	public static File file (File f, String file) {
+		return IO.file(f, file);
+	}
+
+	public static File subdir (File dir, String str) {
+		return IO.subdir(dir, str);
+	}
+
+	public static File subdir (String str) {
+		return IO.subdir(str);
+	}
+
+	public static List<File> subdirs(File dir) {
+		return IO.subdirs(dir);
+	}
+
+	public static List<File> subdirs() {
+		return IO.subdirs();
+	}
 
 	public static String mykey(Class<?> cls, final String key) {
 		return pkey(Facile.class, key);
@@ -89,6 +129,14 @@ public class Facile {
 			builder.append(' ');
 		}
 		System.out.println(builder);
+	}
+	public static void fprint(Logger log, Object... items) {
+		StringBuilder builder = new StringBuilder(256);
+		for (Object item : items) {
+			builder.append(item);
+			builder.append(' ');
+		}
+		log.info(builder.toString());
 	}
 
 	public static class PrintEnumerate implements Enumerate<Object> {
@@ -1904,6 +1952,23 @@ public class Facile {
 		}
 		return builder.toString();
 	}
+	
+	public static String join(Collection<?> args) {
+		StringBuilder builder = new StringBuilder(256);
+		for (Object arg : args) {
+			builder.append(arg.toString());
+		}
+		return builder.toString();
+	}
+
+	public static String join(char delim, Collection<?> args) {
+		StringBuilder builder = new StringBuilder(256);
+		for (Object arg : args) {
+			builder.append(arg.toString());
+			builder.append(delim);
+		}
+		return builder.toString();
+	}
 
 	public static String slc(CharSequence str, int start, int end) {
 		return slice(str, start, end);
@@ -2397,6 +2462,9 @@ public class Facile {
 		return chars3;
 	}
 
+	public static <T> List<T> ls(Class<T> t) {
+		return new ArrayList<T>();
+	}
 	public static List<Character> ls(char... chars) {
 		List<Character> ls = new ArrayList<Character>();
 		for (char c : chars) {
@@ -2443,8 +2511,8 @@ public class Facile {
 		return IO.open(file).readLines();
 	}
 
-	public static String[] readAll(File file) {
-		return IO.open(file).readLines();
+	public static String readAll(File file) {
+		return IO.open(file).readAll();
 	}
 
 	public static String[] readLinesFromFile(String file) {
@@ -2482,4 +2550,141 @@ public class Facile {
 	public static FileObject<String> openFile(String file) {
 		return IO.openFile(file);
 	}
+	
+	/** Allows ability to have symbols similar to Perl and Ruby */
+	@SuppressWarnings("serial")
+	public static class my extends HashMap<String, String> {
+		@SuppressWarnings("rawtypes")
+		private Class enm;
+		private Enum<?> e;
+
+		public my(Class<Enum<?>> enm, Enum<?> e) {
+			this.e = e;
+			this.enm = enm;
+		}
+
+		@SuppressWarnings({ "static-access", "unchecked" })
+		public String put(String key, String value) {
+			try {
+				e.valueOf(enm, key);
+				return super.put(key, value);
+			} catch (Exception ex) {
+				throw new IllegalArgumentException("Not a valid key");
+			}
+		}
+
+		public void i(String key, String value) {
+			this.put(key, value);
+		}
+
+		public void i(@SuppressWarnings("rawtypes") Enum e, String value) {
+			this.put(e.name(), value);
+		}
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public static my my(@SuppressWarnings("rawtypes") Class enm, Enum<?> e) {
+		return new my(enm, e);
+	}
+
+	public static Matcher re(String regex, String input) {
+		return Regex.re(regex, input);
+	}
+	
+	public static Pattern re(String regex) {
+		return Regex.re(regex);
+	}
+	
+	public static Pattern regex(String regex) {
+		return Regex.regex(regex);
+	}
+	
+	public static List<File> files(File dir, final String regex) {
+		return IO.files(dir, regex);
+	}
+	
+	public static int len(Collection<?> col) {
+		return col.size();
+	}
+
+
+	public static int len(Object[] obj) {
+		return obj.length;
+	}
+	
+	public static int len(double[] v) {
+		return v.length;
+	}
+	public static int len(long[] v) {
+		return v.length;
+	}
+	public static int len(float[] v) {
+		return v.length;
+	}
+	public static int len(int[] v) {
+		return v.length;
+	}
+	public static int len(short[] v) {
+		return v.length;
+	}
+	public static int len(byte[] v) {
+		return v.length;
+	}
+	public static int len(char[] v) {
+		return v.length;
+	}
+	public static int len(CharSequence cs) {
+		return cs.length();
+	}
+	public static int len(Object obj) {
+		if (obj.getClass().isArray()) {
+			return Array.getLength(obj);
+		} else {
+			throw new AssertionException("Not an array");
+		}
+	}
+	
+	public static List<File> filesWithExtension(File dir, String extension) {
+		return IO.filesWithExtension(dir, extension);
+	}
+	
+	public static List<File> filesWithExtension(String extension) {
+		return IO.filesWithExtension(extension);	
+	}
+	
+	public static void rest(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			handle(e);
+		}
+	}
+	
+	private static void handle(Exception ex) {
+		throw new AssertionException(ex);
+	}
+
+	public static FileObject<?> open(OutputStream outputStream) {
+		return IO.open(outputStream);
+	}
+
+	public static int exec(String... args) {
+		return ProcessIO.exec(args);
+	}
+	
+	public static ProcessOut run(String... args) {
+		return ProcessIO.run(args);
+		
+	}
+	
+	public static int exec(int timeout, String... args) {
+		return ProcessIO.exec(timeout, args);
+	}
+	
+	public static ProcessOut run(int timeout, String... args) {
+		return ProcessIO.run(timeout, args);
+		
+	}
+
 }

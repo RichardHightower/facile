@@ -10,18 +10,153 @@ import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.regex.Matcher;
 
 import org.facile.ContextParser.Ctx;
 
 import static org.facile.Facile.*;
 
 public class IO {
+
+
+	public static class IOFile extends File {
+		private static final long serialVersionUID = 1L;
+
+		public IOFile(File parent, String child) {
+			super(parent, child);
+		}
+
+		public IOFile(String parent, String child) {
+			super(parent, child);
+		}
+
+		public IOFile(String pathname) {
+			super(pathname);
+		}
+
+		public IOFile(URI uri) {
+			super(uri);
+		}
+
+		
+	}
+	
+	public static File file (String file) {
+		return new IOFile(file);
+	}
+	public static File file (File f, String file) {
+		return new IOFile(f, file);
+	}
+	
+	public static String cwd () {
+		File f = new File(".");
+		try {
+			return f.getCanonicalFile().toString();
+		} catch (IOException e) {
+			throw new InputOutputException(e);
+		}
+	}
+	
+	public static File cwf () {
+		IOFile f = new IOFile(".");
+		try {
+			return f.getCanonicalFile();
+		} catch (IOException e) {
+			throw new InputOutputException(e);
+		}
+	}
+
+	public static File subdir (File dir, String str) {
+		if (!dir.isDirectory()) {
+			dir = dir.getParentFile();
+		}
+		return file(dir, str);
+	}
+
+	public static File subdir (String str) {
+		return subdir(cwf(), str);
+	}
+	
+	public static List<File> subdirs() {
+		return subdirs(cwf());
+	}
+
+	public static List<File> allSubDirs(File dir) {
+		return doFilesSearch(dir, true, false, true, null);
+	}
+	public static List<File> filesWithExtension(File dir, String extension) {
+		return doFilesSearch(dir, true, true, false, ".*\\."+extension);
+	}
+	
+	public static List<File> filesWithExtension(String extension) {
+		return filesWithExtension(cwf(), extension);
+	}
+
+	public static List<File> subdirs(File dir) {
+		List<File> files = list(dir.listFiles());
+		ListIterator<File> listIterator = files.listIterator();
+		while(listIterator.hasNext()) {
+			File next = listIterator.next();
+			if (!next.isDirectory()) {
+				listIterator.remove();
+			}
+		}
+		return files;
+	}
+	
+	public static List<File> files(final String regex) {
+		return files(cwf(), regex);
+	}
+	
+	private static List<File> doFilesSearch(File dir, final boolean recursive, boolean filesOnly, boolean dirsOnly, final String regex) {
+		if (!dir.isDirectory()) {
+			dir = dir.getParentFile();
+		}
+		final List<File> outList = ls(File.class);
+
+		
+		File[] listFiles = dir.listFiles();
+		for (File file : listFiles) {
+			if (file.isFile()) {
+				List<String> list = ls(file.getAbsolutePath(), file.getPath());
+				for (String input : list) {
+					if (regex!=null) {
+						Matcher matcher = re(regex, input);
+						if (matcher.matches()) {
+							if (!dirsOnly){
+								outList.add(file);
+							}
+							break;
+						}
+					}
+				}
+			} else if (file.isDirectory()){
+				if (!filesOnly) {
+					outList.add(file);
+				}
+				if (recursive) {
+					List<File> files = doFilesSearch(file, recursive, filesOnly, false, regex);
+					outList.addAll(files);
+				}
+			}
+		}
+		
+		return outList;
+
+	}
+	public static List<File> files(File dir, final String regex) {
+		return doFilesSearch(dir, true, true, false, regex);
+	}
+
 
 	enum Mode {
 		read_text, read_binary,
@@ -65,6 +200,10 @@ public class IO {
 		void flush();
 
 		String readAll();
+
+		void println(String password);
+
+		void autoFlush();
 
 	}
 
@@ -197,6 +336,18 @@ public class IO {
 		public String readAll() {
 			// TODO Auto-generated method stub
 			return null;
+		}
+
+		@Override
+		public void println(String password) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void autoFlush() {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
@@ -461,6 +612,18 @@ public class IO {
 			}
 		}
 
+		@Override
+		public void println(String password) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void autoFlush() {
+			// TODO Auto-generated method stub
+			
+		}
+
 
 	}
 
@@ -570,6 +733,9 @@ public class IO {
 
 		return null;
 
+	}
+	public static FileObject<?> open(OutputStream outputStream) {
+		return null;
 	}
 
 }

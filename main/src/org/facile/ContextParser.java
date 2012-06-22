@@ -11,12 +11,13 @@ import org.facile.IO.FileTextReader;
 import static org.facile.Facile.*;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 public class ContextParser {
 	// TODO # What if you create a file context like Perl's <IN>.
 	// This context could work with regex too like $1 (group 1 in split), $_
 	// (line), @_ (array), next (regex), and unless (regex)
+
 
 	public static void context(Runnable run) {
 		try {
@@ -29,41 +30,7 @@ public class ContextParser {
 
 	}
 
-	@SuppressWarnings("serial")
-	public static class my extends HashMap<String, String> {
-		@SuppressWarnings("rawtypes")
-		private Class enm;
-		private Enum<?> e;
 
-		public my(Class<Enum<?>> enm, Enum<?> e) {
-			this.e = e;
-			this.enm = enm;
-		}
-
-		@SuppressWarnings({ "static-access", "unchecked" })
-		public String put(String key, String value) {
-			try {
-				e.valueOf(enm, key);
-				return super.put(key, value);
-			} catch (Exception ex) {
-				throw new IllegalArgumentException("Not a valid key");
-			}
-		}
-
-		public void i(String key, String value) {
-			this.put(key, value);
-		}
-
-		public void i(@SuppressWarnings("rawtypes") Enum e, String value) {
-			this.put(e.name(), value);
-		}
-
-	}
-
-	@SuppressWarnings("unchecked")
-	public static my my(@SuppressWarnings("rawtypes") Class enm, Enum<?> e) {
-		return new my(enm, e);
-	}
 
 	private static final Logger log = Logger.getLogger(ContextParser.class
 			.getName());
@@ -231,6 +198,9 @@ public class ContextParser {
 	public List<String> $$() {
 		return currentCtx().$$;
 	}
+	
+
+
 
 	public static class Ctx {
 		public String $_;
@@ -264,7 +234,6 @@ public class ContextParser {
 		private Map<String, FileObject<String>> f = new HashMap<String, FileObject<String>>(
 				10);
 		public Matcher matcher;
-		private static Map<String, Pattern> patterns = new HashMap<String, Pattern>();
 
 		public FileObject<String> f(Object obj) {
 			return f.get(obj.toString());
@@ -316,7 +285,7 @@ public class ContextParser {
 
 		public boolean ok(String regex) {
 			initGroups();
-			regex(regex);
+			matcher = regex(regex).matcher($_);
 
 			if (matcher.find()) {
 
@@ -328,82 +297,11 @@ public class ContextParser {
 			}
 		}
 
-		private void regex(String regex) {
-
-			Pattern pattern = patterns.get(regex);
-			if (pattern == null) {
-
-				boolean transform = false;
-				if (regex.startsWith("r'") && regex.endsWith("'")) {
-					regex = regex.substring(2, regex.length() - 1);
-					transform = true;
-				} else if (regex.startsWith("/") && regex.endsWith("/")) {
-					regex = regex.substring(1, regex.length() - 1);
-					transform = true;
-				}
-
-				//http://docs.oracle.com/javase/1.5.0/docs/api/java/util/regex/Pattern.html
-				if (transform) {
-					regex = regex.replace("//", "{@#$%^}");
-					regex = regex.replace("/", "\\");
-					regex = regex.replace("{@#$%^}", "/");
-					regex = regex.replace("{fw}", "/");
-					regex = regex.replace("{char}", "\\w");
-					regex = regex.replace("{word}", "\\w");
-					regex = regex.replace("{a word}", "\\w+");
-					regex = regex.replace("{digit}", "\\d");
-					regex = regex.replace("{whitespace}", "\\s");
-					regex = regex.replace("{sp}", "\\s+");
-					regex = regex.replace("{no char}", "\\W");
-					regex = regex.replace("{no digit}", "\\D");
-					regex = regex.replace("{no whitespace}", "\\S");
-					regex = regex.replace("{any}", ".*");
-					regex = regex.replace("{lower}", "\\p{javaLowerCase}");
-					regex = regex.replace("{upper}", "\\p{javaUpperCase}");
-					regex = regex.replace("{white}", "\\p{javaWhitespace}");
-					regex = regex.replace("{mirror}", "\\p{javaMirrored}");
-					regex = regex.replace("{blank}", "\\p{Blank}");
-					regex = regex.replace("{alnum}", "\\p{Alnum}");
-					regex = regex.replace("{alpha numeric}", "\\p{Alnum}");
-					regex = regex.replace("{ascii}", "\\p{ASCII}");
-					regex = regex.replace("{punct}", "\\p{Punct}");
-					regex = regex.replace("{alnum}", "\\p{Alnum}");
-					regex = regex.replace("{alpha}", "\\p{Alpha}");
-					regex = regex.replace("{start line}", "^");
-					regex = regex.replace("{end line}", "$");
-					regex = regex.replace("{start input}", "\\A");
-					regex = regex.replace("{start}", "\\A");
-					regex = regex.replace("{end input}", "\\Z");
-					regex = regex.replace("{end}", "\\z");
-					regex = regex.replace("{optional once}", "?");
-					regex = regex.replace("{optional many}", "*");
-					regex = regex.replace("{zero or more}", "*");
-					regex = regex.replace("{one or more}", "+");
-					regex = regex.replace("{required once}", "+");
-					regex = regex.replace("{only one}", "{1}");
-					regex = regex.replace("{only two}", "{2}");
-					regex = regex.replace("{relunctant}", "?");
-					regex = regex.replace("{not greedy}", "?");
-					regex = regex.replace("{possessive}", "+");
-					regex = regex.replace("{match all}", "+");
-					regex = regex.replace("{ OR }", "|");
-					regex = regex.replace("{or}", "|");
-					regex = regex.replace("{not}", "^");
-					regex = regex.replace("{word boundary}", "\\b");
-					regex = regex.replace("{no word boundary}", "\\B");
-					regex = regex.replace("{visible}", "\\p{Graph}");
-					regex = regex.replace("{print}", "\\p{Print}");
-				}
-			}
-
-			pattern = Pattern.compile(regex);
-
-			matcher = pattern.matcher($_);
-		}
 
 		public boolean match(String regex) {
 			initGroups();
-			regex(regex);
+			matcher = regex(regex).matcher($_);
+			
 
 			if (matcher.matches()) {
 				extractGroups();

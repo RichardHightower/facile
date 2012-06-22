@@ -8,17 +8,34 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 
 import org.facile.IO.FileObject;
 import org.junit.Test;
 
 public class IOTest {
 
+	@Test 
+	public void testcwd() throws IOException {
+		String cwd = cwd();
+		File subdir = subdir("foo");
+		
+		assertEquals(cwd, subdir.getParentFile().getCanonicalFile().toString());
+		
+	}
+	
+	@Test 
+	public void findFileTest() throws IOException {
+		File subdir = subdir("bin/org/facile");
+		List<File> files = files(subdir, ".*\\.txt");
+		
+		assertEquals(4, len(files));
+
+	}
+
 	@Test
 	public void testFileEnum() throws IOException {
-		File f = new File(".");
-		f = f.getCanonicalFile();
-		f = new File(f, "test/org/facile/test.txt");
+		File f = subdir( "test/org/facile/test.txt");
 		FileObject<String> file = open(f);
 
 		int index = 0;
