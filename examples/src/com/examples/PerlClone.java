@@ -14,7 +14,7 @@ public class PerlClone {
 
 		my $results = my(Results.class, all);
 
-		ctx();
+		ctx(null);
 		open(IN, "./src/com/examples/sample.txt");
 
 		while (IN()) {

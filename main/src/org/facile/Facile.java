@@ -43,7 +43,9 @@ public class Facile {
 	private static final Logger appLog = Logger.getLogger(sprop(
 			pkey(Facile.class, "appLog"), "genericLog"));
 
+	public static final Class<Object> object = Object.class;
 	public static final Class<String> string = String.class;
+	public static final Class<List<String>> slist = null;
 	public static final Class<Integer> integer = Integer.class;
 	public static final Class<Float> flt = Float.class;
 	public static final Class<Double> dbl = Double.class;
@@ -763,6 +765,11 @@ public class Facile {
 		map.put(k0, v0);
 		return map;
 	}
+	
+	public static <K, V> Map<K, V> mp(Class<K> key, Class<V> v) {
+		HashMap<K, V> map = new HashMap<K, V>(10);
+		return map;
+	}
 
 	public static <K, V> Map<K, V> mp(K k0, V v0, K k1, V v1) {
 		HashMap<K, V> map = new HashMap<K, V>(10);
@@ -1317,12 +1324,13 @@ public class Facile {
 	public static void enumerate(Object func, Object methodName, Collection<?> c) {
 		enumerate(fn(func, methodName), c);
 	}
-
-	public static void enumerate(Object func, Object...c) {
+	
+	public static <T> void enumerate(Object func, T...c) {
 		enumerate(f(func), c);
 	}
 
-	public static void enumerate(Object func, Object methodName, Object... c) {
+	
+	public static <T> void enumerate(Object func, Object methodName, T... c) {
 		enumerate(fn(func, methodName), c);
 	}
 
@@ -1338,7 +1346,7 @@ public class Facile {
 		}
 	}
 
-	public static void enumerate(Function<?> f, Object[] c) {
+	public static void enumerate(Function<?> f, Object... c) {
 		int index = 0;
 		for (Object t : c) {
 			f.execute(index, t);
@@ -2686,5 +2694,34 @@ public class Facile {
 		return ProcessIO.run(timeout, args);
 		
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> T get(Class<T> clz, Map<String, ?> map, String key) {
+		return (T) map.get(key);
+	}
+
+	public static Map<String, ?> cmdToMap(String[] args) {
+		return cmdToMap("--", args);
+	}
+	@SuppressWarnings("unused")
+	public static Map<String, ?> cmdToMap(String delim,
+			String[] args) {
+		
+		final List<String> largs = ls(args);
+		final Map<String, Object> mp = mp(string, object);
+		mp.put("all", largs);
+		func f = new func () {
+			void f(int index, String arg) {
+				if (arg.startsWith("--")) {
+					mp.put(arg, idx(largs,index+1));
+				}
+			}
+		};
+		
+		enumerate(f, args);
+		return mp;
+
+	}
+
 
 }

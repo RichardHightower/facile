@@ -12,10 +12,10 @@ public class ProcessIO {
 	private static final Logger log = log(ProcessIO.class);
 
 	public static class ProcessOut {
-		int exit;
-		String stdout;
-		String stderr;
-		String commandLine;
+		public int exit;
+		public String stdout;
+		public String stderr;
+		public String commandLine;
 		@Override
 		public String toString() {
 			return "ProcessOut [\nexit=" + exit + ", \nstdout=" + stdout

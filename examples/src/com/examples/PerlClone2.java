@@ -82,7 +82,7 @@ public class PerlClone2 {
 	}
 
 	public static void main(String[] args) throws IOException {
-		context(new Runnable() {
+		context(args, new Runnable() {
 			@Override
 			public void run() {
 				parseSampleText();

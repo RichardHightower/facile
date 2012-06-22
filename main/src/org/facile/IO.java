@@ -392,7 +392,7 @@ public class IO {
 
 		private void init(Reader reader) {
 			this.reader = reader;
-			ctx = new Ctx();
+			ctx = new Ctx(null);
 
 		}
 

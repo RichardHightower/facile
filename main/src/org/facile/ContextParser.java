@@ -18,10 +18,13 @@ public class ContextParser {
 	// This context could work with regex too like $1 (group 1 in split), $_
 	// (line), @_ (array), next (regex), and unless (regex)
 
+	
 
-	public static void context(Runnable run) {
+
+	public static void context(String [] args, Runnable run) {
+		
 		try {
-			ctx();
+			ctx(cmdToMap("--", args));
 			run.run();
 
 		} finally {
@@ -41,13 +44,13 @@ public class ContextParser {
 
 	private static ThreadLocal<Ctx> ctx;
 
-	public static Ctx ctx() {
+	public static Ctx ctx(Map<String, ?> arguments) {
 		if (ctx == null) {
 			ctx = new ThreadLocal<Ctx>();
 		}
 		Ctx c = ctx.get();
 		if (c == null) {
-			c = new Ctx();
+			c = new Ctx(arguments);
 			ctx.set(c);
 		} else {
 			Facile.warning(log, "Context was already present and should not be");
@@ -191,18 +194,34 @@ public class ContextParser {
 		return currentCtx().$_;
 	}
 
-	public String _$(int index) {
+	public static String _$(int index) {
 		return currentCtx().$$.get(index);
 	}
 
-	public List<String> $$() {
+	public static List<String> $$() {
 		return currentCtx().$$;
 	}
 	
-
-
+	public static List<String> args() {
+		return currentCtx().args();
+	}
+	public static Map<String, ?> argMap() {
+		return currentCtx().argMap();
+	}
 
 	public static class Ctx {
+		
+		private Map<String, ?> arguments;
+
+		public Ctx(Map<String, ?> arguments) {
+			if (arguments==null) {
+				 Map<String, List<String>> mp = mp(string, slist);		
+				 mp.put("all",  ls(string));
+				 this.arguments = mp;
+			}else {
+				this.arguments = arguments;				
+			}
+		}
 		public String $_;
 		public String _;
 		public String $0;
@@ -273,6 +292,14 @@ public class ContextParser {
 
 		public boolean IN() {
 			return !IN.eof();
+		}
+
+		public Map<String, ?> argMap() {
+			return copy(arguments);
+		}
+
+		public List<String> args() {
+			return get(slist, arguments, "all");
 		}
 
 		public String $(int index) {
