@@ -5,11 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,11 +26,14 @@ import java.util.Date;
 import org.facile.IO;
 import org.facile.IO.FileObject;
 import org.facile.ProcessIO.ProcessOut;
+import org.facile.Reflection.FuncImpl;
 
 import static org.facile.Templating.*;
 
 public class Facile {
-	private static final Logger log = log(Facile.class);
+	static Class<Facile> easy = Facile.class;
+
+	private static final Logger log = log(easy);
 
 	public static Logger log(Class<?> clzz) {
 		return Logger.getLogger(clzz.getName());
@@ -57,24 +55,11 @@ public class Facile {
 	public static final PrintStream OUT = System.out;
 	public static final PrintStream ERR = System.err;
 
-	static Class<Facile> easy = Facile.class;
 
 	static {
 		debug = sbprop(pkey(Facile.class, "debug"));
 	}
 
-	// HELPER
-	// HELPER
-
-	// HELPER
-	// HELPER
-	private static Class<?> clazz(Object that) {
-		if (that instanceof Class) {
-			return (Class<?>) that;
-		} else {
-			return that.getClass();
-		}
-	}
 	
 	public static String cwd () {
 		return IO.cwd();
@@ -297,7 +282,7 @@ public class Facile {
 		}
 		log.warning(String.format(fmt, args));
 	}
-
+	
 	public static void info(Logger log, String fmt, Object... args) {
 		if (debug) {
 			printf(fmt, args);
@@ -580,17 +565,8 @@ public class Facile {
 		return str.toCharArray();
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <V> V[] array(List<V> list) {
-		if (list.size() > 0) {
-			print();
-			Object newInstance = Array.newInstance(list.get(0).getClass(),
-					list.size());
-			return (V[]) list.toArray((V[]) newInstance);
-		} else {
-			complain("array(list): The list has to have at least one item in it");
-			return null;
-		}
+		return Reflection.array(list);
 	}
 
 	public static double[] darray(List<Double> list) {
@@ -948,136 +924,23 @@ public class Facile {
 		T execute(Object... params);
 	}
 
-	private static class FuncImpl<T> implements Func<T> {
-		Method method;
-		Object that;
-
-		FuncImpl(Class<T> clazz, Method method, Object that) {
-			this.method = method;
-			this.that = that;
-		}
-
-		@SuppressWarnings("unchecked")
-		public T execute(Object... params) {
-
-			T ret = null;
-			try {
-				ret = (T) method.invoke(that, params);
-			} catch (Exception ex) {
-				throw new ReflectionException("unable to execute function "
-						+ method.getName(), ex);
-			}
-			return ret;
-		}
-
-	}
 
 	public static <T> Func<T> f(Class<T> returnType, Object that) {
-		try {
-			return fn(returnType, that, "f");
-		} catch (Exception e) {
-			throw new ReflectionException(e);
-		}
+		return Reflection.f(returnType, that);
 	}
 
 	public static Func<?> f(Object that) {
-		try {
-			return fn(that, "f");
-		} catch (Exception e) {
-			throw new ReflectionException(e);
-		}
+		return Reflection.f(that);
 	}
 
 	public static Func<?> fn(Object that, Object name) {
-		return fn(Object.class, that, name);
+		return Reflection.fn(that, name);
 	}
 	
 	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name) {
-		return doFuncLookup(returnType, that, name, -1, (Class<?>[]) null);
+		return Reflection.fn(returnType, that, name);
 	}
 
-	private static <T> Func<T> doFuncLookup(Class<T> returnType, Object that,
-			Object name, int numArgs, Class<?>...args) {
-		try {
-			Method[] methods = clazz(that).getDeclaredMethods();
-			if (methods.length == 1) {
-				methods[0].setAccessible(true);
-				if (Modifier.isStatic(methods[0].getModifiers())) {
-					return new FuncImpl<T>(returnType, methods[0], null);
-				} else {
-					return new FuncImpl<T>(returnType, methods[0], that);
-				}
-			}
-			//Prefer static methods
-			for (Method m : methods) {
-				if (m.getName().equals(name.toString()) && Modifier.isStatic(m.getModifiers())) {
-					if (numArgs==-1 && (args==null || args.length == 0)) {
-						return new FuncImpl<T>(returnType, m, null);
-					} else if (numArgs > -1 && m.getParameterTypes().length == numArgs) {
-						return new FuncImpl<T>(returnType, m, null);
-					} else {
-						Class<?>[] types = m.getParameterTypes();
-						boolean noMatch = false;
-						int index = 0;
-						for (Class<?> t : types) {
-							if (args[index] != t) {
-								noMatch = true;
-								break;
-							}
-							index++;
-						}
-						if (!noMatch) {
-							return new FuncImpl<T>(returnType, m, null);
-						}
-					}
-				}
-			}
-			
-
-			
-			
-			//Accept non static methods
-			
-			if (that instanceof Class) {
-				Constructor<?> constructor = ((Class<?>) that)
-						.getDeclaredConstructors()[0];
-				constructor.setAccessible(true);
-				that = constructor.newInstance((Object[]) null);
-			}
-
-			for (Method m : methods) {
-				if (m.getName().equals(name.toString()) && !Modifier.isStatic(m.getModifiers())) {
-					if (numArgs==-1 && (args==null || args.length == 0)) {
-						return new FuncImpl<T>(returnType, m, null);
-					} else if (numArgs > -1 && m.getParameterTypes().length == numArgs) {
-						return new FuncImpl<T>(returnType, m, null);
-					} else {
-						Class<?>[] types = m.getParameterTypes();
-						boolean noMatch = false;
-						int index = 0;
-						for (Class<?> t : types) {
-							if (args[index] != t) {
-								noMatch = true;
-								break;
-							}
-							index++;
-						}
-						if (!noMatch) {
-							return new FuncImpl<T>(returnType, m, null);
-						}
-					}
-				}
-			}
-
-			
-
-		} catch (Exception ex) {
-			log.log(Level.SEVERE, String.format(
-					"Unable to find function that=%s, name=%s", that, name), ex);
-		}
-		die("Unable to find function that=%s, name=%s", that, name);
-		return null;
-	}
 
 	public static interface f {
 
@@ -2764,7 +2627,7 @@ public class Facile {
 	}
 	public static int len(Object obj) {
 		if (isArray(obj)) {
-			return Array.getLength(obj);
+			return arrayLength(obj);
 		} else if (obj instanceof CharSequence) {
 			return ((CharSequence)obj).length();
 		}else if (obj instanceof Collection) {
@@ -2774,8 +2637,12 @@ public class Facile {
 		}
 	}
 
+	public static int arrayLength(Object obj) {
+		return Reflection.arrayLength(obj);
+	}
+
 	private static boolean isArray(Object obj) {
-		return obj.getClass().isArray();
+		return Reflection.isArray(obj);
 	}
 	
 	public static List<File> filesWithExtension(File dir, String extension) {
@@ -2944,7 +2811,27 @@ public class Facile {
 		}
 		return false;
 	}
+	
+	public static <T> T getProperty(Class<T> t, Object object, final String key) {
+		return Reflection.getProperty(t, object, key);
+	}
+	
+	public static Object getProp(Object object, final String key) {
+		return Reflection.getProp(object, key);
+	}
 
+	public static Object idx(Object object, final String key) {
+		return Reflection.getProp(object, key);
+	}
+	
+	public static int len (Map<?, ?> map) {
+		return map.size();
+	}
+
+
+	public static Object idx(Object object, int index) {
+		return Reflection.idx(object, index);
+	}
 	
 	//TODO look for a toInt method static and regular method.
 	public static Func<Integer> toInt = fn(integer, easy, "toInt");
@@ -2989,20 +2876,10 @@ public class Facile {
 		}
 	}
 
-	static boolean isStaticField(Field field) {
-		 return Modifier.isStatic(field.getModifiers());
-	}
-	static Func<Field> isStaticField = fn(Field.class, easy, "isStaticField");
 	
 	
 	
 	public static void copyArgs(Class<?> clz, Map<String, ?> args) {
-		
-		Collection<Field> fields = gfilter(isStaticField, clz.getDeclaredFields());
-		
-		for (Field field : fields) {
-			field.setAccessible(true);
-		}
-		
+		Reflection.copyArgs(clz, args);
 	}
 }

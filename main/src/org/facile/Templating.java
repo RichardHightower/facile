@@ -1,15 +1,17 @@
 package org.facile;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+//import java.lang.reflect.Array;
+//import java.lang.reflect.Field;
+//import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.facile.Facile.copy;
+import static org.facile.Facile.idx;
 import static org.facile.Facile.index;
+import static org.facile.Facile.getProp;
 
 class Templating {
 	public static String mfmt(String str, Map<?, ?> map) {
@@ -332,7 +334,7 @@ class Templating {
 					Map<String, ?> map = (Map<String, ?>) object;
 					object = map.get(key);
 				} else {
-					object = _propLookup(object, key);
+					object = getProp(object, key);
 				}
 			}
 		}
@@ -445,7 +447,7 @@ class Templating {
 					Map<String, ?> map = (Map<String, ?>) object;
 					object = map.get(key);
 				} else {
-					object = _propLookup(object, key);
+					object = getProp(object, key);
 				}
 			}
 		}
@@ -455,7 +457,7 @@ class Templating {
 	private static Object _indexLookup(Object object, Object oindex) {
 		int index = (Integer) oindex;
 		if (object.getClass().isArray()) {
-			object = Array.get(object, index);
+			object = idx(object, index);
 		} else if (object instanceof List) {
 			object = index(((List<?>) object), index);
 		} else {
@@ -464,48 +466,8 @@ class Templating {
 		return object;
 	}
 
-	private static Object _propLookup(Object object, final String key) {
-		if (object == null) {
-			return null;
-		}
-		object.getClass().getDeclaredMethods();
-		Class<? extends Object> clz = object.getClass();
-		outer: while (clz != Object.class) {
-			Method[] methods = clz.getDeclaredMethods();
-			for (Method method : methods) {
-				method.setAccessible(true);
-				if (method.getParameterTypes().length == 0
-						&& method.getName().toLowerCase()
-								.endsWith(key.toLowerCase())
-						&& (method.getName().startsWith("is")
-								|| method.getName().startsWith("get") || method
-								.getName().length() == key.length())) {
-					try {
-						object = method.invoke(object, (Object[]) null);
-						break outer;
-					} catch (Exception ex) {
-						continue;
-					}
-				}
-			}
-			Field[] declaredFields = clz.getDeclaredFields();
-			for (Field field : declaredFields) {
-				field.setAccessible(true);
-				if (field.getName().equals(key)) {
-					try {
-						object = field.get(object);
-						break outer;
-					} catch (Exception ex) {
-						break;
-					}
-				}
-			}
 
-			clz = clz.getSuperclass();
-		}
-		return object;
 
-	}
 
 	
 	private interface NamespaceResolver<KEY> {
