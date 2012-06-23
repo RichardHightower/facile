@@ -47,7 +47,13 @@ public class Facile {
 	public static final Class<List<String>> slist = null;
 	public static final Class<Integer> integer = Integer.class;
 	public static final Class<Float> flt = Float.class;
+	public static final Class<Long> lng = Long.class;
 	public static final Class<Double> dbl = Double.class;
+	public static final Class<?> pint = int.class;
+	public static final Class<Float> pfloat = float.class;
+	public static final Class<?> pdouble = double.class;
+	public static final Class<?> plong = long.class;
+
 	public static final Class<Date> date = Date.class;
 	public static final Class<String[]> stringA = String[].class;
 	public static final Class<File> fileT = File.class;
@@ -55,6 +61,25 @@ public class Facile {
 	public static final PrintStream OUT = System.out;
 	public static final PrintStream ERR = System.err;
 
+	public static Func<String[]> split = fn(stringA, easy, "split");
+	
+	public final static String quote = "\"";
+
+	public static String quote(String str) {
+		return quote+str+quote;
+	}
+
+	public final static String singleQuote = "'";
+
+	public static String singleQuote(String str) {
+		return singleQuote+str+singleQuote;
+	}
+
+	public final static String comma = ",";
+
+	public final static String comma(String str) {
+		return str+comma;
+	}
 
 	static {
 		debug = sbprop(pkey(Facile.class, "debug"));
@@ -940,7 +965,13 @@ public class Facile {
 	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name) {
 		return Reflection.fn(returnType, that, name);
 	}
+	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name, int numArgs) {
+		return Reflection.fn(returnType, that, name, numArgs);
+	}
 
+	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name, Class<?>...argTypes) {
+		return Reflection.fn(returnType, that, name, argTypes);
+	}
 
 	public static interface f {
 
@@ -2217,7 +2248,6 @@ public class Facile {
 	public static String[] split(String str) {
 		return split(str, " \n\t\r");
 	}
-	public static Func<String[]> split = fn(stringA, easy, "split");
 	
 	public static String[] split(String str, String splitBy) {
 		char[] array = str.toCharArray();

@@ -27,7 +27,7 @@ public class Reflection {
 	}
 
 
-	static boolean isStaticField(Field field) {
+	public static boolean isStaticField(Field field) {
 		 return Modifier.isStatic(field.getModifiers());
 	}
 	
@@ -89,6 +89,13 @@ public class Reflection {
 	
 	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name) {
 		return doFuncLookup(returnType, that, name, -1, (Class<?>[]) null);
+	}
+
+	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name, int numArgs) {
+		return doFuncLookup(returnType, that, name, numArgs, (Class<?>[]) null);
+	}
+	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name, Class<?>...argTypes) {
+		return doFuncLookup(returnType, that, name, -1, argTypes);
 	}
 
 	private static <T> Func<T> doFuncLookup(Class<T> returnType, Object that,
