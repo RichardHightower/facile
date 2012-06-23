@@ -155,7 +155,7 @@ public class IOTest {
 		assertEquals("Line 4", file.readLines()[3]);
 	}
 
-	@Test
+	//@Test Long test
 	public void testURL() throws IOException {
 		FileObject<String> file = open(new URL(
 				"https://raw.github.com/RichardHightower/facile/master/main/test/org/facile/test.txt"));

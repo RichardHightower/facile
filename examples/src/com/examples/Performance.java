@@ -17,7 +17,7 @@ public class Performance {
 	};
 	
 	@SuppressWarnings("rawtypes")
-	static Function myFunc;
+	static Func myFunc;
 	
 	static {
 		

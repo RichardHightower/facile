@@ -249,7 +249,7 @@ Python, Groovy, Perl and Ruby are a source of many ideas for this projects.
 		/* doc
 		 * You can also create a function object on the fly as follows:
 		 */
-		enumerate(new func() { void printIt(int i, String s){ print('a', i,s); } }, list);
+		enumerate(new f() { void printIt(int i, String s){ print('a', i,s); } }, list);
 		
 		/* doc
 		 * If you wanted to be even more terse.

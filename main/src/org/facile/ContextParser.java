@@ -202,10 +202,10 @@ public class ContextParser {
 		return currentCtx().$$;
 	}
 	
-	public static List<String> args() {
+	public static List<String> cmdLine() {
 		return currentCtx().args();
 	}
-	public static Map<String, ?> argMap() {
+	public static Map<String, ?> args() {
 		return currentCtx().argMap();
 	}
 

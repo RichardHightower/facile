@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -50,11 +51,13 @@ public class Facile {
 	public static final Class<Float> flt = Float.class;
 	public static final Class<Double> dbl = Double.class;
 	public static final Class<Date> date = Date.class;
+	public static final Class<String[]> stringA = String[].class;
+	public static final Class<File> fileT = File.class;
 	public static final boolean debug;
 	public static final PrintStream OUT = System.out;
 	public static final PrintStream ERR = System.err;
 
-	Class<Facile> easy = Facile.class;
+	static Class<Facile> easy = Facile.class;
 
 	static {
 		debug = sbprop(pkey(Facile.class, "debug"));
@@ -84,6 +87,8 @@ public class Facile {
 	public static File file (String file) {
 		return IO.file(file);
 	}
+	public static Func<File> file = fn(fileT, easy, "file");
+	
 	public static File file (File f, String file) {
 		return IO.file(f, file);
 	}
@@ -124,21 +129,14 @@ public class Facile {
 		return Boolean.getBoolean(key);
 	}
 
+	public static void print(String... items) {
+		print((Object[])items);
+	}
 	public static void print(Object... items) {
-		StringBuilder builder = new StringBuilder(256);
-		for (Object item : items) {
-			builder.append(item);
-			builder.append(' ');
-		}
-		System.out.println(builder);
+		System.out.println(sprint(items));
 	}
 	public static void fprint(Logger log, Object... items) {
-		StringBuilder builder = new StringBuilder(256);
-		for (Object item : items) {
-			builder.append(item);
-			builder.append(' ');
-		}
-		log.info(builder.toString());
+		log.info(sprint(items));
 	}
 
 	public static class PrintEnumerate implements Enumerate<Object> {
@@ -155,7 +153,11 @@ public class Facile {
 	public static String sprint(Object... items) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object item : items) {
-			builder.append(item);
+			if ( item!=null && isArray(item)) {
+				builder.append(ls((Object[])item));
+			} else {
+				builder.append(item);				
+			}
 			builder.append(' ');
 		}
 		return builder.toString();
@@ -942,15 +944,15 @@ public class Facile {
 	//
 	// Functional
 	//
-	public static interface Function<T> {
+	public static interface Func<T> {
 		T execute(Object... params);
 	}
 
-	private static class FunctionImpl<T> implements Function<T> {
+	private static class FuncImpl<T> implements Func<T> {
 		Method method;
 		Object that;
 
-		FunctionImpl(Class<T> clazz, Method method, Object that) {
+		FuncImpl(Class<T> clazz, Method method, Object that) {
 			this.method = method;
 			this.that = that;
 		}
@@ -970,7 +972,7 @@ public class Facile {
 
 	}
 
-	public static <T> Function<T> f(Class<T> returnType, Object that) {
+	public static <T> Func<T> f(Class<T> returnType, Object that) {
 		try {
 			return fn(returnType, that, "f");
 		} catch (Exception e) {
@@ -978,7 +980,7 @@ public class Facile {
 		}
 	}
 
-	public static Function<?> f(Object that) {
+	public static Func<?> f(Object that) {
 		try {
 			return fn(that, "f");
 		} catch (Exception e) {
@@ -986,48 +988,95 @@ public class Facile {
 		}
 	}
 
-	public static Function<?> fn(Object that, Object name) {
+	public static Func<?> fn(Object that, Object name) {
 		return fn(Object.class, that, name);
 	}
+	
+	public static <T> Func<T> fn(Class<T> returnType, Object that, Object name) {
+		return doFuncLookup(returnType, that, name, -1, (Class<?>[]) null);
+	}
 
-	public static <T> Function<T> fn(Class<T> returnType, Object that,
-			Object name) {
+	private static <T> Func<T> doFuncLookup(Class<T> returnType, Object that,
+			Object name, int numArgs, Class<?>...args) {
 		try {
 			Method[] methods = clazz(that).getDeclaredMethods();
+			if (methods.length == 1) {
+				methods[0].setAccessible(true);
+				if (Modifier.isStatic(methods[0].getModifiers())) {
+					return new FuncImpl<T>(returnType, methods[0], null);
+				} else {
+					return new FuncImpl<T>(returnType, methods[0], that);
+				}
+			}
+			//Prefer static methods
+			for (Method m : methods) {
+				if (m.getName().equals(name.toString()) && Modifier.isStatic(m.getModifiers())) {
+					if (numArgs==-1 && (args==null || args.length == 0)) {
+						return new FuncImpl<T>(returnType, m, null);
+					} else if (numArgs > -1 && m.getParameterTypes().length == numArgs) {
+						return new FuncImpl<T>(returnType, m, null);
+					} else {
+						Class<?>[] types = m.getParameterTypes();
+						boolean noMatch = false;
+						int index = 0;
+						for (Class<?> t : types) {
+							if (args[index] != t) {
+								noMatch = true;
+								break;
+							}
+							index++;
+						}
+						if (!noMatch) {
+							return new FuncImpl<T>(returnType, m, null);
+						}
+					}
+				}
+			}
+			
+
+			
+			
+			//Accept non static methods
+			
 			if (that instanceof Class) {
 				Constructor<?> constructor = ((Class<?>) that)
 						.getDeclaredConstructors()[0];
 				constructor.setAccessible(true);
 				that = constructor.newInstance((Object[]) null);
 			}
-			if (methods.length == 1) {
-				methods[0].setAccessible(true);
-				if (Modifier.isStatic(methods[0].getModifiers())) {
-					return new FunctionImpl<T>(returnType, methods[0], null);
-				} else {
-					return new FunctionImpl<T>(returnType, methods[0], that);
-				}
-			}
+
 			for (Method m : methods) {
-				if (m.getName().equals(name.toString())) {
-					m.setAccessible(true);
-					if (Modifier.isStatic(m.getModifiers())) {
-						return new FunctionImpl<T>(returnType, m, null);
+				if (m.getName().equals(name.toString()) && !Modifier.isStatic(m.getModifiers())) {
+					if (numArgs==-1 && (args==null || args.length == 0)) {
+						return new FuncImpl<T>(returnType, m, null);
+					} else if (numArgs > -1 && m.getParameterTypes().length == numArgs) {
+						return new FuncImpl<T>(returnType, m, null);
 					} else {
-						return new FunctionImpl<T>(returnType, m, that);
+						Class<?>[] types = m.getParameterTypes();
+						boolean noMatch = false;
+						int index = 0;
+						for (Class<?> t : types) {
+							if (args[index] != t) {
+								noMatch = true;
+								break;
+							}
+							index++;
+						}
+						if (!noMatch) {
+							return new FuncImpl<T>(returnType, m, null);
+						}
 					}
 				}
 			}
+
+			
+
 		} catch (Exception ex) {
 			log.log(Level.SEVERE, String.format(
 					"Unable to find function that=%s, name=%s", that, name), ex);
 		}
 		die("Unable to find function that=%s, name=%s", that, name);
 		return null;
-	}
-
-	public static interface func {
-
 	}
 
 	public static interface f {
@@ -1060,9 +1109,9 @@ public class Facile {
 	}
 
 	private static class dEnumerateInvoker implements dEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		dEnumerateInvoker (Function<?> f) {
+		dEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1071,9 +1120,9 @@ public class Facile {
 		}
 	}
 	private static class fEnumerateInvoker implements fEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		fEnumerateInvoker (Function<?> f) {
+		fEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1082,9 +1131,9 @@ public class Facile {
 		}
 	}
 	private static class lEnumerateInvoker implements lEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		lEnumerateInvoker (Function<?> f) {
+		lEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1093,9 +1142,9 @@ public class Facile {
 		}
 	}
 	private static class iEnumerateInvoker implements iEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		iEnumerateInvoker (Function<?> f) {
+		iEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1105,9 +1154,9 @@ public class Facile {
 	}
 
 	private static class sEnumerateInvoker implements sEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		sEnumerateInvoker (Function<?> f) {
+		sEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1116,9 +1165,9 @@ public class Facile {
 		}
 	}
 	private static class bEnumerateInvoker implements bEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		bEnumerateInvoker (Function<?> f) {
+		bEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1127,9 +1176,9 @@ public class Facile {
 		}
 	}
 	private static class cEnumerateInvoker implements cEnumerate {
-		Function<?> f;
+		Func<?> f;
 
-		cEnumerateInvoker (Function<?> f) {
+		cEnumerateInvoker (Func<?> f) {
 			this.f = f;
 		}
 		@Override
@@ -1338,7 +1387,7 @@ public class Facile {
 		enumerate(f(func), c);
 	}
 
-	public static void enumerate(Function<?> f, Collection<?> c) {
+	public static void enumerate(Func<?> f, Collection<?> c) {
 		int index = 0;
 		for (Object o : c) {
 			f.execute(index, o);
@@ -1346,7 +1395,7 @@ public class Facile {
 		}
 	}
 
-	public static void enumerate(Function<?> f, Object... c) {
+	public static void enumerate(Func<?> f, Object... c) {
 		int index = 0;
 		for (Object t : c) {
 			f.execute(index, t);
@@ -1387,9 +1436,9 @@ public class Facile {
 	}
 
 	private static class dFilterInvoker implements dFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private dFilterInvoker(FunctionImpl<?> f) {
+		private dFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1400,9 +1449,9 @@ public class Facile {
 	}
 
 	private static class fFilterInvoker implements fFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private fFilterInvoker(FunctionImpl<?> f) {
+		private fFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1413,9 +1462,9 @@ public class Facile {
 	}
 
 	private static class lFilterInvoker implements lFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private lFilterInvoker(FunctionImpl<?> f) {
+		private lFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1426,9 +1475,9 @@ public class Facile {
 	}
 
 	private static class iFilterInvoker implements iFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private iFilterInvoker(FunctionImpl<?> f) {
+		private iFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1439,9 +1488,9 @@ public class Facile {
 	}
 
 	private static class sFilterInvoker implements sFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private sFilterInvoker(FunctionImpl<?> f) {
+		private sFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1452,9 +1501,9 @@ public class Facile {
 	}
 
 	private static class bFilterInvoker implements bFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private bFilterInvoker(FunctionImpl<?> f) {
+		private bFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1465,9 +1514,9 @@ public class Facile {
 	}
 
 	private static class cFilterInvoker implements cFilter {
-		Function<?> f;
+		Func<?> f;
 
-		private cFilterInvoker(FunctionImpl<?> f) {
+		private cFilterInvoker(FuncImpl<?> f) {
 			this.f = f;
 		}
 
@@ -1477,32 +1526,32 @@ public class Facile {
 		}
 	}
 
-	public static double[] dfilter(Function<?> f, double... array) {
-		return dfilter(new dFilterInvoker((FunctionImpl<?>) f), array);
+	public static double[] dfilter(Func<?> f, double... array) {
+		return dfilter(new dFilterInvoker((FuncImpl<?>) f), array);
 	}
 
-	public static float[] ffilter(Function<?> f, float... array) {
-		return ffilter(new fFilterInvoker((FunctionImpl<?>) f), array);
+	public static float[] ffilter(Func<?> f, float... array) {
+		return ffilter(new fFilterInvoker((FuncImpl<?>) f), array);
 	}
 
-	public static long[] lfilter(Function<?> f, long... array) {
-		return lfilter(new lFilterInvoker((FunctionImpl<?>) f), array);
+	public static long[] lfilter(Func<?> f, long... array) {
+		return lfilter(new lFilterInvoker((FuncImpl<?>) f), array);
 	}
 
-	public static int[] ifilter(Function<?> f, int... array) {
-		return ifilter(new iFilterInvoker((FunctionImpl<?>) f), array);
+	public static int[] ifilter(Func<?> f, int... array) {
+		return ifilter(new iFilterInvoker((FuncImpl<?>) f), array);
 	}
 
-	public static short[] sfilter(Function<?> f, short... array) {
-		return sfilter(new sFilterInvoker((FunctionImpl<?>) f), array);
+	public static short[] sfilter(Func<?> f, short... array) {
+		return sfilter(new sFilterInvoker((FuncImpl<?>) f), array);
 	}
 
-	public static byte[] bfilter(Function<?> f, byte... array) {
-		return bfilter(new bFilterInvoker((FunctionImpl<?>) f), array);
+	public static byte[] bfilter(Func<?> f, byte... array) {
+		return bfilter(new bFilterInvoker((FuncImpl<?>) f), array);
 	}
 
-	public static char[] cfilter(Function<?> f, char... array) {
-		return cfilter(new cFilterInvoker((FunctionImpl<?>) f), array);
+	public static char[] cfilter(Func<?> f, char... array) {
+		return cfilter(new cFilterInvoker((FuncImpl<?>) f), array);
 	}
 
 	public static double[] dfilter(Object func, String name, double... array) {
@@ -1705,11 +1754,11 @@ public class Facile {
 
 	}
 
-	public static Collection<?> filter(Function<?> f, Collection<?> c) {
+	public static Collection<?> filter(Func<?> f, Collection<?> c) {
 		return gfilter(f, c);
 	}
 
-	public static Collection<?> filter(Function<?> f, Object[] c) {
+	public static Collection<?> filter(Func<?> f, Object[] c) {
 		return gfilter(f, c);
 	}
 
@@ -1731,7 +1780,7 @@ public class Facile {
 		return doGfilter(fn(f, name), list(in));
 	}
 
-	private static <T> Collection<T> doGfilter(Function<?> f, List<T> in) {
+	private static <T> Collection<T> doGfilter(Func<?> f, List<T> in) {
 		ListIterator<T> listIterator = in.listIterator();
 		while (listIterator.hasNext()) {
 			Boolean b = (Boolean) f.execute(listIterator.next());
@@ -1767,11 +1816,11 @@ public class Facile {
 		return doGfilter(fn(f, name), list(in));
 	}
 
-	public static <T> Collection<T> gfilter(Function<?> f, T[] in) {
+	public static <T> Collection<T> gfilter(Func<T> f, T[] in) {
 		return doGfilter(f, list(in));
 	}
 
-	public static <T> Collection<T> gfilter(Function<?> f, Collection<T> in) {
+	public static <T> Collection<T> gfilter(Func<?> f, Collection<T> in) {
 		return doGfilter(f, list(in));
 	}
 
@@ -1787,11 +1836,11 @@ public class Facile {
 		TO convert(FROM from);
 	}
 
-	public static List<?> map(Function<?> f, List<?>... cols) {
+	public static List<?> map(Func<?> f, List<?>... cols) {
 		return gmap(f, cols);
 	}
 
-	public static <OUT> List<OUT> gmap(Function<OUT> f, List<?>... cols) {
+	public static <OUT> List<OUT> gmap(Func<OUT> f, List<?>... cols) {
 
 		int max = Integer.MIN_VALUE;
 
@@ -1834,11 +1883,11 @@ public class Facile {
 		return toList;
 	}
 
-	public static List<?> map(Function<?> f, Collection<?> c) {
+	public static List<?> map(Func<?> f, Collection<?> c) {
 		return gmap(f, c);
 	}
 
-	public static List<?> map(Function<?> f, Object[] array) {
+	public static List<?> map(Func<?> f, Object[] array) {
 		return gmap(f, list(array));
 	}
 
@@ -1861,56 +1910,64 @@ public class Facile {
 	@SuppressWarnings("unchecked")
 	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
 			Object name, IN[] c) {
-		return gmap((Function<OUT>) fn(that, name), list(c));
+		return gmap((Func<OUT>) fn(that, name), list(c));
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
 			IN[] c) {
-		return gmap((Function<OUT>) f(that), list(c));
+		return gmap((Func<OUT>) f(that), list(c));
 	}
 
-	public static <IN, OUT> List<OUT> gmap(Function<OUT> f, IN[] c) {
+	public static <IN, OUT> List<OUT> gmap(Func<OUT> f, IN[] c) {
 		return gmap(f, c);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
 			Object name, Collection<IN> c) {
-		return gmap((Function<OUT>) fn(that, name), c);
+		return gmap((Func<OUT>) fn(that, name), c);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <IN, OUT> List<OUT> gmap(Class<OUT> returnType, Object that,
 			Collection<IN> c) {
-		return gmap((Function<OUT>) f(that), c);
+		return gmap((Func<OUT>) f(that), c);
 	}
 
-	public static <IN, OUT> List<OUT> gmap(Function<OUT> f, Collection<IN> c) {
+	public static <IN, OUT> List<OUT> gmap(Func<OUT> f, Collection<IN> c) {
 		ArrayList<OUT> mapList = new ArrayList<OUT>(c.size());
 		for (Object o : c) {
 			mapList.add(f.execute(o));
 		}
 		return mapList;
 	}
+	@SuppressWarnings("unchecked")
+	public static <OUT> List<OUT> gmapHomo(Func<?> f, Collection<OUT> c) {
+		ArrayList<OUT> mapList = new ArrayList<OUT>(c.size());
+		for (Object o : c) {
+			mapList.add((OUT)f.execute(o));
+		}
+		return mapList;
+	}
 
 	@SuppressWarnings("rawtypes")
-	public static Object reduce(Function f, Collection<?> c) {
+	public static Object reduce(Func f, Collection<?> c) {
 		return greduce(f, c);
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static Object reduce(Function f, Object[] array) {
+	public static Object reduce(Func f, Object[] array) {
 		return greduce(f, list(array));
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T greduce(Function<?> f, T array) {
+	public static <T> T greduce(Func<?> f, T array) {
 		return greduce(f, list(array));
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T greduce(Function<?> f, Collection<T> c) {
+	public static <T> T greduce(Func<?> f, Collection<T> c) {
 		T accumulo = null;
 		int index = 0;
 		for (T o : c) {
@@ -1953,6 +2010,9 @@ public class Facile {
 		return builder.toString();
 	}
 
+	public static String join(String... args) {
+		return join((Object[])args);
+	}
 	public static String join(Object... args) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object arg : args) {
@@ -2175,7 +2235,7 @@ public class Facile {
 		if (index < 0) {
 			index = 0;
 		}
-		if (index > length) {
+		if (index >= length) {
 			index = length;
 		}
 
@@ -2199,6 +2259,12 @@ public class Facile {
 		}
 
 	}
+	public static void expect(boolean test) {
+		if (!test) {
+			throw new AssertionException(sprintf(
+					"expected condition false"));
+		}
+	}
 
 	public static <T> void expect(Appendable out, T ex, T v) {
 		if (ex == null && v == null) {
@@ -2215,6 +2281,7 @@ public class Facile {
 
 	}
 
+	
 	public static <T> void expect(String msg, T ex, T v) {
 		if (ex == null && v == null) {
 			return;
@@ -2275,24 +2342,25 @@ public class Facile {
 		return builder.toString().toCharArray();
 	}
 
+	public static String[] split(String str) {
+		return split(str, " \n\t\r");
+	}
+	public static Func<String[]> split = fn(stringA, easy, "split");
+	
 	public static String[] split(String str, String splitBy) {
 		char[] array = str.toCharArray();
 		char[] split = splitBy.toCharArray();
 		String[] strings = split(array,split);
 		return strings;
 	}
-	
 	public static String[] split(String str, char c) {
 		char[] array = str.toCharArray();
 		String[] strings = split(array,c);
 		return strings;
 	}
-
-
 	public static String repr(char c) {
 		return "'" + c + "'";
 	}
-
 	public static String[] toLines(final char[] buffer) {
 		List<String> list = new ArrayList<String>(100);
 		StringBuilder builder = new StringBuilder(256);
@@ -2343,27 +2411,47 @@ public class Facile {
 				builder.append(c);
 			}
 		}
+		
+		if (builder.length() > 0) {
+			str = builder.toString();
+			list.add(str);
+		}
 		return list.toArray(new String[list.size()]);
 	}
 
+	public static String trim (String str) {
+		return str.trim();
+	}
+	public static Func<String> trim = fn(string, easy, "trim");
+	
 	public static String[] split(final char[] buffer, final char[] split) {
 		List<String> list = new ArrayList<String>(100);
 		StringBuilder builder = new StringBuilder(256);
 		String str = null;
+		char c=0;
 		for (int index = 0; index < buffer.length; index++) {
-			char c = buffer[index];
+			c = buffer[index];
 			if (isIn(c,split)) {
 				str = builder.toString();
 				builder.setLength(0);
 				list.add(str);
-				while(isIn(c, split) && index < buffer.length) {
-					index++;
-				}
 				continue;
 			} else {
 				builder.append(c);
 			}
 		}
+		str = builder.toString();
+		builder.setLength(0);
+		list.add(str);
+		
+		ListIterator<String> listIterator = list.listIterator();
+		while(listIterator.hasNext()){
+			String next = listIterator.next();
+			if (next.trim().isEmpty()){
+				listIterator.remove();
+			} 
+		}
+		list = gmap(trim, list); //This just for demo remove for actual string trimming for speed.
 		return list.toArray(new String[list.size()]);
 	}
 
@@ -2383,6 +2471,18 @@ public class Facile {
 
 	public static String str(char... chars) {
 		return string(chars);
+	}
+
+	public static char[] chars(Object obj) {
+		if (obj instanceof String) {
+			return chars((String)obj);
+		} else if (obj instanceof StringBuilder) {
+			return chars((StringBuilder)obj);
+		} else if (obj instanceof CharSequence){
+			return chars((CharSequence)obj);
+		} else {
+			return chars(obj.toString());
+		}
 	}
 
 	public static char[] chars(String str) {
@@ -2443,6 +2543,23 @@ public class Facile {
 	public static String string(Object obj) {
 		return obj.toString();
 	}
+
+	public static <T> boolean isIn(T t1, Collection<T> collection) {
+		if (t1 == null) {
+			return false;
+		}
+		for (T t2 : collection) {
+			if (t1.equals(t2)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public static <T> boolean isIn(T t1, Set <T> set) {
+		return set.contains(t1);
+	}
+
 
 	public static boolean isIn(char c, char... array) {
 		for (int index = 0; index < array.length; index++) {
@@ -2646,11 +2763,19 @@ public class Facile {
 		return cs.length();
 	}
 	public static int len(Object obj) {
-		if (obj.getClass().isArray()) {
+		if (isArray(obj)) {
 			return Array.getLength(obj);
+		} else if (obj instanceof CharSequence) {
+			return ((CharSequence)obj).length();
+		}else if (obj instanceof Collection) {
+			return ((Collection<?>)obj).size();
 		} else {
-			throw new AssertionException("Not an array");
+			throw new AssertionException("Not an array like object");
 		}
+	}
+
+	private static boolean isArray(Object obj) {
+		return obj.getClass().isArray();
 	}
 	
 	public static List<File> filesWithExtension(File dir, String extension) {
@@ -2696,32 +2821,188 @@ public class Facile {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> T get(Class<T> clz, Map<String, ?> map, String key) {
-		return (T) map.get(key);
+	public static <T> T coerce(Class<T> clz, Object value) {
+		if (clz == integer) {
+			Integer i = toInt(value);
+			return (T) i;
+		} else {//TODO toFloat, toDouble, toList, toArray
+			return (T) value;
+		}
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static <T> T get(Class<T> clz, Map map, Object key) {
+		 Object value =  map.get(key.toString());
+		 if (value.getClass() != clz) {
+			 T t = coerce(clz, value);
+			 map.put(key.toString(), (Object)t);
+			 return t;
+		 } else {
+			 return (T) value;
+		 }
 	}
 
 	public static Map<String, ?> cmdToMap(String[] args) {
 		return cmdToMap("--", args);
 	}
-	@SuppressWarnings("unused")
-	public static Map<String, ?> cmdToMap(String delim,
+	
+	public static Map<String, ?> cmdToMap(final String delim,
 			String[] args) {
 		
 		final List<String> largs = ls(args);
 		final Map<String, Object> mp = mp(string, object);
 		mp.put("all", largs);
-		func f = new func () {
-			void f(int index, String arg) {
-				if (arg.startsWith("--")) {
-					mp.put(arg, idx(largs,index+1));
-				}
-			}
-		};
+		List<String> actions = ls(string);
+		mp.put("actions", actions);
 		
-		enumerate(f, args);
+		for (int index=0; index < args.length; index++) {
+			String arg = args[index];
+			if (arg.startsWith(delim)) {
+					arg = trimStart(arg, delim);
+					if (index!=args.length-1) {
+						String nextArg = args[index+1];
+						if (nextArg.startsWith(delim)) {
+							add(actions, arg);
+						} else {
+							mp.put(arg, nextArg);							
+						}
+					} else {
+						add(actions, arg);
+					}
+			}
+		}		
 		return mp;
 
 	}
+	
+	private static String trimStart(String arg, String delim) {
+		if (arg.startsWith(delim)) {
+			return arg.substring(delim.length(), arg.length());
+		}else {
+			return arg;
+		}
+	}
 
 
+	public static Appendable buf () {
+		return new StringBuilder();
+	}
+	public static Appendable buf (int capacity) {
+		return new StringBuilder(capacity);
+	}
+	
+	public static String upper (String str) {
+		return str.toUpperCase();
+	}
+	public Func<String> upper = fn(string, easy, "upper");
+	
+	public static String lower (String str) {
+		return str.toUpperCase();
+	}
+	public Func<String> lower = fn(string, easy, "lower");
+	
+	
+	public static void add (Appendable buf, CharSequence... cs) {
+			try {
+				for (CharSequence c : cs) {
+					buf.append(c);
+				}
+			} catch (IOException e) {
+				handle(e);
+			}
+	}
+	public static void add (Appendable buf, char c) {
+		try {
+			buf.append(c);
+		} catch (IOException e) {
+			handle(e);
+		}
+	}
+	public static <T> void add (List<T> list, T o) {
+		list.add(o);
+	}
+
+	
+	public static boolean not(boolean test) {
+		return !test;
+	}
+
+	public static boolean and(boolean... tests) {
+		for (boolean test : tests) {
+			if (!test) {
+				return test;
+			}
+		}
+		return true;
+	}
+
+	public static boolean or(boolean... tests) {
+		for (boolean test : tests) {
+			if (test) {
+				return test;
+			}
+		}
+		return false;
+	}
+
+	
+	//TODO look for a toInt method static and regular method.
+	public static Func<Integer> toInt = fn(integer, easy, "toInt");
+	public static int toInt(Object obj) {
+		try {
+		if (obj instanceof Number) {
+			return ((Number) obj).intValue();
+		} else if (obj instanceof CharSequence) {
+			try {
+				return Integer.parseInt(((CharSequence)obj).toString());
+			}catch (Exception ex) {
+				char[] chars = chars(obj);
+				Appendable buf = buf(chars.length);
+				boolean found = false;
+				for (char c : chars) {
+					if (Character.isDigit(c) && !found){
+						found = true;
+						add(buf, c);
+					} else if (Character.isDigit(c) && found) {
+						add(buf, c);
+					} else if (!Character.isDigit(c) && found) {
+					}
+				}
+				try {
+					if (len(buf) > 0) {
+						return Integer.parseInt(str(buf));					
+					}
+				} catch (Exception ex2) {
+					//noop
+				}
+				warning(log, "unable to convert to int");
+				return obj.hashCode();
+			}
+		} else {
+			String str = obj.toString();
+			return toInt(str);
+		}
+		}catch (Exception ex) {
+			warning(log, "unable to convert to int and there was an exception %s",
+					ex.getMessage());
+			return obj.hashCode();
+		}
+	}
+
+	static boolean isStaticField(Field field) {
+		 return Modifier.isStatic(field.getModifiers());
+	}
+	static Func<Field> isStaticField = fn(Field.class, easy, "isStaticField");
+	
+	
+	
+	public static void copyArgs(Class<?> clz, Map<String, ?> args) {
+		
+		Collection<Field> fields = gfilter(isStaticField, clz.getDeclaredFields());
+		
+		for (Field field : fields) {
+			field.setAccessible(true);
+		}
+		
+	}
 }
