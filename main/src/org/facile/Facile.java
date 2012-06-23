@@ -2106,6 +2106,15 @@ public class Facile {
 
 	}
 
+	public static void expect(double d1, double d2, double value) {
+		if (value>d1 && value < d2) {
+			
+		} else {
+			throw new AssertionException(sprintf(
+					"expected was to be between %d and %d but was %d", d1, d2, value));
+			
+		}
+	}
 	public static <T> void expect(T ex, T v) {
 		if (ex == null && v == null) {
 			return;
@@ -2600,7 +2609,9 @@ public class Facile {
 	public static int len(Object[] obj) {
 		return obj.length;
 	}
-	
+	public static int len (Map<?, ?> map) {
+		return map.size();
+	}
 	public static int len(double[] v) {
 		return v.length;
 	}
@@ -2824,10 +2835,6 @@ public class Facile {
 		return Reflection.getProp(object, key);
 	}
 	
-	public static int len (Map<?, ?> map) {
-		return map.size();
-	}
-
 
 	public static Object idx(Object object, int index) {
 		return Reflection.idx(object, index);
@@ -2876,6 +2883,36 @@ public class Facile {
 		}
 	}
 
+	//BROKEN
+	public static double toDouble(Object obj) {
+		try {
+		if (obj instanceof Double) {
+			return (Double) obj;
+		} else if (obj instanceof Number) {
+			return ((Number) obj).doubleValue();			
+		} else if (obj instanceof CharSequence) {
+			try {
+				return Double.parseDouble(((CharSequence)obj).toString());
+			}catch (Exception ex) {
+				String svalue = str(obj);
+				Matcher re = Regex.re("[-+]?[0-9]+\\.?[0-9]+([eE][-+]?[0-9]+)?", svalue);
+				if (re.find()) {
+					svalue = re.group(0);
+					return Double.parseDouble(svalue);
+				}
+				warning(log, "unable to convert to double after regex");
+				return Double.NaN;
+			}
+		} else {
+			String str = obj.toString();
+			return toInt(str);
+		}
+		}catch (Exception ex) {
+			warning(log, "unable to convert to int and there was an exception %s",
+					ex.getMessage());
+			return Double.NaN;
+		}
+	}
 	
 	
 	

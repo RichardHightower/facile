@@ -61,11 +61,32 @@ public class ArgumentParsingAndTypesTest {
 		
 		MyClass2 bar = new MyClass2();
 		i = toInt(bar);
-		print(i);
 
 
 	}
-	
+
+	@Test
+	public void testTypeConversionDobule() {
+		String s = "abcdefg123.0ffffff";
+		double i = 0.0;
+		
+		MyClass foo = new MyClass();
+		i = toDouble(foo);
+		expect(123.0, i);
+		
+		Float d = Float.valueOf("123.2");
+		i = toDouble(d);
+		expect(123.1, 123.2, i);
+		
+		MyClass2 bar = new MyClass2();
+		i = toDouble(bar);
+		print(i);
+
+		i = toDouble(s);
+		
+		expect(123.0, i);
+	}
+
 	@Test
 	public void processArguments() {
 		
