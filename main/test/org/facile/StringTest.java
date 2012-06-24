@@ -32,5 +32,15 @@ public class StringTest {
 		
 		assertEquals("[which, httperf]",str(ls(split("which httperf"))));
 		
+		print (join("abc", array("String", "String2")));
+		print (join(array("String2", "String3"), "abc"));
+		print (join(list("String4", "String5"), "abc"));
+		print (join('c', list("String4", "String5")));
+		print (join('c', "String", "String2"));
+		print (join(array("String2", "String3"), 'c'));
+		print (join(list("String4", "String5"), 'c'));
+		print (join('c', list("String4", "String5")));
+
+		
 	}
 }

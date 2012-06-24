@@ -1242,7 +1242,7 @@ public class Facile {
 		return join("\n", (Object[]) lines);
 	}
 
-	public static String join(String delim, Object... args) {
+	public static String join(String delim, Object[] args) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object arg : args) {
 			builder.append(arg.toString());
@@ -1264,6 +1264,25 @@ public class Facile {
 		return join((Object[])args);
 	}
 	public static String join(Object... args) {
+		
+		if (args.length==2) {
+			Object arg1 = args[0];
+			Object arg2 = args[1];
+			
+			if (arg2.getClass()==Character.class) {
+				if (isArray(arg1)) {
+					return join((Character)arg2, (Object[])arg1);
+				} else if (arg1 instanceof Collection) {
+					return join((Character)arg2, (Collection<?>)arg1);
+				}
+			} else if (arg2.getClass()==String.class) {
+				if (isArray(arg1)) {
+					return join((String)arg2, (Object[])arg1);
+				} else if (arg1 instanceof Collection) {
+					return join((String)arg2, (Collection<?>)arg1);
+				}				
+			}
+		}
 		StringBuilder builder = new StringBuilder(256);
 		for (Object arg : args) {
 			builder.append(arg.toString());
@@ -1280,6 +1299,14 @@ public class Facile {
 	}
 
 	public static String join(char delim, Collection<?> args) {
+		StringBuilder builder = new StringBuilder(256);
+		for (Object arg : args) {
+			builder.append(arg.toString());
+			builder.append(delim);
+		}
+		return builder.toString();
+	}
+	public static String join(String delim, Collection<?> args) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object arg : args) {
 			builder.append(arg.toString());
