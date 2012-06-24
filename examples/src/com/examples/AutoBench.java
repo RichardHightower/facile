@@ -3,10 +3,11 @@ package com.examples;
 import static org.facile.ContextParser.*;
 import static org.facile.Facile.*;
 
+import java.io.File;
 import java.util.List;
 
 import org.facile.ProcessIO.ProcessOut;
-
+import  org.facile.Sys;
 
 
 public class AutoBench {
@@ -44,14 +45,24 @@ public class AutoBench {
 	public static void runIt() {
 		ProcessOut out;
 		
-		List<String> args = cmdLine();
-		args();
+		List<String> args = cmdLine();		
+		List<File> path = Sys.path();
 		
-		print (args, mul(50,"*"), mul(3,"\n"));
+		
+		if (Sys.os().startsWith("Mac OS X")) {
+			if (!isIn(file("/usr/bin"), path)) {
+				path.add(file("/usr/bin"));
+			}
+			if (!isIn(file("/usr/local/bin/"), path)) {
+				path.add(file("/usr/local/bin/"));
+			}
+		}
+		
+		
 		args.add(0, "/usr/local/bin/httperf");
-		print(args);
-		out = run(array(args));
 		
+		out = run (0, path, "which httperf");
+
 		print(lines(
 				"COMMAND LINE",
 				out.commandLine,
@@ -62,10 +73,26 @@ public class AutoBench {
 				"STD OUT",
 				out.stdout
 				));
+
+		
+		//		out = run(0, path, array(args));
+		
+//		print(lines(
+//				"COMMAND LINE",
+//				out.commandLine,
+//				"EXIT CODE",
+//				""+out.exit,
+//				"STD ERROR",
+//				out.stderr,
+//				"STD OUT",
+//				out.stdout
+//				));
 		
 	}
 	
 	public static void main (String [] args) {
+	
+
 		
 		context(args, new Runnable() {
 			@Override

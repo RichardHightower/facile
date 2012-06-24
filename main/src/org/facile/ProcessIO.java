@@ -1,5 +1,6 @@
 package org.facile;
 
+import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -30,18 +31,25 @@ public class ProcessIO {
 	}
 
 	public static int exec(String... args) {
-		ProcessRunner runner = new ProcessRunner(null, 0, args);
+		ProcessRunner runner = new ProcessRunner(null, 0, null, args);
 		return runner.exec();
 	}
 
 	public static int exec(int timeout, String... args) {
-		ProcessRunner runner = new ProcessRunner(null, timeout, args);
+		ProcessRunner runner = new ProcessRunner(null, timeout, null, args);
 		return runner.exec();
 	}
 
+
 	public static ProcessOut run(int timeout, String... args) {
+		return run(timeout, null, args);
+	}
+
+	public static ProcessOut run(int timeout, List<File> path, String... args) {
+		
+
 		ProcessOut out = new ProcessOut();
-		ProcessRunner runner = new ProcessRunner(null, timeout, args);
+		ProcessRunner runner = new ProcessRunner(null, timeout, path, args);
 		out.exit = runner.exec();
 		out.stdout = runner.stdOut();
 		out.stderr = runner.stdErr();
@@ -76,20 +84,55 @@ public class ProcessIO {
 	public static class ProcessRunner {
 		List<String> commandLine;
 		String password;
+		List<File> path;
+		
 		ProcessIOThread fromProcessOutput;
 		ProcessIOThread fromProcessError;
 		int seconds = 0;
 
-		public ProcessRunner(String password, int seconds, String... cmdLine) {
+
+		public ProcessRunner(String password, int seconds, List<File> path, String... cmdLine) {
+			
+			
+			if (cmdLine.length==1) {
+				cmdLine = split(cmdLine[0]);
+			}
+
+			
 			this.commandLine = list(cmdLine);
 			this.password = password;
 			this.seconds = seconds;
+			this.path = path;
+			
+			if (this.path == null) {
+				this.path = Sys.path();
+			}
 		}
-
+		
 		public int exec() throws ProcessException {
 			int exit = -666;
 
+			String cmd = commandLine.get(0);
+			File f = file(cmd);
+			if (!f.exists()) {
+				for (File dir : path) {
+					File fcmd = file(dir, cmd);
+					if (fcmd.exists()) {
+						cmd = fcmd.getAbsolutePath();
+						break;
+					}
+				}
+			}
+			
+
+			
+			commandLine.set(0, cmd);
+			
 			ProcessBuilder pb = new ProcessBuilder(commandLine);
+			
+			String spath = join(File.pathSeparatorChar, path);
+			pb.environment().put("PATH", spath);
+			
 			try {
 				final Process process = pb.start();
 

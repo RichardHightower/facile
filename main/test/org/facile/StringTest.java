@@ -28,7 +28,9 @@ public class StringTest {
 			}
 			index++;
 		}
-		print(str(buf));
+		assertEquals("fooBar", str(buf));
+		
+		assertEquals("[which, httperf]",str(ls(split("which httperf"))));
 		
 	}
 }

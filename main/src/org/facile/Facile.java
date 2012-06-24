@@ -97,7 +97,7 @@ public class Facile {
 	public static File file (String file) {
 		return IO.file(file);
 	}
-	public static Func<File> file = fn(fileT, easy, "file");
+	public static Func<File> file = fn(fileT, easy, "file", 1);
 	
 	public static File file (File f, String file) {
 		return IO.file(f, file);
@@ -140,7 +140,7 @@ public class Facile {
 	}
 
 	public static void print(String... items) {
-		print((Object[])items);
+		print(ls(items));
 	}
 	public static void print(Object... items) {
 		System.out.println(sprint(items));
@@ -524,14 +524,41 @@ public class Facile {
 		}
 		return arrayList;
 	}
-
+//identityHashCode
+	
+	public static boolean isSame(Object left, Object right) {
+		if (left == null && right == null) {
+			return true;
+		}
+		if (left == null) {
+			return false;
+		}
+		if (right == null) {
+			return false;
+		}
+		return System.identityHashCode(left) == System.identityHashCode(right);
+		
+	}
+	public static boolean isEqual(Object left, Object right) {
+		if (left == null && right == null) {
+			return true;
+		}
+		if (left == null) {
+			return false;
+		}
+		if (right == null) {
+			return false;
+		}
+		return left.equals(right);
+	
+	}
 	public static boolean isEqual(List<?> left, List<?> right) {
 		if (left.size() != right.size()) {
 			return false;
 		}
 		int index = 0;
 		for (Object it : left) {
-			if (!right.get(index).equals(it)) {
+			if(!isEqual(it, right.get(index))){
 				return false;
 			}
 			index++;
@@ -1139,7 +1166,11 @@ public class Facile {
 	}
 
 	public static <IN, OUT> List<OUT> gmap(Func<OUT> f, IN[] c) {
-		return gmap(f, c);
+		ArrayList<OUT> mapList = new ArrayList<OUT>(c.length);
+		for (Object o : c) {
+			mapList.add(f.execute(o));
+		}
+		return mapList;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -2056,6 +2087,10 @@ public class Facile {
 	public static ProcessOut run(int timeout, String... args) {
 		return ProcessIO.run(timeout, args);
 		
+	}
+	
+	public static ProcessOut run(int timeout, List<File> path, String... args) {
+		return ProcessIO.run(timeout, path, args);
 	}
 	
 	public static int toInt(Object obj) {

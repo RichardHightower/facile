@@ -140,7 +140,7 @@ public class Reflection {
 						return new FuncImpl<T>(returnType, m, null);
 					} else if (numArgs > -1 && m.getParameterTypes().length == numArgs) {
 						return new FuncImpl<T>(returnType, m, null);
-					} else {
+					} else if (args!=null && args.length > 0){
 						Class<?>[] types = m.getParameterTypes();
 						boolean noMatch = false;
 						int index = 0;
