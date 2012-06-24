@@ -21,10 +21,10 @@ public class ContextParser {
 	
 
 
-	public static void context(String [] args, Runnable run) {
+	public static void context(Class<?> mainClass, String [] args, Runnable run) {
 		
 		try {
-			ctx(cmdToMap("--", args));
+			ctx(cmdToMap("--", args), mainClass);
 			run.run();
 
 		} finally {
@@ -44,13 +44,13 @@ public class ContextParser {
 
 	private static ThreadLocal<Ctx> ctx;
 
-	public static Ctx ctx(Map<String, ?> arguments) {
+	public static Ctx ctx(Map<String, ?> arguments, Class<?> mainClass) {
 		if (ctx == null) {
 			ctx = new ThreadLocal<Ctx>();
 		}
 		Ctx c = ctx.get();
 		if (c == null) {
-			c = new Ctx(arguments);
+			c = new Ctx(arguments, mainClass);
 			ctx.set(c);
 		} else {
 			Facile.warning(log, "Context was already present and should not be");
@@ -213,13 +213,14 @@ public class ContextParser {
 		
 		private Map<String, ?> arguments;
 
-		public Ctx(Map<String, ?> arguments) {
+		public Ctx(Map<String, ?> arguments, Class<?> mainClass) {
 			if (arguments==null) {
 				 Map<String, List<String>> mp = mp(string, slist);		
 				 mp.put("all",  ls(string));
 				 this.arguments = mp;
 			}else {
-				this.arguments = arguments;				
+				this.arguments = arguments;
+				copyArgs(mainClass, arguments);
 			}
 		}
 		public String $_;

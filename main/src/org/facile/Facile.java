@@ -45,11 +45,13 @@ public class Facile {
 	public static final Class<String> string = String.class;
 	public static final Class<List<String>> slist = null;
 	public static final Class<String[]> sarray = String[].class;
+	public static final Class<Boolean> bool = Boolean.class;
 	public static final Class<Integer> integer = Integer.class;
 	public static final Class<Float> flt = Float.class;
 	public static final Class<Long> lng = Long.class;
 	public static final Class<Double> dbl = Double.class;
 	public static final Class<?> pint = int.class;
+	public static final Class<?> pboolean = boolean.class;
 	public static final Class<Float> pfloat = float.class;
 	public static final Class<?> pdouble = double.class;
 	public static final Class<?> plong = long.class;
@@ -2070,7 +2072,7 @@ public class Facile {
 		return Reflection.arrayLength(obj);
 	}
 
-	private static boolean isArray(Object obj) {
+	public static boolean isArray(Object obj) {
 		return Reflection.isArray(obj);
 	}
 	
@@ -2161,6 +2163,7 @@ public class Facile {
 			String arg = args[index];
 			if (arg.startsWith(delim)) {
 					arg = trimStart(arg, delim);
+					arg = camelCase(arg);
 					if (index!=args.length-1) {
 						String nextArg = args[index+1];
 						if (nextArg.startsWith(delim)) {
@@ -2199,7 +2202,7 @@ public class Facile {
 	public Func<String> upper = fn(string, easy, "upper");
 	
 	public static String lower (String str) {
-		return str.toUpperCase();
+		return str.toLowerCase();
 	}
 	public Func<String> lower = fn(string, easy, "lower");
 	
@@ -2269,6 +2272,43 @@ public class Facile {
 	
 	public static void copyArgs(Class<?> clz, Map<String, ?> args) {
 		Reflection.copyArgs(clz, args);
+	}
+	
+	public static String camelCase(Object value) {
+		return camelCase(str(value));
+	}
+
+	public static String camelCase(Object value, Boolean upper) {
+		return camelCase(str(value), upper);
+	}
+	
+	public static String camelCase(String value) {
+		return camelCase(value, null);
+	}
+
+	public static String camelCase(String value, Boolean upper) {
+		String[] split = split(value, "_- ");
+		Appendable buf = buf();
+
+		int index = 0;
+		for (String s : split) {
+			if (index == 0) {
+				if (upper == null) {
+					add(buf, slc(s, 0, 1), lower(slc(s, 1)));
+				} else {
+					boolean up = upper;
+					if (up) {
+						add(buf, upper(slc(s, 0, 1)), lower(slc(s, 1)));
+					} else if (!up) {
+						add(buf, lower(slc(s, 0, 1)), lower(slc(s, 1)));
+					}
+				}
+			} else {
+				add(buf, upper(slc(s, 0, 1)), lower(slc(s, 1)));
+			}
+			index++;
+		}
+		return buf.toString();
 	}
 	
 }

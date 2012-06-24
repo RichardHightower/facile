@@ -392,8 +392,7 @@ public class IO {
 
 		private void init(Reader reader) {
 			this.reader = reader;
-			ctx = new Ctx(null);
-
+			ctx = new Ctx(null, null);
 		}
 
 		public void increaseBufferSize() {

@@ -29,7 +29,7 @@ public class ArgumentParsingAndTypesTest {
 //	//--num_conn $1
 //	static int numConn;
 //	//--num_call 10
-//	static int numCall;
+	static int numCall;
 //	//--low_rate $2
 //	static int lowRate;
 //	//--high_rate $3
@@ -119,7 +119,7 @@ public class ArgumentParsingAndTypesTest {
 		String uri = get(string, args, "uri1");
 		assertEquals("/file_$5.html", uri);
 		
-		int numCall = get(integer, args, "num_call");
+		int numCall = get(integer, args, "numCall");
 		assertEquals(10, numCall);
 		
 		
@@ -134,7 +134,7 @@ public class ArgumentParsingAndTypesTest {
 		//public static void copyArgs(Class<?> clz, Map<String, ?> args) {
 
 		sargs = "--uri1 /file_$5.html  --start   --host1 ch_resin --port1 8080 --uri2 /file_0k.html " +
-				" --num_call 10  --clients darth.foobar.com:4600,luke.foobar.com:4600 ";
+				" --num_call 10  --clients darth.foobar.com:4600,luke.foobar.com:4600 --dry-run true";
 
 		aargs = split(sargs);
 
@@ -146,6 +146,8 @@ public class ArgumentParsingAndTypesTest {
 		assertEquals ("clients", "darth.foobar.com:4600 luke.foobar.com:4600 ", sprint(clients));
 		assertEquals ("uri1", "/file_$5.html", uri1);
 		assertEquals ("port1", 8080, port1);
+		assertEquals ("numCall", 10, numCall);
+		
 		
 		
 	}

@@ -1,6 +1,8 @@
 package org.facile;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
@@ -53,6 +55,24 @@ public class Types {
 		}
 	}
 
+	public static boolean toBoolean(Object obj) {
+		
+		Set<String> trueSet = set("t", "true", "True", "y", "yes", "1", "aye", "ofcourse", "T", "TRUE", "ok");
+		if (obj instanceof String || obj instanceof CharSequence || obj.getClass() == char[].class) {
+			String str = str(obj);
+			if (str.length()==0) {
+				return false;
+			} else {
+				return isIn(str, trueSet);
+			}
+		} else if (obj instanceof Boolean) {
+			return ((Boolean)obj).booleanValue();
+		} else if (isArray(obj) || obj instanceof Collection) {
+			return len(obj) > 0;
+		} else {
+			return toBoolean(str(obj));
+		}
+	}
 	public static double toDouble(Object obj) {
 		try {
 			if (obj instanceof Double) {
@@ -95,6 +115,9 @@ public class Types {
 			return (T) i;
 		} else if (clz == sarray) {
 			return (T) toStringArray(value);
+		}  else if (clz == bool || clz == pboolean) {
+			Boolean b = toBoolean(value);
+			return (T) b;
 		} else {// TODO toFloat, toList, toArray
 			return (T) value;
 		}
