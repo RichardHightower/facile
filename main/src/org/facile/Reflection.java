@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.facile.Facile.Func;
-import org.facile.Facile.ReflectionException;
 import static org.facile.Facile.*;
 
 public class Reflection {
 
+	
 	static Class<Reflection> reflection = Reflection.class;
 
 	private static final Logger log = Facile.log(reflection);
@@ -23,6 +23,27 @@ public class Reflection {
 
 	static Func<Field> isStaticField = fn(Field.class, reflection, "isStaticField");
 
+	@SuppressWarnings("serial")
+	public static class ReflectionException extends RuntimeException {
+
+		public ReflectionException() {
+			super();
+		}
+
+		public ReflectionException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public ReflectionException(String message) {
+			super(message);
+		}
+
+		public ReflectionException(Throwable cause) {
+			super(cause);
+		}
+	}
+
+	
 	public static boolean isArray(Object obj) {
 		return obj.getClass().isArray();
 	}
@@ -209,9 +230,23 @@ public class Reflection {
 		
 		for (Field field : fields) {
 			field.setAccessible(true);
+			try {
+				Object value = args.get(field.getName());
+				if (value==null) {
+					continue;
+				}
+				field.set(null, Facile.coerce(field.getType(), value));
+			} catch (Exception e) {
+				handle(e);
+			}		
 		}
 		
 	}
+	
+	private static void handle(Exception ex) {
+		throw new ReflectionException(ex);
+	}
+
 
 	private static Class<?> clazz(Object that) {
 		if (that instanceof Class) {

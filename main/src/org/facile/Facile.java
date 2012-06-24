@@ -45,6 +45,7 @@ public class Facile {
 	public static final Class<Object> object = Object.class;
 	public static final Class<String> string = String.class;
 	public static final Class<List<String>> slist = null;
+	public static final Class<String[]> sarray = String[].class;
 	public static final Class<Integer> integer = Integer.class;
 	public static final Class<Float> flt = Float.class;
 	public static final Class<Long> lng = Long.class;
@@ -160,7 +161,13 @@ public class Facile {
 
 	public static PrintEnumerate printEnum = new PrintEnumerate();
 
+	public static String sprint(String... items) {
+		return sprint((Object [])items);
+	}
 	public static String sprint(Object... items) {
+		if (items == null) {
+			return "";
+		}
 		StringBuilder builder = new StringBuilder(256);
 		for (Object item : items) {
 			if ( item!=null && isArray(item)) {
@@ -392,25 +399,6 @@ public class Facile {
 		}
 	}
 
-	@SuppressWarnings("serial")
-	public static class ReflectionException extends RuntimeException {
-
-		public ReflectionException() {
-			super();
-		}
-
-		public ReflectionException(String message, Throwable cause) {
-			super(message, cause);
-		}
-
-		public ReflectionException(String message) {
-			super(message);
-		}
-
-		public ReflectionException(Throwable cause) {
-			super(cause);
-		}
-	}
 
 	public static void die(boolean condition, String message) {
 		if (condition) {
@@ -2307,7 +2295,7 @@ public class Facile {
 			if (c == split) {
 				str = builder.toString();
 				builder.setLength(0);
-				list.add(str);
+				list.add(str.trim());
 				continue;
 			} else {
 				builder.append(c);
@@ -2316,7 +2304,7 @@ public class Facile {
 		
 		if (builder.length() > 0) {
 			str = builder.toString();
-			list.add(str);
+			list.add(str.trim());
 		}
 		return list.toArray(new String[list.size()]);
 	}
@@ -2443,7 +2431,7 @@ public class Facile {
 	}
 
 	public static String string(Object obj) {
-		return obj.toString();
+		return Types.toString(obj);
 	}
 
 	public static <T> boolean isIn(T t1, Collection<T> collection) {
@@ -2728,14 +2716,16 @@ public class Facile {
 		
 	}
 	
-	@SuppressWarnings("unchecked")
+	public static int toInt(Object obj) {
+		return Types.toInt(obj);
+	}
+	
+	public static double toDouble(Object obj) {
+		return Types.toDouble(obj);
+	}
+
 	public static <T> T coerce(Class<T> clz, Object value) {
-		if (clz == integer) {
-			Integer i = toInt(value);
-			return (T) i;
-		} else {//TODO toFloat, toDouble, toList, toArray
-			return (T) value;
-		}
+		return Types.coerce(clz, value);
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -2870,79 +2860,6 @@ public class Facile {
 		return Reflection.idx(object, index);
 	}
 	
-	//TODO look for a toInt method static and regular method.
-	public static Func<Integer> toInt = fn(integer, easy, "toInt");
-	public static int toInt(Object obj) {
-		try {
-		if (obj instanceof Number) {
-			return ((Number) obj).intValue();
-		} else if (obj instanceof CharSequence) {
-			try {
-				return Integer.parseInt(((CharSequence)obj).toString());
-			}catch (Exception ex) {
-				char[] chars = chars(obj);
-				Appendable buf = buf(chars.length);
-				boolean found = false;
-				for (char c : chars) {
-					if (Character.isDigit(c) && !found){
-						found = true;
-						add(buf, c);
-					} else if (Character.isDigit(c) && found) {
-						add(buf, c);
-					} else if (!Character.isDigit(c) && found) {
-					}
-				}
-				try {
-					if (len(buf) > 0) {
-						return Integer.parseInt(str(buf));					
-					}
-				} catch (Exception ex2) {
-					//noop
-				}
-				warning(log, "unable to convert to int");
-				return obj.hashCode();
-			}
-		} else {
-			String str = obj.toString();
-			return toInt(str);
-		}
-		}catch (Exception ex) {
-			warning(log, "unable to convert to int and there was an exception %s",
-					ex.getMessage());
-			return obj.hashCode();
-		}
-	}
-
-	//BROKEN
-	public static double toDouble(Object obj) {
-		try {
-		if (obj instanceof Double) {
-			return (Double) obj;
-		} else if (obj instanceof Number) {
-			return ((Number) obj).doubleValue();			
-		} else if (obj instanceof CharSequence) {
-			try {
-				return Double.parseDouble(((CharSequence)obj).toString());
-			}catch (Exception ex) {
-				String svalue = str(obj);
-				Matcher re = Regex.re("[-+]?[0-9]+\\.?[0-9]+([eE][-+]?[0-9]+)?", svalue);
-				if (re.find()) {
-					svalue = re.group(0);
-					return Double.parseDouble(svalue);
-				}
-				warning(log, "unable to convert to double after regex");
-				return Double.NaN;
-			}
-		} else {
-			String str = obj.toString();
-			return toInt(str);
-		}
-		}catch (Exception ex) {
-			warning(log, "unable to convert to int and there was an exception %s",
-					ex.getMessage());
-			return Double.NaN;
-		}
-	}
 	
 	
 	
