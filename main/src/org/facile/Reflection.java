@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import org.facile.Facile.Func;
 import org.facile.Facile.ReflectionException;
+import static org.facile.Facile.*;
 
 public class Reflection {
 
@@ -121,10 +122,26 @@ public class Reflection {
 						Class<?>[] types = m.getParameterTypes();
 						boolean noMatch = false;
 						int index = 0;
-						for (Class<?> t : types) {
-							if (args[index] != t) {
-								noMatch = true;
-								break;
+						for (Class<?> argType : types) {
+							Class<?> matchType = args[index];
+							if (matchType != argType) {
+								
+								if (argType.isPrimitive()) {
+									if (argType == pint && matchType == integer) {
+										
+									} else if (argType == pfloat && matchType == flt) {
+										
+									} else if (argType == pdouble && matchType == dbl) {
+										
+									}  else if (argType == plong && matchType == lng) {
+										
+									} else {
+										noMatch = true;
+										break;
+									}
+								} else {
+									break;
+								}
 							}
 							index++;
 						}
