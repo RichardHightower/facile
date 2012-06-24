@@ -1,10 +1,12 @@
 package org.facile;
 import static org.facile.Facile.*;
-
+import static org.facile.Primitive.*;
 import java.util.Collection;
 
 
 import org.junit.Test;
+import static org.facile.Facile.*;
+
 @SuppressWarnings("unused")
 public class FilterTest {
 	

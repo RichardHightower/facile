@@ -70,6 +70,7 @@ public class Reflection {
 		Object that;
 
 		FuncImpl(Class<T> clazz, Method method, Object that) {
+			method.setAccessible(true);
 			this.method = method;
 			this.that = that;
 		}
@@ -82,7 +83,7 @@ public class Reflection {
 				ret = (T) method.invoke(that, params);
 			} catch (Exception ex) {
 				throw new ReflectionException("unable to execute function "
-						+ method.getName(), ex);
+						+ method.getName() + " of " + method, ex);
 			}
 			return ret;
 		}
@@ -183,6 +184,8 @@ public class Reflection {
 						.getDeclaredConstructors()[0];
 				constructor.setAccessible(true);
 				that = constructor.newInstance((Object[]) null);
+				
+				return doFuncLookup(returnType, that, name, numArgs, args);
 			}
 
 			for (Method m : methods) {
@@ -260,6 +263,11 @@ public class Reflection {
 		object = Array.get(object, index);
 		return object;
 	}
+	
+	public static void idx(Object object, int index, Object value) {
+		Array.set(object, index, value);
+	}
+
 
 	@SuppressWarnings("unchecked")
 	public static <T> T getProperty(Class<T> t, Object object, final String key) {

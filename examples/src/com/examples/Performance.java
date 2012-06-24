@@ -1,6 +1,8 @@
 package com.examples;
 
 import static org.facile.Facile.*;
+import static org.facile.Primitive.*;
+import org.facile.Primitive.*;
 
 @SuppressWarnings("unused")
 public class Performance {

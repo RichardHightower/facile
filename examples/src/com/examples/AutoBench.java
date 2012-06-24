@@ -48,7 +48,8 @@ public class AutoBench {
 		args();
 		
 		print (args, mul(50,"*"), mul(3,"\n"));
-		args.set(0, "httperf");
+		args.add(0, "/usr/local/bin/httperf");
+		print(args);
 		out = run(array(args));
 		
 		print(lines(

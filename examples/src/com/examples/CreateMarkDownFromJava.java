@@ -20,7 +20,7 @@ public class CreateMarkDownFromJava {
 		
 		f fileAsLines = new f() { 
 			void f (int index, Map<String, String> file) {
-				println ("file number %d  named %s has this many %d characters", index, file.get("name"), file.get("contents").length());
+				printf ("file number %d  named %s has this many %d characters\n", index, file.get("name"), file.get("contents").length());
 			}
 		};
 

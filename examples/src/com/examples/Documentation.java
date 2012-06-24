@@ -264,13 +264,13 @@ Python, Groovy, Perl and Ruby are a source of many ideas for this projects.
 	 * Or how about this.
 	 */
 
-	static class P { void p(int i, String s) {print('b', i, s); } }
+	static class P {  void p(int i, String s) {print('b', i, s); } }
 	//Ignore
 	private static void functionalProgramming2(StringBuilder out) {
 		//Ignore
 		List<String> list = list("tic", "tac", "toe");
 
-		enumerate(P.class, list);
+		enumerate(new P(), list);
 		
 		enumerate(printEnum, list);
 
