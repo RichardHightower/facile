@@ -5,8 +5,6 @@ import static org.facile.Facile.*;
 
 import java.io.File;
 import java.util.List;
-
-//import org.facile.ProcessIO.ProcessOut;
 import org.facile.ProcessIO.ProcessOut;
 import  org.facile.Sys;
 
@@ -54,10 +52,6 @@ public class AutoBench {
 			homeDir = cwf();
 			if (verbose) print ("Home directory was not passed setting to: ", homeDir);
 		}
-		
-		List<String> cmdLine = cmdLine();
-
-
 		
 		if (verbose) print ("Command line arguments", cmdLine());
 		
