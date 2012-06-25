@@ -1,5 +1,6 @@
 package org.facile;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -118,8 +119,22 @@ public class Types {
 		}  else if (clz == bool || clz == pboolean) {
 			Boolean b = toBoolean(value);
 			return (T) b;
-		} else {// TODO toFloat, toList, toArray
+		} else if (clz == fileT) {
+			return (T) toFile(value);
+		}
+		else {// TODO toFloat, toList, toArray
+	
 			return (T) value;
+		}
+	}
+
+	public static File toFile(Object value) {
+		if (value instanceof File) {
+			return (File)value;
+		} else if (value instanceof CharSequence){
+			return file(str(value));
+		} else {
+			return toFile(value.toString());
 		}
 	}
 

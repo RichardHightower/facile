@@ -9,6 +9,9 @@ examples/.settings/org.eclipse.jdt.core.prefs
 
 examples/bin
 
+examples/output/
+
+
 main/bin
 
 main/.settings/
@@ -35,3 +38,10 @@ doc.sh~
 perf.sh~
 
 classes.bak
+
+autobench.sh~
+
+
+output/
+
+run0k.sh~

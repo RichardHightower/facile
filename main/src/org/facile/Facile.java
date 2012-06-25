@@ -142,10 +142,10 @@ public class Facile {
 	}
 
 	public static void print(String... items) {
-		if (items.length > 1 || items.length == 0) {
-			print(ls(items));
-		} else {
+		if (items!=null && items.length==1) {
 			System.out.println(items[0]);
+		} else {
+			print ((Object[] )items);
 		}
 	}
 	public static void print(Object... items) {
