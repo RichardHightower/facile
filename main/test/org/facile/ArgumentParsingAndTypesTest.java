@@ -148,8 +148,6 @@ public class ArgumentParsingAndTypesTest {
 		assertEquals ("port1", 8080, port1);
 		assertEquals ("numCall", 10, numCall);
 		
-		
-		
 	}
 
 }

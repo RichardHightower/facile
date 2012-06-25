@@ -1,2 +1,1 @@
-./main/src/org/facile/ContextParser.java ./main/src/org/facile/Facile.java  ./main/src/org/facile/IO.java  ./main/src/org/facile/Parser.java  ./main/src/org/facile/ProcessIO.java  ./main/src/org/facile/Regex.java  ./main/src/org/facile/Templating.java 
-
+.//main/src/org/facile/ContextParser.java .//main/src/org/facile/Facile.java .//main/src/org/facile/IO.java .//main/src/org/facile/Math.java .//main/src/org/facile/Parser.java .//main/src/org/facile/Primitive.java .//main/src/org/facile/ProcessIO.java .//main/src/org/facile/Reflection.java .//main/src/org/facile/Regex.java .//main/src/org/facile/Sys.java .//main/src/org/facile/Templating.java .//main/src/org/facile/TodoAndExperiments.java .//main/src/org/facile/Types.java 

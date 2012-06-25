@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.List;
 
 //import org.facile.ProcessIO.ProcessOut;
+import org.facile.ProcessIO.ProcessOut;
 import  org.facile.Sys;
 
 
@@ -126,19 +127,31 @@ public class AutoBench {
 	"[--use-timer-cache]");
 
 		for (int rate=lowRate; rate <highRate; rate+=rateStep){
-			
+
+
+			String httperf1 = sprint("httperf", "--server", host1, "--uri", uri1, "--num-con", numConn,
+					"--num-call", numCall,"--timeout", timeout, "--rate", rate,
+					"--port", port1);
+			String httperf2 =	sprint("httperf", "--server", host2, "--uri", uri2, "--num-con", numConn,
+						"--num-call", numCall,"--timeout", timeout, "--rate", rate,
+						"--port", port2);
+
+
 			if (dryRun) {
 				print ("Dry run");
 				print ("SERVER 1", mul(50, "*"));
-				print("httperf", "--server", host1, "--uri", uri1, "--num-con", numConn,
-					"--num-call", numCall,"--timeout", timeout, "--rate", rate,
-					"--port", 8080);
+				print(httperf1);
 				print ("SERVER 2", mul(50, "*"));
-				print("httperf", "--server", host2, "--uri", uri2, "--num-con", numConn,
-						"--num-call", numCall,"--timeout", timeout, "--rate", rate,
-						"--port", 8080);
+				print(httperf2);
 			} else {
-				
+				print ("Running benchmark");
+				print ("SERVER 1", mul(50, "*"));
+				ProcessOut run1 = run(0, path, httperf1);
+				print(run1.stdout);
+				print ("SERVER 2", mul(50, "*"));
+				ProcessOut run2 = run(0, path, httperf2);				
+				print(run2.stdout);
+
 			}
 			
 		}

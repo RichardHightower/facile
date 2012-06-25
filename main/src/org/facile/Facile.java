@@ -142,7 +142,11 @@ public class Facile {
 	}
 
 	public static void print(String... items) {
-		print(ls(items));
+		if (items.length > 1 || items.length == 0) {
+			print(ls(items));
+		} else {
+			System.out.println(items[0]);
+		}
 	}
 	public static void print(Object... items) {
 		System.out.println(sprint(items));
@@ -2180,7 +2184,7 @@ public class Facile {
 
 	}
 	
-	private static String trimStart(String arg, String delim) {
+	public static String trimStart(String arg, String delim) {
 		if (arg.startsWith(delim)) {
 			return arg.substring(delim.length(), arg.length());
 		}else {
@@ -2311,4 +2315,8 @@ public class Facile {
 		return buf.toString();
 	}
 	
+	
+	public static void writeAll(File file, String output) {
+		IO.writeAll(file, output);
+	}
 }
