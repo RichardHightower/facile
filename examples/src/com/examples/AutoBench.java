@@ -117,7 +117,7 @@ public class AutoBench {
 	public static void runServer(int serverNum, String cmdLine, File outDir, int runNum) {
 		print ("SERVER", serverNum, ":", mul(50, "*"));
 		if (echoCommandLine || verbose) print("RUNNING:", cmdLine);
-		ProcessOut run = run(0, path, cmdLine);
+		ProcessOut run = run(0, path, verbose, cmdLine);
 		print ("EXIT CODE for SERVER ", serverNum, ":",  run.exit);
 		if (verbose) print(run.stdout);
 		
@@ -128,6 +128,7 @@ public class AutoBench {
 			fprint(System.err, "NOT ABLE TO RUN PROGRAM EXIT CODE : ", run.exit);
 			File errorFile = file(outDir, "run_" + runNum + "_err_" + run.exit);
 			writeAll(errorFile, lines(cmdLine, run.stderr));
+			rest(1000);
 		} 
 
 	}

@@ -2125,7 +2125,11 @@ public class Facile {
 	public static ProcessOut run(int timeout, List<File> path, String... args) {
 		return ProcessIO.run(timeout, path, args);
 	}
-	
+
+	public static ProcessOut run(int timeout, List<File> path, boolean verbose, String... args) {
+		return ProcessIO.run(timeout, path, verbose, args);
+	}
+
 	public static int toInt(Object obj) {
 		return Types.toInt(obj);
 	}

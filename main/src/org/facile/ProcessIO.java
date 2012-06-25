@@ -31,12 +31,12 @@ public class ProcessIO {
 	}
 
 	public static int exec(String... args) {
-		ProcessRunner runner = new ProcessRunner(null, 0, null, args);
+		ProcessRunner runner = new ProcessRunner(null, 0, null, false, args);
 		return runner.exec();
 	}
 
 	public static int exec(int timeout, String... args) {
-		ProcessRunner runner = new ProcessRunner(null, timeout, null, args);
+		ProcessRunner runner = new ProcessRunner(null, timeout, null, false, args);
 		return runner.exec();
 	}
 
@@ -46,10 +46,13 @@ public class ProcessIO {
 	}
 
 	public static ProcessOut run(int timeout, List<File> path, String... args) {
+		return run(timeout, path, false, args);
+	}
+	public static ProcessOut run(int timeout, List<File> path, boolean verbose, String... args) {
 		
 
 		ProcessOut out = new ProcessOut();
-		ProcessRunner runner = new ProcessRunner(null, timeout, path, args);
+		ProcessRunner runner = new ProcessRunner(null, timeout, path, verbose, args);
 		out.exit = runner.exec();
 		out.stdout = runner.stdOut();
 		out.stderr = runner.stdErr();
@@ -89,9 +92,10 @@ public class ProcessIO {
 		ProcessIOThread fromProcessOutput;
 		ProcessIOThread fromProcessError;
 		int seconds = 0;
+		boolean verbose;
 
 
-		public ProcessRunner(String password, int seconds, List<File> path, String... cmdLine) {
+		public ProcessRunner(String password, int seconds, List<File> path, boolean verbose, String... cmdLine) {
 			
 			
 			if (cmdLine.length==1) {
@@ -103,6 +107,7 @@ public class ProcessIO {
 			this.password = password;
 			this.seconds = seconds;
 			this.path = path;
+			this.verbose = verbose;
 			
 			if (this.path == null) {
 				this.path = Sys.path();
@@ -141,9 +146,9 @@ public class ProcessIO {
 				FileObject<String> stdOut = open(process.getInputStream());
 				FileObject<String> stdErr = open(process.getErrorStream());
 
-				fromProcessError = new ProcessIOThread(stdErr);
+				fromProcessError = new ProcessIOThread(stdErr, verbose);
 				fromProcessOutput = new ProcessIOThread(stdOut, toProcess,
-						password, false);
+						password, false, verbose);
 
 				fromProcessOutput.start();
 				fromProcessError.start();
@@ -213,17 +218,20 @@ public class ProcessIO {
 		String password;
 		FileObject<?> toProcess;
 		StringBuilder outputBuffer = new StringBuilder(256);
-		boolean sudo = false;
+		boolean sudo;
+		boolean verbose;
 
-		ProcessIOThread(FileObject<String> fromProcess) {
+		ProcessIOThread(FileObject<String> fromProcess, boolean verbose) {
 			this.fromProcess = fromProcess;
+			this.verbose = verbose;
 		}
 
 		ProcessIOThread(FileObject<String> fromProcess,
-				FileObject<?> toProcess, String password, boolean sudo) {
+				FileObject<?> toProcess, String password, boolean sudo, boolean verbose) {
 			this.sudo = sudo;
 			this.fromProcess = fromProcess;
 			this.toProcess = toProcess;
+			this.verbose = verbose;
 
 			// this.toProcess.autoFlush();
 			this.password = password;
@@ -239,6 +247,7 @@ public class ProcessIO {
 			try {
 				for (String line : fromProcess) {
 					fprintln(outputBuffer, line);
+					if (verbose) print(line);
 					if (this.isInterrupted()) {
 						break;
 					}
