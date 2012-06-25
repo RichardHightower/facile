@@ -44,6 +44,8 @@ public class AutoBench {
 	static boolean verbose;
 	static boolean echoCommandLine=true;
 	
+	static int processTimeout = 0;
+	
 	static List<File> path;
 
 	public static void runIt() {
@@ -117,7 +119,7 @@ public class AutoBench {
 	public static void runServer(int serverNum, String cmdLine, File outDir, int runNum) {
 		print ("SERVER", serverNum, ":", mul(50, "*"));
 		if (echoCommandLine || verbose) print("RUNNING:", cmdLine);
-		ProcessOut run = run(0, path, verbose, cmdLine);
+		ProcessOut run = run(processTimeout * 60, path, verbose, cmdLine);
 		print ("EXIT CODE for SERVER ", serverNum, ":",  run.exit);
 		if (verbose) print(run.stdout);
 		
