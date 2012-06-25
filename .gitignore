@@ -45,3 +45,7 @@ autobench.sh~
 output/
 
 run0k.sh~
+
+buildall.sh~
+
+compile.sh~

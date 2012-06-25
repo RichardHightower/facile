@@ -55,6 +55,10 @@ public class AutoBench {
 			if (verbose) print ("Home directory was not passed setting to: ", homeDir);
 		}
 		
+		List<String> cmdLine = cmdLine();
+
+
+		
 		if (verbose) print ("Command line arguments", cmdLine());
 		
 		File outputFolder = file (homeDir, "/output");
@@ -70,6 +74,21 @@ public class AutoBench {
 			}
 		}
 		
+		@SuppressWarnings("unchecked")
+		String runString1 = join("_", array("run1", "host", host1, "port", port1, "uri", uri1, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
+		@SuppressWarnings("unchecked")
+		String runString2 = join("_", array("run2", "host", host2, "port", port2, "uri", uri2, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
+		
+		runString1 = runString1.replace('.', '_').replace('/', '_').replace(' ', '_').replace(':', '_').replace(',', '_');
+		runString2 = runString2.replace('.', '_').replace('/', '_').replace(' ', '_').replace(':', '_').replace(',', '_');
+		
+		//Build an output file dir that uniquely defines this run
+		File out1Dir = file(outputFolder,runString1);
+		File out2Dir = file(outputFolder,runString2);
+		
+		out1Dir.mkdirs();
+		out2Dir.mkdirs();
+
 		
 		for (int rate=lowRate, index=0; rate <highRate; rate+=rateStep, index++){
 
@@ -81,11 +100,6 @@ public class AutoBench {
 						"--num-call", numCall,"--timeout", timeout, "--rate", rate,
 						"--port", port2);
 			
-			File out1Dir = file(outputFolder,"run1__" + join("_", split(httperf1, " \t-")));
-			File out2Dir = file(outputFolder,"run2__" + join("_", split(httperf2, " \t-")));
-			
-			out1Dir.mkdirs();
-			out2Dir.mkdirs();
 			
 			
 
@@ -112,11 +126,15 @@ public class AutoBench {
 		ProcessOut run = run(0, path, cmdLine);
 		print ("EXIT CODE for SERVER ", serverNum, ":",  run.exit);
 		if (verbose) print(run.stdout);
-		writeAll(file(outDir, "run"+runNum), lines(cmdLine, run.toString()));
+		
+		File outputFile = file(outDir, "run_" + runNum + "_out");		
+		writeAll(outputFile, lines(cmdLine, run.toString()));
 		
 		if (run.exit!=0) {
 			fprint(System.err, "NOT ABLE TO RUN PROGRAM EXIT CODE : ", run.exit);
-		}
+			File errorFile = file(outDir, "run_" + runNum + "_err_" + run.exit);
+			writeAll(errorFile, lines(cmdLine, run.stderr));
+		} 
 
 	}
 	
