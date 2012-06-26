@@ -7,6 +7,8 @@ import static org.facile.Facile.*;
 import java.io.File;
 import java.util.List;
 import org.facile.Facile.my;
+import org.facile.IO.FileObject;
+import org.facile.ProcessIO.ProcessInOut;
 import org.facile.ProcessIO.ProcessOut;
 import  org.facile.Sys;
 
@@ -46,13 +48,27 @@ public class AutoBench {
 	static boolean verbose;
 	static boolean echoCommandLine=true;
 	
+	static boolean slave=false;
+	static int numSlave=2;
+	static boolean master=false;
+	
 	static int processTimeout = 0;
 	
 	static List<File> path;
 	
 	static File outputFolder;
+	static int slaveId;
 
 	public static void runIt() {
+		
+		if (slave) {
+			print("Slave started ok " + slaveId);
+			FileObject<String> reader = open(System.in);
+			String line = reader.readLine();
+			expect("", "ack", line);
+		}
+
+		
 	
 		if (homeDir==null) {
 			homeDir = cwf();
@@ -74,6 +90,7 @@ public class AutoBench {
 			}
 		}
 		
+		
 		@SuppressWarnings("unchecked")
 		String runString1 = joinByString("_", array("run1", "host", host1, "port", port1, "uri", uri1, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
 		@SuppressWarnings("unchecked")
@@ -89,8 +106,9 @@ public class AutoBench {
 		out1Dir.mkdirs();
 		out2Dir.mkdirs();
 
-		
-		outputHeader();
+		if (!slave) {
+			outputHeader();
+		}
 		
 		for (int rate=lowRate, index=0; rate <highRate; rate+=rateStep, index++){
 
@@ -112,11 +130,24 @@ public class AutoBench {
 				print ("SERVER 2", mul(50, "*"));
 				print(httperf2);
 			} else {
-				print ("Running benchmark run number ", index);
-				String out1 = runServer(1, httperf1, out1Dir, index);
-				String out2 = runServer(2, httperf2, out2Dir, index);
+				if (!slave) print ("Running benchmark run number ", index);
+				String out1 = null;
+				String out2 = null;
 				
-				outputResult(500, parseOutput(out1), parseOutput(out2));
+				if (master) {
+					my myout1 = runSlavesServer(1, rate);
+					my myout2 = runSlavesServer(2, rate);
+					outputResult(rate, myout1, myout2);
+
+				}
+				
+				if (!master) {
+					out1 = runServer(1, httperf1, out1Dir, index);				
+					out2 = runServer(2, httperf2, out2Dir, index);
+				}
+				if (!slave && !master) {
+					outputResult(rate, parseOutput(out1), parseOutput(out2));
+				}
 			}
 			
 		}
@@ -125,6 +156,132 @@ public class AutoBench {
 	}
 	
 
+	private static my runSlavesServer(int i, int rate) {
+		
+		
+		List<File> classPath = Sys.classPath();
+		int numSlaves =2;
+		
+		String classpath = calculateClasspath(classPath);
+		
+		String args = join(' ',
+				Sys.java().toString(), "-cp", classpath, AutoBench.class.getName(),	
+				"--uri1", uri1, "--host1", host1, "--port1", port1, 
+			 "--uri2", uri2, "--host2", host2, "--port2", port2, 
+			 "--num_conn", numConn/numSlaves, "--num_call", numCall, 
+			 "--low_rate", lowRate/numSlaves, 
+			 "--high_rate", highRate/numSlaves, 
+			 "--rate_step", rateStep/numSlaves, "--timeout", timeout, 
+			 "--file",  file, "--slave",  "yes", "--verbose", "false", "--echo-command-line", "false");
+
+		
+		ProcessInOut inout1 = runAsync(0, path, true, args + " --slave-id 1");
+		ProcessInOut inout2 = runAsync(0, path, true, args+ " --slave-id 2");
+		
+		FileObject<?> stdIn1 = inout1.getStdIn();
+		FileObject<?> stdIn2 = inout2.getStdIn();
+		
+		String line = null;
+		
+		line = inout1.getStdOut().readLine();
+		expect("", "Slave started ok 1", line);
+		line = inout2.getStdOut().readLine();
+		expect("", "Slave started ok 2", line);
+		
+		stdIn1.println("ack");
+		stdIn2.println("ack");
+		
+		line = inout1.getStdOut().readLine();
+		expect("", sprint("SERVER", 1, ":", mul(50, "*")), line);
+		line = inout2.getStdOut().readLine();
+		expect("", sprint("SERVER", 1, ":", mul(50, "*")), line);
+		
+		boolean found = false;
+		
+		while (!found) {
+			line = inout1.getStdOut().readLine();
+			if (line.startsWith("EXIT CODE FOR SERVER")) {
+				found = true;
+			}
+		}
+
+		found = false;
+		while (!found) {
+			line = inout2.getStdOut().readLine();
+			if (line.startsWith("EXIT CODE FOR SERVER")) {
+				found = true;
+			}
+		}
+		
+		stdIn1.println("ack");
+		stdIn2.println("ack");
+
+		StringBuilder buf = new StringBuilder(512);
+		found = false;
+		while (!found) {
+			line = inout1.getStdOut().readLine();
+			buf.append(line);
+			if (line.startsWith("#### END SERVER")) {
+				found = true;
+			}
+		}
+		String out1 = buf.toString();
+		
+		buf = new StringBuilder(512);
+		found = false;
+		while (!found) {
+			line = inout2.getStdOut().readLine();
+			buf.append(line);
+			if (line.startsWith("#### END SERVER")) {
+				found = true;
+			}
+		}
+		String out2 = buf.toString();
+
+		my my1 = parseOutput(out1);
+		my my2 = parseOutput(out2);
+		
+		try {
+			int iReplies = get(integer, my1, replies);
+			iReplies += get(integer, my1, replies);
+			my2.i(replies, "" + iReplies);
+			//TODO more here
+		}catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		
+		stdIn1.println("ack");
+		stdIn2.println("ack");
+
+		return my1; //not done
+	}
+
+
+	private static String calculateClasspath(List<File> classPath) {
+		File abPath = null;
+		File facilePath = null;
+		for (File p : classPath) {
+			List<File> files = files(p, ".*com/examples/AutoBench.*");
+			if (files.size() > 0) {
+				abPath = p;
+			}
+			files = files(p, ".*org/facile/Facile.*");
+			if (files.size() > 0) {
+				facilePath = p;
+			}
+		}
+		
+		
+		String classpath = null;
+		if (abPath.equals(facilePath)) {
+			classpath = abPath.toString();
+		}else {
+			classpath = join(':', abPath, facilePath);
+		}
+		return classpath;
+	}
+
+
 	public static String runServer(int serverNum, String cmdLine, File outDir, int runNum) {
 		print ("SERVER", serverNum, ":", mul(50, "*"));
 		if (echoCommandLine || verbose) print("RUNNING:", cmdLine);
@@ -132,8 +289,17 @@ public class AutoBench {
 		print ("EXIT CODE for SERVER ", serverNum, ":",  run.exit);
 		if (verbose) print(run.stdout);
 		
-		File outputFile = file(outDir, "run_" + runNum + "_out");		
-		writeAll(outputFile, lines(cmdLine, run.toString()));
+		if (slave) {
+			FileObject<String> reader = open(System.in);
+			String line = reader.readLine();
+			expect("", "ack", line);
+			File outputFile = file(outDir, "run_" + runNum + "_out_" + slaveId);		
+			writeAll(outputFile, lines(cmdLine, run.toString()));
+
+		} else {
+			File outputFile = file(outDir, "run_" + runNum + "_out");		
+			writeAll(outputFile, lines(cmdLine, run.toString()));
+		}
 		
 		if (run.exit!=0) {
 			fprint(System.err, "NOT ABLE TO RUN PROGRAM EXIT CODE : ", run.exit);
@@ -141,6 +307,20 @@ public class AutoBench {
 			writeAll(errorFile, lines(cmdLine, run.stderr));
 			rest(1000);
 		} 
+		
+		
+		
+		if (slave) {
+			print ("#### START SERVER", run.exit, "####");
+			print (run);
+			print ("#### END SERVER",  run.exit, "####");
+			
+			FileObject<String> reader = open(System.in);
+			String line = reader.readLine();
+			expect("", "ack", line);
+
+		}
+
 		
 		return run.stdout;
 

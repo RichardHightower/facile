@@ -26,6 +26,7 @@ import java.util.Date;
 import org.facile.IO;
 import org.facile.IO.FileObject;
 import org.facile.IO.Mode;
+import org.facile.ProcessIO.ProcessInOut;
 import org.facile.ProcessIO.ProcessOut;
 
 import static org.facile.Templating.*;
@@ -2138,9 +2139,14 @@ public class Facile {
 		throw new AssertionException(ex);
 	}
 
-	public static FileObject<?> open(OutputStream outputStream) {
+	public static FileObject<String> open(OutputStream outputStream) {
 		return IO.open(outputStream);
 	}
+	
+	public static ProcessInOut runAsync(int timeout, List<File> path, boolean verbose, String... args) {
+		return ProcessIO.runAsync(timeout, path, verbose, args);
+	}
+
 
 	public static int exec(String... args) {
 		return ProcessIO.exec(args);

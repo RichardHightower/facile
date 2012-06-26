@@ -12,9 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -466,7 +468,7 @@ public class IO {
 		PrintWriter out;
 		boolean autoFlush;
 
-		public FileTextWriter(FileWriter writer) {
+		public FileTextWriter(Writer writer) {
 			out = new PrintWriter(writer);
 		}
 
@@ -500,6 +502,7 @@ public class IO {
 		public void flush() {
 			out.flush();
 		}
+	
 
 	}
 
@@ -776,6 +779,7 @@ public class IO {
 		FileTextReader textReader = new FileTextReader(reader);
 		return textReader;
 	}
+	
 
 	/**
 	 * This is the same as open(File file). It just converts the string into a
@@ -949,8 +953,8 @@ public class IO {
 
 	}
 
-	public static FileObject<?> open(OutputStream outputStream) {
-		return null;
+	public static FileObject<String> open(OutputStream outputStream) {
+		return new FileTextWriter(new OutputStreamWriter(outputStream));
 	}
 
 }
