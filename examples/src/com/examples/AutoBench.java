@@ -114,10 +114,10 @@ public class AutoBench {
 
 
 			String httperf1 = sprint("httperf", "--server", host1, "--uri", uri1, "--num-con", numConn,
-					"--num-call", numCall,"--timeout", timeout, "--rate", rate,
+					"--num-call", numCall,"--timeout", timeout, "--rate", rate/numCall,
 					"--port", port1);
 			String httperf2 =	sprint("httperf", "--server", host2, "--uri", uri2, "--num-con", numConn,
-						"--num-call", numCall,"--timeout", timeout, "--rate", rate,
+						"--num-call", numCall,"--timeout", timeout, "--rate", rate/numCall,
 						"--port", port2);
 			
 			
@@ -421,7 +421,7 @@ public class AutoBench {
 		// dem_req_rate	req_rate_ch_resin	con_rate_ch_resin	min_rep_rate_ch_resin	avg_rep_rate_ch_resin
 		// X            req_rate			conn_rate			rep_rate_min			rep_rate_avg
 
-		return join('\t', server.i(req_rate), server.i(conn_rate), server.i(rep_rate_min), server.i(rep_rate_avg),
+		return join('\t', toInt(server.i(req_rate))*numCall, server.i(conn_rate), server.i(rep_rate_min), server.i(rep_rate_avg),
 				
 				// max_rep_rate_ch_resin	stddev_rep_rate_ch_resin	resp_time_ch_resin	net_io_ch_resin		errors_ch_resin
 				// rep_rate_max				rep_rate_stdv				rep_time			net_io			error_total
