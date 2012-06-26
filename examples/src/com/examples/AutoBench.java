@@ -58,6 +58,8 @@ public class AutoBench {
 	
 	static File outputFolder;
 	static int slaveId;
+	
+	static boolean shortForm;
 
 	public static void runIt() {
 		
@@ -110,14 +112,14 @@ public class AutoBench {
 			outputHeader();
 		}
 		
-		for (int rate=lowRate, index=0; rate <highRate; rate+=rateStep, index++){
+		for (int rate=lowRate, index=0; rate <(highRate + rateStep); rate+=rateStep, index++){
 
 
 			String httperf1 = sprint("httperf", "--server", host1, "--uri", uri1, "--num-con", numConn,
-					"--num-call", numCall,"--timeout", timeout, "--rate", rate/numCall,
+					"--num-call", numCall,"--timeout", timeout, "--rate", rate,
 					"--port", port1);
 			String httperf2 =	sprint("httperf", "--server", host2, "--uri", uri2, "--num-con", numConn,
-						"--num-call", numCall,"--timeout", timeout, "--rate", rate/numCall,
+						"--num-call", numCall,"--timeout", timeout, "--rate", rate,
 						"--port", port2);
 			
 			
@@ -339,8 +341,10 @@ public class AutoBench {
 	}
 
 	private static void outputHeader() {
-	
-		String header = join('\t',
+		String header = null;
+		
+		if (!shortForm) {
+		header = join('\t',
 				"dem_req_rate",	
 				"req_rate_" + host1,	
 				"con_rate_ch_" + host1,	
@@ -371,6 +375,20 @@ public class AutoBench {
 				"status_400_" + host2,
 				"status_500_" + host2
 				);
+		}	else {
+			header = join('\t',
+					"rate",	
+					"rate_" + host1,	
+					"io_" + host1,
+					"errs_" + host1,
+					"resp_time_" + host1,
+					"rate_" + host2,	
+					"io_" + host2,
+					"errs_" + host2,
+					"resp_time_" + host2
+					);
+			
+		}
 
 			if (verbose) print(header);
 
@@ -383,7 +401,7 @@ public class AutoBench {
 		String result1 = createResultForServer(server1);
 		String result2 = createResultForServer(server2);
 		
-		String result = join('\t', rate, result1,  result2);
+		String result = join('\t', rate*numCall, result1,  result2);
 		if (verbose) print(result);
 		
 		appendWriteLine(outputFile(), result);
@@ -416,12 +434,21 @@ public class AutoBench {
 
 
 	private static String createResultForServer(my server) {
+
+
+		if (shortForm) {
+			
+			return join('\t', toDouble(server.i(req_rate)), server.i(net_io), server.i(error_total), server.i(rep_time)
+					);		
+
 		
 		//server1.i(key, value)
 		// dem_req_rate	req_rate_ch_resin	con_rate_ch_resin	min_rep_rate_ch_resin	avg_rep_rate_ch_resin
 		// X            req_rate			conn_rate			rep_rate_min			rep_rate_avg
 
-		return join('\t', toInt(server.i(req_rate))*numCall, server.i(conn_rate), server.i(rep_rate_min), server.i(rep_rate_avg),
+		}
+		else {
+		return join('\t', toDouble(server.i(req_rate)), server.i(conn_rate), server.i(rep_rate_min), server.i(rep_rate_avg),
 				
 				// max_rep_rate_ch_resin	stddev_rep_rate_ch_resin	resp_time_ch_resin	net_io_ch_resin		errors_ch_resin
 				// rep_rate_max				rep_rate_stdv				rep_time			net_io			error_total
@@ -431,6 +458,7 @@ public class AutoBench {
 				// status_100			status_200				status_300				status_400				status_500
 				server.i(status_100), server.i(status_200), server.i(status_300), server.i(status_400), server.i(status_500)
 				);		
+		}
 	}
 
 
@@ -449,6 +477,7 @@ public class AutoBench {
 			}
 			if (ok("/{start line}Connection rate: ({digit}+/.{digit})/")) {
 				$results.i(conn_rate, $1());
+				print("********************  CON RATE", conn_rate, $results.i(conn_rate));
 			}
 			if (ok("^Request rate: (\\d+\\.\\d)")) {
 				$results.i(req_rate, $1());
