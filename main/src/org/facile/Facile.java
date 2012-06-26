@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 import java.util.Date;
 import org.facile.IO;
 import org.facile.IO.FileObject;
+import org.facile.IO.Mode;
 import org.facile.ProcessIO.ProcessOut;
 
 import static org.facile.Templating.*;
@@ -1250,18 +1251,28 @@ public class Facile {
 
 	public static String joinByString(String delim, Object[] args) {
 		StringBuilder builder = new StringBuilder(256);
+		int index=0;
+
 		for (Object arg : args) {
 			builder.append(arg.toString());
 			builder.append(delim);
+			if (!(index==args.length-1)){
+				builder.append(delim);
+			}
+			index++;
 		}
 		return builder.toString();
 	}
 
 	public static String join(char delim, Object... args) {
 		StringBuilder builder = new StringBuilder(256);
+		int index=0;
 		for (Object arg : args) {
 			builder.append(arg.toString());
-			builder.append(delim);
+			if (!(index==args.length-1)){
+				builder.append(delim);
+			}
+			index++;
 		}
 		return builder.toString();
 	}
@@ -1298,6 +1309,7 @@ public class Facile {
 	
 	public static String join(Collection<?> args) {
 		StringBuilder builder = new StringBuilder(256);
+		
 		for (Object arg : args) {
 			builder.append(arg.toString());
 		}
@@ -1306,17 +1318,29 @@ public class Facile {
 
 	public static String join(char delim, Collection<?> args) {
 		StringBuilder builder = new StringBuilder(256);
+
+		int index=0;
 		for (Object arg : args) {
 			builder.append(arg.toString());
 			builder.append(delim);
+			if (!(index==args.size()-1)){
+				builder.append(delim);
+			}
+			index++;
+
 		}
 		return builder.toString();
 	}
 	public static String join(String delim, Collection<?> args) {
 		StringBuilder builder = new StringBuilder(256);
+		int index=0;
 		for (Object arg : args) {
 			builder.append(arg.toString());
 			builder.append(delim);
+			if (!(index==args.size()-1)){
+				builder.append(delim);
+			}
+			index++;
 		}
 		return builder.toString();
 	}
@@ -1972,6 +1996,9 @@ public class Facile {
 		return IO.openFile(file);
 	}
 	
+	public static FileObject<String> open(File file, Mode mode) {
+		return IO.open(file, mode);
+	}	
 	/** Allows ability to have symbols similar to Perl and Ruby */
 	@SuppressWarnings("serial")
 	public static class my extends HashMap<String, String> {
@@ -2333,5 +2360,12 @@ public class Facile {
 	
 	public static void writeAll(File file, String output) {
 		IO.writeAll(file, output);
+	}
+	
+	public static void appendWriteAll(File file, String output) {
+		IO.appendWriteAll(file, output);
+	}
+	public static void appendWriteLine(File file, String output) {
+		IO.appendWriteLine(file, output);
 	}
 }

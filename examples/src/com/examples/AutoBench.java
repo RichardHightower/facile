@@ -4,10 +4,8 @@ import static com.examples.Results.*;
 import static org.facile.ContextParser.*;
 import static org.facile.ContextParser.Input.IN;
 import static org.facile.Facile.*;
-
 import java.io.File;
 import java.util.List;
-
 import org.facile.Facile.my;
 import org.facile.ProcessIO.ProcessOut;
 import  org.facile.Sys;
@@ -50,16 +48,12 @@ public class AutoBench {
 	
 	static int processTimeout = 0;
 	
-	static boolean parseTest = true;
-	
 	static List<File> path;
+	
+	static File outputFolder;
 
 	public static void runIt() {
 	
-		if (parseTest) {
-			parseTest();
-			System.exit(0);
-		}
 		if (homeDir==null) {
 			homeDir = cwf();
 			if (verbose) print ("Home directory was not passed setting to: ", homeDir);
@@ -67,8 +61,8 @@ public class AutoBench {
 		
 		if (verbose) print ("Command line arguments", cmdLine());
 		
-		File outputFolder = file (homeDir, "/output");
-	
+		outputFolder = file (homeDir, "/output");
+		
 		path = Sys.path();
 
 		if (Sys.os().startsWith("Mac OS X")) {
@@ -81,9 +75,9 @@ public class AutoBench {
 		}
 		
 		@SuppressWarnings("unchecked")
-		String runString1 = join("_", array("run1", "host", host1, "port", port1, "uri", uri1, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
+		String runString1 = joinByString("_", array("run1", "host", host1, "port", port1, "uri", uri1, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
 		@SuppressWarnings("unchecked")
-		String runString2 = join("_", array("run2", "host", host2, "port", port2, "uri", uri2, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
+		String runString2 = joinByString("_", array("run2", "host", host2, "port", port2, "uri", uri2, "numConn", numConn, "numCall", numCall, "rates", lowRate, highRate, rateStep));
 		
 		runString1 = runString1.replace('.', '_').replace('/', '_').replace(' ', '_').replace(':', '_').replace(',', '_');
 		runString2 = runString2.replace('.', '_').replace('/', '_').replace(' ', '_').replace(':', '_').replace(',', '_');
@@ -95,6 +89,8 @@ public class AutoBench {
 		out1Dir.mkdirs();
 		out2Dir.mkdirs();
 
+		
+		outputHeader();
 		
 		for (int rate=lowRate, index=0; rate <highRate; rate+=rateStep, index++){
 
@@ -117,8 +113,10 @@ public class AutoBench {
 				print(httperf2);
 			} else {
 				print ("Running benchmark run number ", index);
-				runServer(1, httperf1, out1Dir, index);
-				runServer(2, httperf2, out2Dir, index);
+				String out1 = runServer(1, httperf1, out1Dir, index);
+				String out2 = runServer(2, httperf2, out2Dir, index);
+				
+				outputResult(500, parseOutput(out1), parseOutput(out2));
 			}
 			
 		}
@@ -127,7 +125,7 @@ public class AutoBench {
 	}
 	
 
-	public static void runServer(int serverNum, String cmdLine, File outDir, int runNum) {
+	public static String runServer(int serverNum, String cmdLine, File outDir, int runNum) {
 		print ("SERVER", serverNum, ":", mul(50, "*"));
 		if (echoCommandLine || verbose) print("RUNNING:", cmdLine);
 		ProcessOut run = run(processTimeout * 60, path, verbose, cmdLine);
@@ -143,28 +141,97 @@ public class AutoBench {
 			writeAll(errorFile, lines(cmdLine, run.stderr));
 			rest(1000);
 		} 
+		
+		return run.stdout;
 
 	}
 	
-	private static void parseTest() {
-		print(cwf(), "src/com/examples/sample.txt");
-		
+	public static void parseTest() {
 		File file = file (cwf(), "src/com/examples/sample.txt");
 		
 		String sample = readAll(file);
 		
-		outputResult(500, parseSampleText(sample), parseSampleText(sample));
+		if (file!=null) {
+			outputHeader();
+		}
 		
+		outputResult(500, parseOutput(sample), parseOutput(sample));
+	}
+
+	private static void outputHeader() {
+	
+		String header = join('\t',
+				"dem_req_rate",	
+				"req_rate_" + host1,	
+				"con_rate_ch_" + host1,	
+				"min_rep_rate_" + host1, 
+				"avg_rep_rate_" + host1, 
+				"max_rep_rate_ch_"+ host1,
+				"stddev_rep_rate_" + host1, 
+				"resp_time_" + host1,
+				"net_io_" + host1,
+				"errors_" + host1,
+				"status_100_" + host1,
+				"status_200_" + host1,
+				"status_300_" + host1,
+				"status_400_" + host1,
+				"status_500_" + host1,
+				"req_rate_" + host2,	
+				"con_rate_ch_" + host2,	
+				"min_rep_rate_" + host2, 
+				"avg_rep_rate_" + host2, 
+				"max_rep_rate_ch_"+ host2,
+				"stddev_rep_rate_" + host2, 
+				"resp_time_" + host2,
+				"net_io_" + host2,
+				"errors_" + host2,
+				"status_100_" + host2,
+				"status_200_" + host2,
+				"status_300_" + host2,
+				"status_400_" + host2,
+				"status_500_" + host2
+				);
+
+			if (verbose) print(header);
+
+			appendWriteLine(outputFile(), header);
+	}
+	private static void outputResult(int rate, my server1, my server2) {
 		
+				
 		
+		String result1 = createResultForServer(server1);
+		String result2 = createResultForServer(server2);
+		
+		String result = join('\t', rate, result1,  result2);
+		if (verbose) print(result);
+		
+		appendWriteLine(outputFile(), result);
+
+	
 		
 	}
 
-	private static void outputResult(int rate, my server1, my server2) {
+
+	private static File outputFile() {
 		
-		String result1 = createResultForServer(server1);
-		print("R1", result1);
 		
+		File outFile = null;
+		
+		if (file == null) {
+			outFile = file(outputFolder, "out.tsv");
+			
+		} else {		
+			if (!file.isAbsolute()) {
+				outFile = file(outputFolder, file.toString());
+			} else {
+				outFile = file;
+			}
+		}
+		
+		
+		return outFile;
+	
 	}
 
 
@@ -187,7 +254,7 @@ public class AutoBench {
 	}
 
 
-	public static my parseSampleText(String output) {
+	public static my parseOutput(String output) {
 		my $results = my(Results.class, all);
 
 		openString(IN, output);

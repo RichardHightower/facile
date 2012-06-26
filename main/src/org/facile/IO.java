@@ -161,7 +161,7 @@ public class IO {
 		return doFilesSearch(dir, true, true, false, regex);
 	}
 
-	enum Mode {
+	public enum Mode {
 		read_text, read_binary,
 
 		readwrite_text, readwrite_binary,
@@ -764,7 +764,7 @@ public class IO {
 		FileTextReader textReader = new FileTextReader(reader);
 		return textReader;
 	}
-
+	
 
 	/**
 	 * Open Reader in readonly text mode.
@@ -824,10 +824,37 @@ public class IO {
 	}
 
 	public static void writeAll(File file, String output) {
-		open(file, Mode.write_text).writeAll(output).closeIt();
+		FileObject<String> fileObject = open(file, Mode.write_text);
+		
+		try {
+			fileObject.writeAll(output);
+		} finally {
+			fileObject.close();
+		}
+
+	}
+	
+	public static void appendWriteAll(File file, String output) {
+		FileObject<String> fileObject = open(file, Mode.append_text);
+		
+		try {
+			fileObject.writeAll(output);
+		} finally {
+			fileObject.close();
+		}
+
 	}
 
-	public static FileObject<?> open(File file, Mode mode) {
+	public static void appendWriteLine(File file, String output) {
+		FileObject<String> fileObject = open(file, Mode.append_text);
+		try {
+			fileObject.println(output);
+		} finally {
+			fileObject.close();
+		}
+	}
+
+	public static FileObject<String> open(File file, Mode mode) {
 
 		switch (mode) {
 		case write_text:
