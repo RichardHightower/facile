@@ -118,6 +118,10 @@ public class ContextParser {
 		return currentCtx().open(t, file);
 	}
 
+	public static FileObject<String> openString(Input t, String file) {
+		return currentCtx().openString(t, file);
+	}
+
 	public static boolean ok(String regex) {
 		return currentCtx().ok(regex);
 	}
@@ -260,8 +264,19 @@ public class ContextParser {
 
 		}
 
+		public FileObject<String> openString(Input t, String buffer) {
+			FileObject<String> fileObject = Facile.openString(buffer);
+			placeFile(t, fileObject);
+			return fileObject;			
+		}
+
 		public FileObject<String> open(Input t, String file) {
 			FileObject<String> fileObject = Facile.openFile(file);
+			placeFile(t, fileObject);
+			return fileObject;
+		}
+
+		private void placeFile(Input t, FileObject<String> fileObject) {
 			if (fileObject instanceof FileTextReader) {
 				((FileTextReader) fileObject).ctx(this);
 				((FileTextReader) fileObject).startIteration();
@@ -282,7 +297,6 @@ public class ContextParser {
 					break;
 				}
 			}
-			return fileObject;
 		}
 
 		public FileObject<String> open(Object obj, String file) {

@@ -1,10 +1,14 @@
 package com.examples;
 
+import static com.examples.Results.*;
 import static org.facile.ContextParser.*;
+import static org.facile.ContextParser.Input.IN;
 import static org.facile.Facile.*;
 
 import java.io.File;
 import java.util.List;
+
+import org.facile.Facile.my;
 import org.facile.ProcessIO.ProcessOut;
 import  org.facile.Sys;
 
@@ -46,10 +50,16 @@ public class AutoBench {
 	
 	static int processTimeout = 0;
 	
+	static boolean parseTest = true;
+	
 	static List<File> path;
 
 	public static void runIt() {
-		
+	
+		if (parseTest) {
+			parseTest();
+			System.exit(0);
+		}
 		if (homeDir==null) {
 			homeDir = cwf();
 			if (verbose) print ("Home directory was not passed setting to: ", homeDir);
@@ -116,6 +126,7 @@ public class AutoBench {
 		
 	}
 	
+
 	public static void runServer(int serverNum, String cmdLine, File outDir, int runNum) {
 		print ("SERVER", serverNum, ":", mul(50, "*"));
 		if (echoCommandLine || verbose) print("RUNNING:", cmdLine);
@@ -134,6 +145,94 @@ public class AutoBench {
 		} 
 
 	}
+	
+	private static void parseTest() {
+		print(cwf(), "src/com/examples/sample.txt");
+		
+		File file = file (cwf(), "src/com/examples/sample.txt");
+		
+		String sample = readAll(file);
+		
+		outputResult(500, parseSampleText(sample), parseSampleText(sample));
+		
+		
+		
+		
+	}
+
+	private static void outputResult(int rate, my server1, my server2) {
+		
+		String result1 = createResultForServer(server1);
+		print("R1", result1);
+		
+	}
+
+
+	private static String createResultForServer(my server) {
+		
+		//server1.i(key, value)
+		// dem_req_rate	req_rate_ch_resin	con_rate_ch_resin	min_rep_rate_ch_resin	avg_rep_rate_ch_resin
+		// X            req_rate			conn_rate			rep_rate_min			rep_rate_avg
+
+		return join('\t', server.i(req_rate), server.i(conn_rate), server.i(rep_rate_min), server.i(rep_rate_avg),
+				
+				// max_rep_rate_ch_resin	stddev_rep_rate_ch_resin	resp_time_ch_resin	net_io_ch_resin		errors_ch_resin
+				// rep_rate_max				rep_rate_stdv				rep_time			net_io			error_total
+				server.i(rep_rate_max), server.i(rep_rate_stdv), server.i(rep_time), server.i(net_io), server.i(error_total),
+				
+				// status_100_ch_resin	status_200_ch_resin		status_300_ch_resin		status_400_ch_resin		status_500_ch_resin
+				// status_100			status_200				status_300				status_400				status_500
+				server.i(status_100), server.i(status_200), server.i(status_300), server.i(status_400), server.i(status_500)
+				);		
+	}
+
+
+	public static my parseSampleText(String output) {
+		my $results = my(Results.class, all);
+
+		openString(IN, output);
+
+		while (IN()) {
+
+			if (ok("^Total: .*replies (\\d+)")) {
+				$results.i(replies, $1());
+			}
+			if (ok("^Errors:.*total (\\d+)")) {
+				$results.i(error_total, $1());
+			}
+			if (ok("/{start line}Connection rate: ({digit}+/.{digit})/")) {
+				$results.i(conn_rate, $1());
+			}
+			if (ok("^Request rate: (\\d+\\.\\d)")) {
+				$results.i(req_rate, $1());
+			}
+			if (ok("/^Reply rate .*min (/d+/./d) avg (/d+/./d) max (/d+/./d) stddev (/d+/./d)/")) {
+				$results.i(rep_rate_min, $1());
+				$results.i(rep_rate_avg, $2());
+				$results.i(rep_rate_max, $3());
+				$results.i(rep_rate_stdv, $4());
+			}
+			if (ok("/^Reply time {any} response ({digit}+/.{digit})/")) {
+				$results.i(rep_time, $1());
+			}
+			if (ok("/^Reply status{any}1xx=({digit}+) 2xx=({digit}+) 3xx=({digit}+) 4xx=({digit}+) 5xx=({digit}+){any}/")) {
+				$results.i(status_100, $1());
+				$results.i(status_200, $2());
+				$results.i(status_300, $3());
+				$results.i(status_400, $4());
+				$results.i(status_500, $5());
+			}
+			
+			
+			if (ok("/^Net I{fw}O: ({digit}+/.{digit})/")) {
+	            $results.i(net_io, $1());
+	        }
+
+		}
+		return $results;
+
+	}
+
 	
 	public static void main (String [] args) {
 		context(AutoBench.class, args, new Runnable() {

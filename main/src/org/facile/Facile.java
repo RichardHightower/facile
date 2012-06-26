@@ -1245,10 +1245,10 @@ public class Facile {
 	}
 
 	public static String lines(String... lines) {
-		return join("\n", (Object[]) lines);
+		return join('\n', (Object[]) lines);
 	}
 
-	public static String join(String delim, Object[] args) {
+	public static String joinByString(String delim, Object[] args) {
 		StringBuilder builder = new StringBuilder(256);
 		for (Object arg : args) {
 			builder.append(arg.toString());
@@ -2001,6 +2001,17 @@ public class Facile {
 		public void i(@SuppressWarnings("rawtypes") Enum e, String value) {
 			this.put(e.name(), value);
 		}
+		
+		public String i(String key) {
+			return this.get(key);
+		}
+
+
+		public String i(@SuppressWarnings("rawtypes") Enum e) {
+			return this.get(e.name());
+		}
+
+
 
 	}
 

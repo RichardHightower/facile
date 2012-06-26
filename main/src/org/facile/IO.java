@@ -166,7 +166,9 @@ public class IO {
 
 		readwrite_text, readwrite_binary,
 
-		write_binary, write_text
+		write_binary, write_text,
+		
+		append_binary, append_text
 
 	}
 
@@ -730,10 +732,14 @@ public class IO {
 	}
 
 
-	private static FileObject<String> openTextWriter(File file) {
+	private static FileObject<String> openTextWriter(File file, Mode mode) {
 		FileWriter writer = null;
 		try {
-			writer = new FileWriter(file);
+			if (mode==Mode.append_text) {
+				writer = new FileWriter(file, true);
+			} else {
+				writer = new FileWriter(file, false);
+			}
 		} catch (IOException e) {
 			handle(e);
 		}
@@ -825,7 +831,10 @@ public class IO {
 
 		switch (mode) {
 		case write_text:
-			return openTextWriter(file);
+			return openTextWriter(file, mode);
+		case append_text:
+			return openTextWriter(file, mode);
+
 		case read_text:
 			return open(file);
 		}
