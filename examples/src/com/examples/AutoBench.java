@@ -375,7 +375,7 @@ public class AutoBench {
 		return classpath;
 	}
 
-	public static my runServer(int rate, int serverNum, File outDir, int runNum) {
+	public static my runServer(int serverNum, int rate, File outDir, int runNum) {
 
 		String cmdLine;
 
