@@ -78,10 +78,12 @@ public class Reflection {
 		@SuppressWarnings("unchecked")
 		public T execute(Object... params) {
 
+			notNull(method);
+			notNull(params);
 			T ret = null;
 			try {
 				ret = (T) method.invoke(that, params);
-			} catch (Exception ex) {
+			} catch (Exception ex) {				
 				throw new ReflectionException("unable to execute function "
 						+ method.getName() + " of " + method, ex);
 			}

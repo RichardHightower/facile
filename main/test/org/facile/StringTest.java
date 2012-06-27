@@ -3,6 +3,9 @@ package org.facile;
 import static org.facile.Facile.*;
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import org.junit.Test;
 
 public class StringTest {
@@ -34,15 +37,43 @@ public class StringTest {
 
 		assertEquals("[which, httperf]", str(ls(split("which httperf"))));
 
-		print(join("abc", array("String", "String2")));
-		print(join(array("String2", "String3"), "abc"));
-		print(join(list("String4", "String5"), "abc"));
-		print(join('c', list("String4", "String5")));
-		print(join('c', "String", "String2"));
-		print(join(array("String2", "String3"), 'c'));
-		print(join(list("String4", "String5"), 'c'));
-		print(join('c', list("String4", "String5")));
 
+	}
+
+	ByteArrayOutputStream err;
+	ByteArrayOutputStream out;
+
+	private void setupStreams() {
+		err = new ByteArrayOutputStream();
+		out = new ByteArrayOutputStream();
+
+		PrintStream ps = new PrintStream(err);
+		System.setErr(ps);
+		ps = new PrintStream(out);
+		System.setOut(ps);
+
+	}
+	
+	@Test 
+	public void testStrings() {
+		assertEquals("\"Rick Hightower\"", quote("Rick Hightower"));
+		assertEquals("'Rick Hightower'", singleQuote("Rick Hightower"));
+		assertEquals("Rick Hightower,", comma("Rick Hightower"));
+		
+		
+		
+	}
+	
+	@Test public void printTest() {
+		
+		setupStreams();
+		print("Hi", "Mom");
+		assertEquals("Hi Mom \n", out.toString());
+		
+		setupStreams();		
+		print(1, 2, 3, 4, "Hi");
+		assertEquals("1 2 3 4 Hi \n", out.toString());
+		
 	}
 
 
