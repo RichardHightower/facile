@@ -123,8 +123,6 @@ public class AutoBench {
 			if (master) {
 				myout1 = runSlavesServer(1, rate, out1Dir, index);
 				myout2 = runSlavesServer(2, rate, out2Dir, index);
-				outputResult(rate, myout1, myout2);
-
 			} else {
 				myout1 = runServer(1, rate, out1Dir, index);
 				myout2 = runServer(2, rate, out2Dir, index);
@@ -136,6 +134,7 @@ public class AutoBench {
 	}
 
 
+	
 	private static String httperfString(int rate, String host, String uri,
 			int port) {
 		String httperf1 = sprint("httperf", "--server", host, "--uri", uri,
@@ -143,29 +142,51 @@ public class AutoBench {
 				timeout, "--rate", rate, "--port", port);
 		return httperf1;
 	}
+
+	private static String httperfString(int rate, String host, String uri,
+			int port, int nconn, int ncall, int to) {
+		String httperf1 = sprint(
+				"httperf", 
+				"--server", host, 
+				"--uri", uri,
+				"--num-con", nconn, 
+				"--num-call", ncall, 
+				"--timeout", to, 
+				"--rate", rate, 
+				"--port", port);
+		return httperf1;
+	}
+
 	
 	private static void runSlave() {
 		String command = null;
+		ProcessOut run = null;
 		print("Slave started ok " + slaveId);
-		System.err.append("CHILDE PROCESS " + slaveId + "  here 1 ");
 
 		FileObject<String> reader = open(System.in);
 		String line = reader.readLine();
 		expect("", "ack", line);
-		System.err.append("CHILDE PROCESS " + slaveId + "  here 2 ");
 
-		boolean wasCommand;
 		while(line!=null && !line.trim().equals("DIE NOW")) {
-			System.err.append("CHILDE PROCESS " + slaveId + "   " +  line);
 			if (line.trim().equals("command")) {
-				wasCommand = true;
 				print("ack command", slaveId);
 				command = reader.readLine();
-				print ("command", command);
-				print ("done");
+				print ("running ...... command", command);
+				run = run(processTimeout * 60, path, verbose, command);
+				print ("done ...... running command", command);
+				print("EXIT CODE for SLAVE ", slaveId, ": EXIT=", run.exit);
+				print(run);
+				print ("***done***");
+				if (run.exit != 0) {
+					System.exit(run.exit);
+				}
 			}
 			line = reader.readLine();
-
+		}
+		if (run==null) {
+			System.exit(-666);
+		} else {
+			System.exit(run.exit);
 		}
 	}
 
@@ -179,24 +200,96 @@ public class AutoBench {
 
 		//Fill this with the real command.
 		if (serverNum == 1) {
-			cmdLine = httperfString(rate, host1, uri1, port1);
+			cmdLine = httperfString(rate/2, host1, uri1, port1, numConn/2, numCall/2, timeout);
 		} else {
-			cmdLine = httperfString(rate, host2, uri2, port2);
+			cmdLine = httperfString(rate/2, host2, uri2, port2, numConn/2, numCall/2, timeout);
 		}
 		sendToChildren("command");
 		expectFromChildren("ack command");
 		sendToChildren(cmdLine);
-		print (readFromChildren("done"));
-//		expectFromChildren("command recieved");
-//		sendToChildren("start");
-//		expectFromChildren("done");
-//		sendToChildren("send output");
-//		List<String> output = readFromChildren("***OUTPUT COMPLETE***");
-//		print(output);
-		return null; // not done
+		List<String> list = readFromChildren("***done***");
+		rest(1000);
+		
+		
+		sendToChildren("DIE NOW");
+		my out1 = parseOutput(list.get(0));
+		my out2 = parseOutput(list.get(1));
+		
+		if (inout1.processOut().exit == 0 && inout2.processOut().exit != 0) {
+			return out1;
+		} else if (inout1.processOut().exit != 0 && inout2.processOut().exit == 0) {
+			return out2;
+		} else if (inout1.processOut().exit != 0 && inout2.processOut().exit != 0) {
+			return null;
+		} else {
+		
+			Double v = get(dbl, out1, replies);
+			
+			if (v== null) {
+				return null;
+			}
+			if (v!=null) {
+				v+= get(dbl, out2, replies);
+				out1.i(replies, str(v));
+			}
+			
+			v = get(dbl, out1, error_total);
+			v+= get(dbl, out2, error_total);
+			out1.i(error_total, str(v));
+			
+			v = get(dbl, out1, conn_rate);
+			v+= get(dbl, out2, conn_rate);
+			out1.i(conn_rate, str(v));
+			
+			v = get(dbl, out1, req_rate);
+			v+= get(dbl, out2, req_rate);
+			out1.i(req_rate, str(v));
+			
+			v = get(dbl, out1, rep_rate_min);
+			v+= get(dbl, out2, rep_rate_min);
+			out1.i(rep_rate_min, str(v));
+	
+			v = get(dbl, out1, rep_rate_avg);
+			v+= get(dbl, out2, rep_rate_avg);
+			out1.i(rep_rate_avg, str(v));
+	
+			v = get(dbl, out1, rep_rate_max);
+			v+= get(dbl, out2, rep_rate_max);
+			out1.i(rep_rate_max, str(v));
+	
+			v = get(dbl, out1, rep_rate_stdv);
+			v+= get(dbl, out2, rep_rate_stdv);
+			out1.i(rep_rate_stdv, str(v));
+	
+			v = get(dbl, out1, status_100);
+			v+= get(dbl, out2, status_100);
+			out1.i(status_100, str(v));
+	
+			v = get(dbl, out1, status_200);
+			v+= get(dbl, out2, status_200);
+			out1.i(status_200, str(v));
+	
+			v = get(dbl, out1, status_300);
+			v+= get(dbl, out2, status_300);
+			out1.i(status_300, str(v));
+	
+			v = get(dbl, out1, status_400);
+			v+= get(dbl, out2, status_400);
+			out1.i(status_400, str(v));
+	
+			v = get(dbl, out1, status_500);
+			v+= get(dbl, out2, status_500);
+			out1.i(status_500, str(v));
+	
+			v = get(dbl, out1, net_io);
+			v+= get(dbl, out2, net_io);
+			out1.i(net_io, str(v));
+			
+			return out1;
+		}
+
 	}
 
-	static boolean init = false;
 	static ProcessInOut inout1;
 	static ProcessInOut inout2;
 	static List<FileObject<String>> childrenProcessOutput;
@@ -220,20 +313,20 @@ public class AutoBench {
 		
 	}
 	
-	private static List<String> readFromChildren(String delimeter) {
+	private static List<String> readFromChildren(String delim) {
 		List<String> list = ls(string);
 		String line = null;
 		int index = 1;
 
 		for (FileObject<String> out : childrenProcessOutput) {
 			Appendable buf = buf();
-
-			while (!line.trim().equals(delimeter.trim())){
-				line = out.readLine();
+			line = out.readLine();
+			while (!(line==null) && !line.trim().equals(delim.trim())){
 				print("FROM CHILD READ", index, line);
-				add(buf, line);
+				add(buf, line + "\n");
+				line = out.readLine();
 			}
-			list.add(str(buf));
+			list.add(str(buf)+"\n");
 			index++;
 		}
 		return list;
@@ -243,8 +336,6 @@ public class AutoBench {
 
 	@SuppressWarnings("unchecked")
 	private static void initProcess() {
-		if (init) return;
-		
 		List<File> classPath = Sys.classPath();
 
 		String classpath = calculateClasspath(classPath);
@@ -370,6 +461,10 @@ public class AutoBench {
 	}
 
 	private static void outputResult(int rate, my server1, my server2) {
+		
+		if (master) {
+			rate = rate / 2;
+		}
 
 		String result1 = createResultForServer(server1);
 		String result2 = createResultForServer(server2);
@@ -402,11 +497,15 @@ public class AutoBench {
 	}
 
 	private static String createResultForServer(my server) {
+		if (server == null) {
+			return mul(14, "**\t");
+		}
 
 		if (shortForm) {
-
-			return join('\t', toDouble(server.i(req_rate)), server.i(net_io),
-					server.i(error_total), server.i(rep_time));
+			
+			return join('\t', 
+					server.safe(req_rate), server.safe(net_io),
+					server.safe(error_total), server.safe(rep_time));
 
 			// server1.i(key, value)
 			// dem_req_rate req_rate_ch_resin con_rate_ch_resin
@@ -416,27 +515,31 @@ public class AutoBench {
 		} else {
 			return join(
 					'\t',
-					toDouble(server.i(req_rate)),
-					server.i(conn_rate),
-					server.i(rep_rate_min),
-					server.i(rep_rate_avg),
+					server.safe(req_rate),
+					server.safe(conn_rate),
+					server.safe(rep_rate_min),
+					server.safe(rep_rate_avg),
 
 					// max_rep_rate_ch_resin stddev_rep_rate_ch_resin
 					// resp_time_ch_resin net_io_ch_resin errors_ch_resin
 					// rep_rate_max rep_rate_stdv rep_time net_io error_total
-					server.i(rep_rate_max),
-					server.i(rep_rate_stdv),
-					server.i(rep_time),
-					server.i(net_io),
-					server.i(error_total),
+					server.safe(rep_rate_max),
+					server.safe(rep_rate_stdv),
+					server.safe(rep_time),
+					server.safe(net_io),
+					server.safe(error_total),
 
 					// status_100_ch_resin status_200_ch_resin
 					// status_300_ch_resin status_400_ch_resin
 					// status_500_ch_resin
 					// status_100 status_200 status_300 status_400 status_500
-					server.i(status_100), server.i(status_200),
-					server.i(status_300), server.i(status_400),
-					server.i(status_500));
+					server.safe(status_100), 
+					server.safe(status_200),
+					server.safe(status_300), 
+					server.safe(status_400),
+					server.safe(status_500)
+					
+					);
 		}
 	}
 
@@ -455,8 +558,6 @@ public class AutoBench {
 			}
 			if (ok("/{start line}Connection rate: ({digit}+/.{digit})/")) {
 				$results.i(conn_rate, $1());
-				print("********************  CON RATE", conn_rate,
-						$results.i(conn_rate));
 			}
 			if (ok("^Request rate: (\\d+\\.\\d)")) {
 				$results.i(req_rate, $1());
@@ -482,7 +583,7 @@ public class AutoBench {
 				$results.i(net_io, $1());
 			}
 
-		}
+		}		
 		return $results;
 
 	}
@@ -495,35 +596,4 @@ public class AutoBench {
 			}
 		});
 	}
-
-	// print (args);
-	//
-	// print("file", AutoBench.file,
-	// "host1", AutoBench.host1,
-	// "uri1", AutoBench.uri1,
-	// "host2", AutoBench.host2,
-	// "uri2", AutoBench.uri2,
-	// "numConn", AutoBench.numConn,
-	// "numCall", AutoBench.numCall,
-	// "lowRate", AutoBench.lowRate,
-	// "highRate", AutoBench.highRate,
-	// "rateStep", AutoBench.rateStep,
-	// "timeout", AutoBench.timeout
-	// );
-	// lines(
-	// "Usage: httperf [-hdvV] [--add-header S] [--burst-length N] [--client N/N]",
-	// "[--close-with-reset] [--debug N] [--failure-status N]",
-	// "[--help] [--hog] [--http-version S] [--max-connections N]",
-	// "[--max-piped-calls N] [--method S] [--no-host-hdr]",
-	// "[--num-calls N] [--num-conns N] [--session-cookies]",
-	// "[--period [d|u|e]T1[,T2]|[v]T1,D1[,T2,D2]...[,Tn,Dn]",
-	// "[--print-reply [header|body]] [--print-request [header|body]]",
-	// "[--rate X] [--recv-buffer N] [--retry-on-failure] [--send-buffer N]",
-	// "[--server S] [--server-name S] [--port N] [--uri S]",
-	// "[--ssl] [--ssl-ciphers L] [--ssl-no-reuse]",
-	// "[--think-timeout X] [--timeout X] [--verbose] [--version]",
-	// "[--wlog y|n,file] [--wsess N,N,X] [--wsesslog N,X,file]",
-	// "[--wset N,X]",
-	// "[--use-timer-cache]");
-
 }

@@ -74,7 +74,7 @@ public class Parser {
 		}
 
 		public Rule allow(char... chars) {
-			checkArgumentsForNulls(chars);
+			notNull(chars);
 			Rule clone = cloneMe();
 			clone.allowed = chars;
 			return clone;
@@ -87,7 +87,7 @@ public class Parser {
 		}
 
 		public Rule exact(char[] chars) {
-			checkArgumentsForNulls(chars);
+			notNull(chars);
 			Rule clone = cloneMe();
 			clone.type = RuleType.EXACT_CHARS;
 			clone.allowed = chars;
@@ -95,7 +95,7 @@ public class Parser {
 		}
 
 		public Rule rules(Rule... rules) {
-			checkArgumentsForNulls(rules);
+			notNull(rules);
 			Rule clone = cloneMe();
 			clone.type = RuleType.SEQUENCE;
 			clone.rules = rules;
@@ -103,7 +103,7 @@ public class Parser {
 		}
 
 		public Rule oneOf(Rule... rules) {
-			checkArgumentsForNulls(rules);
+			notNull(rules);
 			Rule clone = cloneMe();
 			clone.type = RuleType.ONE_OF;
 			clone.rules = rules;
@@ -121,7 +121,7 @@ public class Parser {
 		}
 
 		private Rule times(int min, int max, Cardinality cardinality) {
-			checkArgumentsForNulls(cardinality);
+			notNull(cardinality);
 
 			Rule clone = (Rule) cloneMe();
 
@@ -140,7 +140,7 @@ public class Parser {
 		}
 
 		private Rule name(String name) {
-			checkArgumentsForNulls(name);
+			notNull(name);
 
 			this.name = name;
 			return this;
@@ -194,96 +194,96 @@ public class Parser {
 	}
 
 	public static Rule optional(Rule... rules) {
-		checkArgumentsForNulls(rules);
+		notNull(rules);
 		return OPTIONAL.rules(rules);
 	}
 
 	public static Rule optional(String name, Rule... rules) {
-		checkArgumentsForNulls(name);
-		checkArgumentsForNulls(rules);
+		notNull(name);
+		notNull(rules);
 
 		return OPTIONAL.rules(rules).name(name);
 	}
 
 	public static Rule oneOf(Rule... rules) {
-		checkArgumentsForNulls(rules);
+		notNull(rules);
 
 		return ONCE.oneOf(rules);
 	}
 
 	public static Rule oneOf(String name, Rule... rules) {
-		checkArgumentsForNulls(name);
-		checkArgumentsForNulls(rules);
+		notNull(name);
+		notNull(rules);
 
 		return ONCE.oneOf(rules).name(name);
 	}
 
 	public static Rule exact(String chars) {
-		checkArgumentsForNulls(chars);
+		notNull(chars);
 
 		return RULE.exact(chars.toCharArray()).name("exact-" + chars);
 	}
 
 	public static Rule once(Rule... rules) {
-		checkArgumentsForNulls(rules);
+		notNull(rules);
 
 		return ONCE.rules(rules);
 	}
 
 	public static Rule zeroOrMore(Rule... rules) {
-		checkArgumentsForNulls(rules);
+		notNull(rules);
 
 		return ZERO_OR_MORE.rules(rules);
 	}
 
 	public static Rule once(String name, Rule... rules) {
-		checkArgumentsForNulls(name);
-		checkArgumentsForNulls(rules);
+		notNull(name);
+		notNull(rules);
 
 		return ONCE.rules(rules).name(name);
 	}
 
 	public static Rule zeroOrMore(String name, Rule... rules) {
-		checkArgumentsForNulls(name);
-		checkArgumentsForNulls(rules);
+		notNull(name);
+		notNull(rules);
 
 		return ZERO_OR_MORE.rules(rules);
 	}
 
 	public static Rule required(Rule... rules) {
-		checkArgumentsForNulls(rules);
+		notNull(rules);
 
 		return REQUIRED.rules(rules);
 	}
 
 	public static Rule rules(Rule... rules) {
-		checkArgumentsForNulls(rules);
+		notNull(rules);
 
 		return REQUIRED.rules(rules);
 	}
 
 	public static Rule required(String name, Rule... rules) {
-		checkArgumentsForNulls(name);
-		checkArgumentsForNulls(rules);
+		notNull(name);
+		notNull(rules);
 
 		return REQUIRED.rules(rules).name(name);
 	}
 
 	public static Rule rules(String name, Rule... rules) {
-		checkArgumentsForNulls(name);
-		checkArgumentsForNulls(rules);
+		notNull(name);
+		notNull(rules);
 
 		return REQUIRED.rules(rules).name(name);
 	}
 
 	public static Rule allow(char... chars) {
-		checkArgumentsForNulls(chars, "");
+		notNull(chars, "");
 
 		return REQUIRED.allow(chars);
 	}
 
 	public static Rule allowOnce(char... chars) {
-		checkArgumentsForNulls(chars);
+		notNull(chars);
 
 		return REQUIRED.allow(chars).once();
 	}
@@ -293,7 +293,7 @@ public class Parser {
 	}
 
 	public static Rule digits(String name, int times) {
-		checkArgumentsForNulls(name);
+		notNull(name);
 
 		return DIGIT.times(times).name(name);
 	}
@@ -303,7 +303,7 @@ public class Parser {
 	}
 
 	public static Rule alpha(String name, int times) {
-		checkArgumentsForNulls(name);
+		notNull(name);
 
 		return ALPHA.times(times).name(name);
 	}
@@ -317,13 +317,13 @@ public class Parser {
 	}
 
 	public static Rule alpha(Cardinality card) {
-		checkArgumentsForNulls(card);
+		notNull(card);
 
 		return alpha(ALPHA.name, card);
 	}
 
 	public static Rule alpha(String name, Cardinality card) {
-		checkArgumentsForNulls(new Object[] { name, card });
+		notNull(new Object[] { name, card });
 
 		switch (card) {
 		case ZERO_OR_MORE:
@@ -343,26 +343,26 @@ public class Parser {
 	}
 
 	public static boolean match(String string, Rule rule) {
-		checkArgumentsForNulls(string, rule);
+		notNull(string, rule);
 
 		return match(chars(string), rule);
 	}
 
 	public static boolean match(char[] chars, Rule rule) {
-		checkArgumentsForNulls(chars, rule);
+		notNull(chars, rule);
 
 		return match(chars, rule, 0, chars.length);
 	}
 
 	public static boolean match(char[] chars, Rule rule, int start) {
-		checkArgumentsForNulls(chars, rule);
+		notNull(chars, rule);
 
 		return match(chars, rule, start, chars.length);
 
 	}
 
 	public static boolean match(char[] chars, Rule rule, int start, int end) {
-		checkArgumentsForNulls(chars, rule);
+		notNull(chars, rule);
 
 		int index = doMatch(chars, rule, start, end);
 

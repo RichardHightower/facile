@@ -1919,7 +1919,7 @@ public class Facile {
 		return ls;
 	}
 
-	public static <T> void checkArgumentsForNulls(T... objects) {
+	public static <T> void notNull(T... objects) {
 		if (objects == null) {
 			throw new IllegalArgumentException(
 					" nulls arguments are not allowed ");
@@ -2030,6 +2030,7 @@ public class Facile {
 			this.put(e.name(), value);
 		}
 		
+		
 		public String i(String key) {
 			return this.get(key);
 		}
@@ -2039,6 +2040,9 @@ public class Facile {
 			return this.get(e.name());
 		}
 
+		public String safe(@SuppressWarnings("rawtypes") Enum e) {
+			return this.get(e.name()) == null ? "**" : this.get(e.name());
+		}
 
 
 	}
@@ -2189,9 +2193,11 @@ public class Facile {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> T get(Class<T> clz, Map map, Object key) {
 		 Object value =  map.get(key.toString());
+		 if (value==null) {
+			 return (T) value;
+		 }
 		 if (value.getClass() != clz) {
 			 T t = coerce(clz, value);
-			 map.put(key.toString(), (Object)t);
 			 return t;
 		 } else {
 			 return (T) value;
