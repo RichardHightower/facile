@@ -240,11 +240,21 @@ public class AutoBench {
 		sendToChildren(cmdLine);
 		List<String> list = readFromChildren("***done***");
 		rest(1000);
-		
-		
-		sendToChildren("DIE NOW");
 		my out1 = parseOutput(list.get(0));
 		my out2 = parseOutput(list.get(1));
+		rest(1000);
+		sendToChildren("DIE NOW");
+		
+		int times=0;
+		for (ProcessInOut p : processes) {
+			while (!p.isDone()) {
+				rest(1000);
+				times++;
+				if (times > 10) {
+					p.kill();
+				}
+			}
+		}
 		
 		if (inout1.processOut().exit == 0 && inout2.processOut().exit != 0) {
 			return out1;
@@ -323,6 +333,8 @@ public class AutoBench {
 
 	static ProcessInOut inout1;
 	static ProcessInOut inout2;
+	static List<ProcessInOut> processes = ls(inout1, inout2);
+
 	
 	private static void sendToChildren(String value) {
 		for (FileObject toProcess : toSlaves) {
@@ -333,9 +345,10 @@ public class AutoBench {
 		String line = null;
 		int index = 1;
 		for (FileObject out : fromSlaves) {
-			print ("expect " + value);
+			if (verbose) print ("expect " + value);
 			line = out.readLine();
-			print("FROM CHILD", index, line);
+			if (verbose) print("FROM CHILD", index, line);
+			notNull(line);
 			expect("", value + " " + index, line.trim());
 			index++;
 		}
@@ -377,6 +390,9 @@ public class AutoBench {
 
 			inout1 = runAsync(0, path, true, args + " --slave-id 1");
 			inout2 = runAsync(0, path, true, args + " --slave-id 2");
+			
+			processes = ls(inout1, inout2);
+			
 
 			fromSlaves = ls(inout1.getStdOut(),inout2.getStdOut());
 			toSlaves = ls(inout1.getStdIn(), inout2.getStdIn());

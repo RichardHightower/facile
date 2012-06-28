@@ -22,6 +22,9 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
 import org.facile.ContextParser.Ctx;
@@ -228,7 +231,7 @@ public class IO {
 		}
 	}
 
-	private static void handle(IOException ex) {
+	private static void handle(Exception ex) {
 		throw new InputOutputException(ex);
 	}
 
@@ -855,5 +858,62 @@ public class IO {
 	public static FileObject open(OutputStream outputStream) {
 		return new FileTextWriter(new OutputStreamWriter(outputStream));
 	}
+	
+	public static final String EOF_MARKER = "***** EOF ***** 12345678910";
+
+	
+	public static class QueueReaderFile extends AbstractFile {
+		BlockingQueue<String> queue = new ArrayBlockingQueue<String>(100);
+		int timeout;
+		boolean eof  = false;
+		public QueueReaderFile(BlockingQueue<String> queue, int seconds, int miliseconds) {
+			this.queue = queue;
+			this.timeout = seconds * 1000 + miliseconds;
+			if (this.timeout == 0) {
+				timeout = seconds * 60 * 60 * 24;
+			}
+		}
+
+		
+		public String readLine() {
+			if (eof) {
+				return null;
+			}
+			try {
+				String line = queue.poll(timeout, TimeUnit.MILLISECONDS);
+				
+				if (line!=null && line.equals(EOF_MARKER)) {
+					eof = true;
+					queue = null;
+					return null;
+				} else  {
+					return line;
+				}
+			} catch (InterruptedException e) {
+				handle(e);
+				return null;
+			}
+		}
+		
+		public boolean eof() {
+			return eof;
+		}
+
+
+	}
+
+
+	public static FileObject open(BlockingQueue<String> queue, int seconds, int miliseconds) {
+		return new QueueReaderFile(queue, seconds, miliseconds);
+	}
+
+	public static FileObject open(BlockingQueue<String> queue, int seconds) {
+		return new QueueReaderFile(queue, seconds, 0);
+	}
+	public static FileObject open(BlockingQueue<String> queue) {
+		return new QueueReaderFile(queue, 0, 0);
+
+	}
+
 
 }

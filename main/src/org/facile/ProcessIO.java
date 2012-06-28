@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.facile.IO.FileObject;
+import org.facile.IO.QueueReaderFile;
 
 import static org.facile.Facile.*;
 
@@ -69,35 +70,27 @@ public class ProcessIO {
 			return out;
 		}
 
-		
+		QueueReaderFile stdout;
 		public FileObject getStdOut() {
-			return new IO.AbstractFile() {
-				public String readLine() {
-					try {
-						return queueOut.poll(1000, TimeUnit.DAYS);
-					} catch (InterruptedException e) {
-						handle(e);
-					}
-					return "out";
-				}
-			};
+			return IO.open(queueOut, 1);
 		}
 
 		public FileObject getStdErr() {
-			return new IO.AbstractFile() {
-				public String readLine() {
-					try {
-						return queueErr.poll(1000, TimeUnit.DAYS);
-					} catch (InterruptedException e) {
-						handle(e);
-					}
-					return "err";
-				}
-			};
+			return IO.open(queueErr, 1);
 		}
 		
 		public FileObject getStdIn() {
 			return runner.toProcess;
+		}
+
+		public int kill() {
+			try {
+				runner.process.destroy();
+				
+			} catch (Exception ex) {
+				
+			}
+			return runner.process.exitValue();
 		}
 		
 	}
@@ -200,6 +193,7 @@ public class ProcessIO {
 		
 		
 		ProcessInOut inout ;
+		Process process;
 
 
 		public ProcessRunner(ProcessInOut inout, String password, int seconds, List<File> path, boolean verbose, String... cmdLine) {
@@ -216,6 +210,7 @@ public class ProcessIO {
 			this.seconds = seconds;
 			this.path = path;
 			this.verbose = verbose;
+		
 			
 			if (this.path == null) {
 				this.path = Sys.path();
@@ -247,7 +242,7 @@ public class ProcessIO {
 			pb.environment().put("PATH", spath);
 			
 			try {
-				final Process process = pb.start();
+				process = pb.start();
 
 				toProcess = open(process.getOutputStream());
 				
@@ -276,13 +271,6 @@ public class ProcessIO {
 				if (seconds == 0) {
 					exit = process.waitFor();
 
-					rest(10);
-					fromProcessError.interrupt();
-					fromProcessOutput.interrupt();
-					rest(10);
-					fromProcessError.join();
-					fromProcessOutput.join();
-
 				} else {
 					// Timer thread to make sure process does not hang.
 					Thread timer = new Thread(new Runnable() {
@@ -309,14 +297,16 @@ public class ProcessIO {
 												// will kill it if it takes too
 												// long.
 					timer.interrupt(); // tell timer to die.
-					rest(10); // Give time for buffers to get drained.
-					fromProcessError.interrupt(); // Send interrupt... time to
-													// clean up.
-					fromProcessOutput.interrupt();
-					rest(10); // Give threads a chance to get signal.
-					fromProcessError.join();
-					fromProcessOutput.join();
 				}
+				
+				rest(10); // Give time for buffers to get drained.
+				fromProcessError.interrupt(); // Send interrupt... time to
+												// clean up.
+				fromProcessOutput.interrupt();
+				rest(10); // Give threads a chance to get signal.
+				fromProcessError.join();
+				fromProcessOutput.join();
+
 			} catch (Exception e) {
 				handle(e);
 			}
@@ -401,6 +391,12 @@ public class ProcessIO {
 					fprintln(outputBuffer, line);
 					if (verbose) print(line);
 					if (this.isInterrupted()) {
+						if(queue!=null) {
+							try {
+								queue.put(IO.EOF_MARKER);
+							} catch (InterruptedException e) {
+							}
+						}
 						break;
 					}
 				}
