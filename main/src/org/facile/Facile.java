@@ -159,6 +159,10 @@ public class Facile {
 	public static void fprint(Appendable appendable, Object... items) {
 		add(appendable, sprint(items));
 	}
+	public static void fprint(FileObject file, Object... items) {
+		file.println(sprint(items));
+	}
+
 
 	
 	public static interface Enumerate<T> {
@@ -1941,15 +1945,15 @@ public class Facile {
 		throw new UnsupportedOperationException(msg);
 	}
 
-	public static FileObject<String> open(File file) {
+	public static FileObject open(File file) {
 		return IO.open(file);
 	}
 
-	public static FileObject<String> openString(String str) {
+	public static FileObject openString(String str) {
 		return IO.openString(str);
 	}
 
-	public static FileObject<String> open(char[] buffer) {
+	public static FileObject open(char[] buffer) {
 		return IO.open(buffer);
 	}
 
@@ -1969,19 +1973,19 @@ public class Facile {
 		return IO.open(new File(file)).readLines();
 	}
 
-	public static FileObject<String> open(InputStream inputStream) {
+	public static FileObject open(InputStream inputStream) {
 		return IO.open(inputStream);
 	}
 
-	public static FileObject<String> open(Class<?> clz, String resource) {
+	public static FileObject open(Class<?> clz, String resource) {
 		return IO.open(clz, resource);
 	}
 
-	public static FileObject<String> open(URL url) {
+	public static FileObject open(URL url) {
 		return IO.open(url);
 	}
 
-	public static FileObject<String> open(String suri) {
+	public static FileObject open(String suri) {
 		return IO.open(suri);
 	}
 	
@@ -1993,11 +1997,11 @@ public class Facile {
 		return total;
 	}
 	
-	public static FileObject<String> openFile(String file) {
+	public static FileObject openFile(String file) {
 		return IO.openFile(file);
 	}
 	
-	public static FileObject<String> open(File file, Mode mode) {
+	public static FileObject open(File file, Mode mode) {
 		return IO.open(file, mode);
 	}	
 	/** Allows ability to have symbols similar to Perl and Ruby */
@@ -2143,7 +2147,7 @@ public class Facile {
 		throw new AssertionException(ex);
 	}
 
-	public static FileObject<String> open(OutputStream outputStream) {
+	public static FileObject open(OutputStream outputStream) {
 		return IO.open(outputStream);
 	}
 	
@@ -2211,6 +2215,7 @@ public class Facile {
 	public static Map<String, ?> cmdToMap(final String delim,
 			String[] args) {
 		
+		
 		final List<String> largs = ls(args);
 		final Map<String, Object> mp = mp(string, object);
 		mp.put("all", largs);
@@ -2232,6 +2237,14 @@ public class Facile {
 					} else {
 						add(actions, arg);
 					}
+			} else if (arg.startsWith("+")) {
+				arg = trimStart(arg, "+");
+				arg = camelCase(arg);
+				mp.put(arg, "true");							
+			}else if (arg.startsWith("-")) {
+				arg = trimStart(arg, "-");
+				arg = camelCase(arg);
+				mp.put(arg, "false");											
 			}
 		}		
 		return mp;

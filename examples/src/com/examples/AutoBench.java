@@ -5,6 +5,8 @@ import static org.facile.ContextParser.*;
 import static org.facile.ContextParser.Input.IN;
 import static org.facile.Facile.*;
 import java.io.File;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 import org.facile.Facile.my;
 import org.facile.IO.FileObject;
@@ -56,10 +58,15 @@ public class AutoBench {
 
 	static File outputFolder;
 	static int slaveId;
+	static boolean remote;
 
 	static boolean shortForm;
+	
+	static int slavePort = 4600;
+	private static ServerSocket slaveServerSocket;
+	private static Socket socketFromSlaveToMaster;
 
-	public static void runIt() {
+	public static void runIt() throws Exception {
 
 		if (slave) {
 			runSlave();
@@ -158,25 +165,41 @@ public class AutoBench {
 	}
 
 	
-	private static void runSlave() {
+	private static void runSlave() throws Exception {
+		if (remote) {
+			initSlave();
+		}
+		
 		String command = null;
 		ProcessOut run = null;
 		print("Slave started ok " + slaveId);
 
-		FileObject<String> reader = open(System.in);
+		FileObject reader;
+		FileObject writer;
+		if (!remote) {
+			reader = open(System.in);
+			writer = open(System.out);
+			writer.autoFlush();
+
+		} else {
+			reader = open(socketFromSlaveToMaster.getInputStream());
+			writer = open(socketFromSlaveToMaster.getOutputStream());
+			writer.autoFlush();
+		}
 		String line = reader.readLine();
+
 		expect("", "ack", line);
 
 		while(line!=null && !line.trim().equals("DIE NOW")) {
 			if (line.trim().equals("command")) {
-				print("ack command", slaveId);
+				writer.print("ack command", slaveId);
 				command = reader.readLine();
-				print ("running ...... command", command);
+				writer.print ("running ...... command", command);
 				run = run(processTimeout * 60, path, verbose, command);
-				print ("done ...... running command", command);
-				print("EXIT CODE for SLAVE ", slaveId, ": EXIT=", run.exit);
-				print(run);
-				print ("***done***");
+				writer.print ("done ...... running command", command);
+				writer.print("EXIT CODE for SLAVE ", slaveId, ": EXIT=", run.exit);
+				writer.print(run);
+				writer.print ("***done***");
 				if (run.exit != 0) {
 					System.exit(run.exit);
 				}
@@ -191,7 +214,15 @@ public class AutoBench {
 	}
 
 
-	private static my runSlavesServer(int serverNum, int rate, File outDir, int runNumber) {
+	private static void initSlave() throws Exception {
+		   slaveServerSocket = new ServerSocket(slavePort);
+		   print("Waiting for socket connection on port " + slavePort);
+		   socketFromSlaveToMaster = slaveServerSocket.accept();
+	}
+
+
+
+	private static my runSlavesServer(int serverNum, int rate, File outDir, int runNumber) throws Exception {
 		initProcess();
 		expectFromChildren("Slave started ok");		
 		sendToChildren("ack");
@@ -292,18 +323,16 @@ public class AutoBench {
 
 	static ProcessInOut inout1;
 	static ProcessInOut inout2;
-	static List<FileObject<String>> childrenProcessOutput;
-	static List<FileObject<? extends Object>> childProcessInputs;
 	
 	private static void sendToChildren(String value) {
-		for (FileObject<? extends Object> toProcess : childProcessInputs) {
+		for (FileObject toProcess : toSlaves) {
 			toProcess.println(value);
 		}
 	}
 	private static void expectFromChildren(String value) {
 		String line = null;
 		int index = 1;
-		for (FileObject<String> out : childrenProcessOutput) {
+		for (FileObject out : fromSlaves) {
 			print ("expect " + value);
 			line = out.readLine();
 			print("FROM CHILD", index, line);
@@ -318,7 +347,7 @@ public class AutoBench {
 		String line = null;
 		int index = 1;
 
-		for (FileObject<String> out : childrenProcessOutput) {
+		for (FileObject out : fromSlaves) {
 			Appendable buf = buf();
 			line = out.readLine();
 			while (!(line==null) && !line.trim().equals(delim.trim())){
@@ -333,23 +362,40 @@ public class AutoBench {
 		
 	}
 
-
-	@SuppressWarnings("unchecked")
-	private static void initProcess() {
-		List<File> classPath = Sys.classPath();
-
-		String classpath = calculateClasspath(classPath);
-
-		String args = join(' ', Sys.java().toString(), "-cp", classpath,
+	static List<Socket> slaveSockets = ls(Socket.class);
+	static List<FileObject> toSlaves = ls(FileObject.class);
+	static List<FileObject> fromSlaves = ls(FileObject.class); 
+	private static void initProcess() throws Exception {
+		
+		if (!remote) {
+			List<File> classPath = Sys.classPath();
+	
+			String classpath = calculateClasspath(classPath);
+	
+			String args = join(' ', Sys.java().toString(), "-cp", classpath,
 				AutoBench.class.getName(), "--slave", "yes");
 
-		inout1 = runAsync(0, path, true, args + " --slave-id 1");
-		inout2 = runAsync(0, path, true, args + " --slave-id 2");
+			inout1 = runAsync(0, path, true, args + " --slave-id 1");
+			inout2 = runAsync(0, path, true, args + " --slave-id 2");
 
-		childrenProcessOutput = ls(inout1.getStdOut(),
-				inout2.getStdOut());
-		childProcessInputs = ls(inout1.getStdIn(),
-				inout2.getStdIn());
+			fromSlaves = ls(inout1.getStdOut(),inout2.getStdOut());
+			toSlaves = ls(inout1.getStdIn(), inout2.getStdIn());
+		} else {
+			
+			if (clients==null) {
+				print ("The argument --clients is required if --remote is set");
+			}
+			for (String client : clients) {
+				String[] hostPort = split(client, ":");
+				String host = hostPort[0];
+				int port = toInt(hostPort[1]);
+				Socket socket = new Socket(host, port);
+				slaveSockets.add(socket);
+				toSlaves.add(open(socket.getOutputStream()));
+				fromSlaves.add(open(socket.getInputStream()));
+			}
+
+		}
 	}
 
 	private static String calculateClasspath(List<File> classPath) {
@@ -592,7 +638,12 @@ public class AutoBench {
 		context(AutoBench.class, args, new Runnable() {
 			@Override
 			public void run() {
-				runIt();
+				try {
+					runIt();
+				} catch (Exception ex) {
+					ex.printStackTrace();
+					System.exit(-777);
+				}
 			}
 		});
 	}

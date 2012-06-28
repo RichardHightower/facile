@@ -2,7 +2,6 @@ package org.facile;
 
 import java.io.CharArrayReader;
 import java.io.Closeable;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -176,8 +175,8 @@ public class IO {
 
 	// File
 	// File
-	public static interface FileObject<T> extends Closeable, Flushable,
-			Iterable<T> {
+	public static interface FileObject extends Closeable, Flushable,
+			Iterable<String> {
 		String read(int size);
 
 		int read(char[] buffer);
@@ -196,27 +195,29 @@ public class IO {
 
 		byte input();
 
-		Iterator<T> iterator();
+		Iterator<String> iterator();
 
 		long tell();
 
-		FileObject<T> seek(long pos);
+		FileObject seek(long pos);
 
 		void close();
 
-		FileObject<T> closeIt();
+		FileObject closeIt();
 
 		void flush();
 
-		FileObject<T> flushIt();
+		FileObject  flushIt();
 
 		String readAll();
 
-		FileObject<T> println(CharSequence cs);
+		FileObject  println(CharSequence cs);
+		
+		FileObject  print(Object... args);
 
-		FileObject<T> autoFlush();
+		FileObject  autoFlush();
 
-		FileObject<T> writeAll(CharSequence output);
+		FileObject  writeAll(CharSequence output);
 
 	}
 
@@ -231,116 +232,6 @@ public class IO {
 		throw new InputOutputException(ex);
 	}
 
-	public static class FileBinary extends AbstractFile<String> {
-
-		private InputStream stream;
-		private DataInputStream dataInput;
-		private Reader reader;
-		private boolean eof;
-
-		public FileBinary() {
-		}
-
-		public FileBinary(InputStream stream) {
-			init(stream);
-		}
-
-		private void init(InputStream stream) {
-			this.stream = stream;
-			this.dataInput = new DataInputStream(this.stream);
-			this.reader = new InputStreamReader(dataInput);
-		}
-
-		@Override
-		public String read(int size) {
-			return doRead(reader, size);
-		}
-
-		@Override
-		public int read(char[] buffer) {
-			notSupported();
-			return 0;
-		}
-
-		@Override
-		public char read() {
-			try {
-				return dataInput.readChar();
-			} catch (IOException e) {
-				handle(e);
-			}
-			return 0;
-		}
-
-		@Override
-		public String readLine() {
-			return null;
-		}
-
-		@Override
-		public String[] readLines() {
-			return null;
-		}
-
-		@Override
-		public boolean eof() {
-			return eof;
-		}
-
-		@Override
-		public byte[] input(long size) {
-			return null;
-		}
-
-		@Override
-		public int input(byte[] buffer) {
-			return 0;
-		}
-
-		@Override
-		public byte input() {
-			return 0;
-		}
-
-		@Override
-		public Iterator<String> iterator() {
-			return null;
-		}
-
-		@Override
-		public long tell() {
-			return 0;
-		}
-
-		@Override
-		public void close() {
-		}
-
-		@Override
-		public void flush() {
-		}
-
-		@Override
-		public String readAll() {
-			return null;
-		}
-
-		@Override
-		public FileObject<String> closeIt() {
-			return null;
-		}
-
-		@Override
-		public FileObject<String> flushIt() {
-			return null;
-		}
-
-		@Override
-		public FileObject<String> writeAll(CharSequence output) {
-			return null;
-		}
-
-	}
 
 	private static String doRead(Reader reader, int size) {
 		int count = 0;
@@ -357,7 +248,7 @@ public class IO {
 		return string(0, count, buffer);
 	}
 
-	public static abstract class AbstractFile<T> implements FileObject<T> {
+	public static abstract class AbstractFile implements FileObject {
 		public String read(int size) {
 			notSupported();
 			return null;
@@ -404,7 +295,7 @@ public class IO {
 			return 0;
 		}
 
-		public Iterator<T> iterator() {
+		public Iterator<String> iterator() {
 			notSupported();
 			return null;
 		}
@@ -414,7 +305,7 @@ public class IO {
 			return 0;
 		}
 
-		public FileObject<T> seek(long pos) {
+		public FileObject seek(long pos) {
 			notSupported();
 			return null;
 		}
@@ -433,37 +324,45 @@ public class IO {
 			return null;
 		}
 
-		public FileObject<T> println(CharSequence txt) {
+		public FileObject println(CharSequence txt) {
 			notSupported();
 			return null;
 		}
 
-		public FileObject<T> autoFlush() {
+		public FileObject autoFlush() {
 			notSupported();
 			return null;
 		}
 
 		@Override
-		public FileObject<T> closeIt() {
+		public FileObject closeIt() {
 			close();
 			return this;
 		}
 
 		@Override
-		public FileObject<T> flushIt() {
+		public FileObject flushIt() {
 			flush();
 			return this;
 		}
 
+		
 		@Override
-		public FileObject<T> writeAll(CharSequence output) {
+		public FileObject writeAll(CharSequence output) {
 			notSupported();
 			return null;
 		}
+		
+		@Override
+		public FileObject print(Object... args) {
+			fprint(this, args);
+			return this;
+		}
+
 
 	}
 
-	public static class FileTextWriter extends AbstractFile<String> {
+	public static class FileTextWriter extends AbstractFile {
 		
 		PrintWriter out;
 		boolean autoFlush;
@@ -473,7 +372,7 @@ public class IO {
 		}
 
 		@Override
-		public FileObject<String> println(CharSequence text) {
+		public FileObject println(CharSequence text) {
 			out.println(text);
 			if (autoFlush) {
 				out.flush();
@@ -482,13 +381,13 @@ public class IO {
 		}
 
 		@Override
-		public FileObject<String> autoFlush() {
+		public FileObject  autoFlush() {
 			this.autoFlush = true;
 			return this;
 		}
 
 		@Override
-		public FileObject<String> writeAll(CharSequence output) {
+		public FileObject  writeAll(CharSequence output) {
 			out.print(output);
 			if (autoFlush && output !=null && output.length() > 255) {
 				out.flush();
@@ -506,7 +405,7 @@ public class IO {
 
 	}
 
-	public static class FileTextReader extends AbstractFile<String> {
+	public static class FileTextReader extends AbstractFile {
 		Reader reader;
 		int bufferSize = 256;
 		int position = 0;
@@ -671,7 +570,7 @@ public class IO {
 		}
 
 		@Override
-		public FileObject<String> seek(long pos) {
+		public FileObject seek(long pos) {
 			try {
 				reader.skip(pos);
 			} catch (IOException e) {
@@ -735,7 +634,7 @@ public class IO {
 	}
 
 
-	private static FileObject<String> openTextWriter(File file, Mode mode) {
+	private static FileObject openTextWriter(File file, Mode mode) {
 		FileWriter writer = null;
 		try {
 			if (mode==Mode.append_text) {
@@ -757,7 +656,7 @@ public class IO {
 	 *            file to open in read mode
 	 * @return
 	 */
-	public static FileObject<String> open(File file) {
+	public static FileObject open(File file) {
 		FileReader reader = null;
 		try {
 			reader = new FileReader(file);
@@ -775,7 +674,7 @@ public class IO {
 	 * @param file
 	 * @return
 	 */
-	public static FileObject<String> open(Reader reader) {
+	public static FileObject open(Reader reader) {
 		FileTextReader textReader = new FileTextReader(reader);
 		return textReader;
 	}
@@ -789,7 +688,7 @@ public class IO {
 	 *            name of file to open
 	 * @return
 	 */
-	public static FileObject<String> openFile(String sFile) {
+	public static FileObject openFile(String sFile) {
 		return open(new File(sFile));
 	}
 
@@ -799,7 +698,7 @@ public class IO {
 	 * @param str
 	 * @return
 	 */
-	public static FileObject<String> openString(String str) {
+	public static FileObject openString(String str) {
 		StringReader reader = new StringReader(str);
 		FileTextReader textReader = new FileTextReader(reader);
 		return textReader;
@@ -811,7 +710,7 @@ public class IO {
 	 * @param buffer
 	 * @return
 	 */
-	public static FileObject<String> open(char buffer[]) {
+	public static FileObject open(char buffer[]) {
 		CharArrayReader reader = new CharArrayReader(buffer);
 		FileTextReader textReader = new FileTextReader(reader);
 		return textReader;
@@ -823,12 +722,12 @@ public class IO {
 	 * @param cs
 	 * @return
 	 */
-	public static FileObject<String> openString(CharSequence cs) {
+	public static FileObject openString(CharSequence cs) {
 		return openString(cs.toString());
 	}
 
 	public static void writeAll(File file, String output) {
-		FileObject<String> fileObject = open(file, Mode.write_text);
+		FileObject fileObject = open(file, Mode.write_text);
 		
 		try {
 			fileObject.writeAll(output);
@@ -839,7 +738,7 @@ public class IO {
 	}
 	
 	public static void appendWriteAll(File file, String output) {
-		FileObject<String> fileObject = open(file, Mode.append_text);
+		FileObject fileObject = open(file, Mode.append_text);
 		
 		try {
 			fileObject.writeAll(output);
@@ -850,7 +749,7 @@ public class IO {
 	}
 
 	public static void appendWriteLine(File file, String output) {
-		FileObject<String> fileObject = open(file, Mode.append_text);
+		FileObject fileObject = open(file, Mode.append_text);
 		try {
 			fileObject.println(output);
 		} finally {
@@ -858,7 +757,7 @@ public class IO {
 		}
 	}
 
-	public static FileObject<String> open(File file, Mode mode) {
+	public static FileObject open(File file, Mode mode) {
 
 		switch (mode) {
 		case write_text:
@@ -888,13 +787,13 @@ public class IO {
 		return open(new File(file)).readLines();
 	}
 
-	public static FileObject<String> open(InputStream inputStream) {
+	public static FileObject open(InputStream inputStream) {
 		FileTextReader textReader = new FileTextReader(new InputStreamReader(
 				inputStream));
 		return textReader;
 	}
 
-	public static FileObject<String> open(URL url) {
+	public static FileObject open(URL url) {
 
 		FileTextReader textReader = null;
 		try {
@@ -906,13 +805,13 @@ public class IO {
 		return textReader;
 	}
 
-	public static FileObject<String> open(Class<?> clz, String resource) {
+	public static FileObject open(Class<?> clz, String resource) {
 		FileTextReader textReader = new FileTextReader(new InputStreamReader(
 				clz.getResourceAsStream(resource)));
 		return textReader;
 	}
 
-	public static FileObject<String> open(String suri) {
+	public static FileObject open(String suri) {
 		URI uri = URI.create(suri);
 		String scheme = uri.getScheme();
 		if (scheme == null) {
@@ -953,7 +852,7 @@ public class IO {
 
 	}
 
-	public static FileObject<String> open(OutputStream outputStream) {
+	public static FileObject open(OutputStream outputStream) {
 		return new FileTextWriter(new OutputStreamWriter(outputStream));
 	}
 

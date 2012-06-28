@@ -114,11 +114,11 @@ public class ContextParser {
 		return currentCtx().IN();
 	}
 
-	public static FileObject<String> open(Input t, String file) {
+	public static FileObject open(Input t, String file) {
 		return currentCtx().open(t, file);
 	}
 
-	public static FileObject<String> openString(Input t, String file) {
+	public static FileObject openString(Input t, String file) {
 		return currentCtx().openString(t, file);
 	}
 
@@ -251,32 +251,32 @@ public class ContextParser {
 		public String $19;
 		List<String> $$;
 
-		public FileObject<String> FILE;
-		public FileObject<String> INPUT;
-		public FileObject<String> IN;
-		public FileObject<String> OUT;
-		private Map<String, FileObject<String>> f = new HashMap<String, FileObject<String>>(
+		public FileObject FILE;
+		public FileObject INPUT;
+		public FileObject IN;
+		public FileObject OUT;
+		private Map<String, FileObject> f = new HashMap<String, FileObject>(
 				10);
 		public Matcher matcher;
 
-		public FileObject<String> f(Object obj) {
+		public FileObject f(Object obj) {
 			return f.get(obj.toString());
 
 		}
 
-		public FileObject<String> openString(Input t, String buffer) {
-			FileObject<String> fileObject = Facile.openString(buffer);
+		public FileObject openString(Input t, String buffer) {
+			FileObject fileObject = Facile.openString(buffer);
 			placeFile(t, fileObject);
 			return fileObject;			
 		}
 
-		public FileObject<String> open(Input t, String file) {
-			FileObject<String> fileObject = Facile.openFile(file);
+		public FileObject open(Input t, String file) {
+			FileObject fileObject = Facile.openFile(file);
 			placeFile(t, fileObject);
 			return fileObject;
 		}
 
-		private void placeFile(Input t, FileObject<String> fileObject) {
+		private void placeFile(Input t, FileObject fileObject) {
 			if (fileObject instanceof FileTextReader) {
 				((FileTextReader) fileObject).ctx(this);
 				((FileTextReader) fileObject).startIteration();
@@ -299,8 +299,8 @@ public class ContextParser {
 			}
 		}
 
-		public FileObject<String> open(Object obj, String file) {
-			FileObject<String> fo = open((Input) null, file);
+		public FileObject open(Object obj, String file) {
+			FileObject fo = open((Input) null, file);
 			f.put(obj.toString(), fo);
 			return fo;
 		}

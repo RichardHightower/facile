@@ -33,6 +33,9 @@ public class ArgumentParsingAndTypesTest {
 	static int numCall;
 	
 	static File file;
+	
+	static boolean flag;
+	static boolean flag2= true;
 //	//--low_rate $2
 //	static int lowRate;
 //	//--high_rate $3
@@ -137,7 +140,8 @@ public class ArgumentParsingAndTypesTest {
 		//public static void copyArgs(Class<?> clz, Map<String, ?> args) {
 
 		sargs = "--uri1 /file_$5.html  --start   --host1 ch_resin --port1 8080 --uri2 /file_0k.html " +
-				" --num_call 10  --clients darth.foobar.com:4600,luke.foobar.com:4600 --file /tmp --dry-run true";
+				" --num_call 10  --clients darth.foobar.com:4600,luke.foobar.com:4600 --file /tmp --dry-run true " +
+				" -flag2 +flag";
 
 		aargs = split(sargs);
 
@@ -151,7 +155,8 @@ public class ArgumentParsingAndTypesTest {
 		assertEquals ("uri1", "/file_$5.html", uri1);
 		assertEquals ("port1", 8080, port1);
 		assertEquals ("numCall", 10, numCall);
-		
+		assertEquals ("flag", true, flag);
+		assertEquals ("flag2", false, flag2);
 		
 	}
 

@@ -27,6 +27,7 @@ public class ProcessIO {
 		
 		BlockingQueue<Boolean> wait;
 		
+		
 		public ProcessInOut () {
 			this.queueOut = new ArrayBlockingQueue<String>(100);
 			this.queueErr = new ArrayBlockingQueue<String>(100);
@@ -69,8 +70,8 @@ public class ProcessIO {
 		}
 
 		
-		public FileObject<String> getStdOut() {
-			return new IO.AbstractFile<String>() {
+		public FileObject getStdOut() {
+			return new IO.AbstractFile() {
 				public String readLine() {
 					try {
 						return queueOut.poll(1000, TimeUnit.DAYS);
@@ -82,8 +83,8 @@ public class ProcessIO {
 			};
 		}
 
-		public FileObject<String> getStdErr() {
-			return new IO.AbstractFile<String>() {
+		public FileObject getStdErr() {
+			return new IO.AbstractFile() {
 				public String readLine() {
 					try {
 						return queueErr.poll(1000, TimeUnit.DAYS);
@@ -95,7 +96,7 @@ public class ProcessIO {
 			};
 		}
 		
-		public FileObject<?> getStdIn() {
+		public FileObject getStdIn() {
 			return runner.toProcess;
 		}
 		
@@ -195,7 +196,7 @@ public class ProcessIO {
 		int seconds = 0;
 		boolean verbose;
 		
-		volatile FileObject<String> toProcess;
+		volatile FileObject toProcess;
 		
 		
 		ProcessInOut inout ;
@@ -250,8 +251,8 @@ public class ProcessIO {
 
 				toProcess = open(process.getOutputStream());
 				
-				FileObject<String> stdOut = open(process.getInputStream());
-				FileObject<String> stdErr = open(process.getErrorStream());
+				FileObject stdOut = open(process.getInputStream());
+				FileObject stdErr = open(process.getErrorStream());
 
 				if (inout == null) {
 					fromProcessError = new ProcessIOThread(stdErr, verbose);
@@ -333,26 +334,26 @@ public class ProcessIO {
 	}
 
 	static class ProcessIOThread extends Thread {
-		FileObject<String> fromProcess;
+		FileObject fromProcess;
 		String password;
-		FileObject<?> toProcess;
+		FileObject toProcess;
 		StringBuilder outputBuffer = new StringBuilder(256);
 		boolean sudo;
 		boolean verbose;
 		private BlockingQueue<String> queue;
 
-		ProcessIOThread(FileObject<String> fromProcess, boolean verbose) {
+		ProcessIOThread(FileObject fromProcess, boolean verbose) {
 			this.fromProcess = fromProcess;
 			this.verbose = verbose;
 		}
-		ProcessIOThread(BlockingQueue<String> queueOut, FileObject<String> fromProcess, boolean verbose) {
+		ProcessIOThread(BlockingQueue<String> queueOut, FileObject fromProcess, boolean verbose) {
 			this.queue = queueOut;
 			this.fromProcess = fromProcess;
 			this.verbose = verbose;
 		}
 
-		ProcessIOThread(FileObject<String> fromProcess,
-				FileObject<?> toProcess, String password, boolean sudo, boolean verbose) {
+		ProcessIOThread(FileObject fromProcess,
+				FileObject toProcess, String password, boolean sudo, boolean verbose) {
 			this.sudo = sudo;
 			this.fromProcess = fromProcess;
 			this.toProcess = toProcess;
@@ -361,8 +362,8 @@ public class ProcessIO {
 			this.password = password;
 		}
 
-		public ProcessIOThread(BlockingQueue<String> queueOut,FileObject<String> fromProcess,
-				FileObject<?> toProcess, String password, boolean sudo, boolean verbose) {
+		public ProcessIOThread(BlockingQueue<String> queueOut,FileObject fromProcess,
+				FileObject toProcess, String password, boolean sudo, boolean verbose) {
 			this.queue = queueOut;
 			this.sudo = sudo;
 			this.fromProcess = fromProcess;

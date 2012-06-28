@@ -36,7 +36,7 @@ public class IOTest {
 	@Test
 	public void testFileEnum() throws IOException {
 		File f = subdir( "test/org/facile/test.txt");
-		FileObject<String> file = open(f);
+		FileObject file = open(f);
 
 		int index = 0;
 
@@ -57,7 +57,7 @@ public class IOTest {
 		File f = new File(".");
 		f = f.getCanonicalFile();
 		f = new File(f, "test/org/facile/test.txt");
-		FileObject<String> file = open(f);
+		FileObject file = open(f);
 
 		assertEquals("abcdefg", file.iterator().next());
 		assertEquals("Line 1", file.iterator().next());
@@ -73,7 +73,7 @@ public class IOTest {
 		File f = new File(".");
 		f = f.getCanonicalFile();
 		f = new File(f, "test/org/facile/test.txt");
-		FileObject<String> file = open(f);
+		FileObject file = open(f);
 
 		testSimpleRead(file);
 		testReadLine(file);
@@ -86,7 +86,7 @@ public class IOTest {
 	@Test
 	public void testInputStream() throws IOException {
 		InputStream inputStream = IOTest.class.getResourceAsStream("test.txt");
-		FileObject<String> file = open(inputStream);
+		FileObject file = open(inputStream);
 
 		testSimpleRead(file);
 		testReadLine(file);
@@ -99,7 +99,7 @@ public class IOTest {
 
 	@Test
 	public void testClassResource() throws IOException {
-		FileObject<String> file = open(IOTest.class, "test.txt");
+		FileObject file = open(IOTest.class, "test.txt");
 
 		testSimpleRead(file);
 		testReadLine(file);
@@ -115,7 +115,7 @@ public class IOTest {
 		String lines = lines("abcdefg\r", "Line 1\r", "Line 2\r", "Line 3\r",
 				"Line 4\r", "Line 5\r");
 
-		FileObject<String> file = openString(lines);
+		FileObject  file = openString(lines);
 
 		testSimpleRead(file);
 		testReadLine(file);
@@ -131,7 +131,7 @@ public class IOTest {
 		String lines = lines("abcdefg", "Line 1", "Line 2", "Line 3", "Line 4",
 				"Line 5");
 
-		FileObject<String> file = openString(lines);
+		FileObject  file = openString(lines);
 
 		testSimpleRead(file);
 		testReadLine(file);
@@ -142,22 +142,22 @@ public class IOTest {
 
 	}
 
-	private void testSimpleRead(FileObject<String> file) {
+	private void testSimpleRead(FileObject  file) {
 		char c = file.read();
 		assertEquals('a', c);
 	}
 
-	private void testReadLine(FileObject<String> file) {
+	private void testReadLine(FileObject  file) {
 		assertEquals("bcdefg", file.readLine());
 	}
 
-	private void testReadLines(FileObject<String> file) {
+	private void testReadLines(FileObject  file) {
 		assertEquals("Line 4", file.readLines()[3]);
 	}
 
 	//@Test Long test
 	public void testURL() throws IOException {
-		FileObject<String> file = open(new URL(
+		FileObject  file = open(new URL(
 				"https://raw.github.com/RichardHightower/facile/master/main/test/org/facile/test.txt"));
 
 		testSimpleRead(file);
@@ -171,7 +171,7 @@ public class IOTest {
 	public void testClassResourceURL() throws IOException {
 		URL resource = this.getClass().getResource("test.txt");
 		print(resource);
-		FileObject<String> file = open(resource);
+		FileObject  file = open(resource);
 
 		testSimpleRead(file);
 		testReadLine(file);
@@ -183,7 +183,7 @@ public class IOTest {
 	@Test
 	public void testClassResourceURL2() throws IOException {
 
-		FileObject<String> file = open("classpath:/org/facile/test.txt");
+		FileObject  file = open("classpath:/org/facile/test.txt");
 
 		testSimpleRead(file);
 		testReadLine(file);
