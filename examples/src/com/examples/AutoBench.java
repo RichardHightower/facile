@@ -5,11 +5,13 @@ import static org.facile.ContextParser.*;
 import static org.facile.ContextParser.Input.IN;
 import static org.facile.Facile.*;
 import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 import org.facile.Facile.my;
 import org.facile.IO.FileObject;
+import org.facile.IO.Mode;
 import org.facile.ProcessIO.ProcessInOut;
 import org.facile.ProcessIO.ProcessOut;
 import org.facile.Sys;
@@ -61,6 +63,9 @@ public class AutoBench {
 	static boolean remote;
 
 	static boolean shortForm;
+	static boolean hog = true;
+	static int recvBuffer = 64000; 
+	static int sendBuffer = 16000; 
 	
 	static int slavePort = 4600;
 	private static ServerSocket slaveServerSocket;
@@ -144,10 +149,8 @@ public class AutoBench {
 	
 	private static String httperfString(int rate, String host, String uri,
 			int port) {
-		String httperf1 = sprint("httperf", "--server", host, "--uri", uri,
-				"--num-con", numConn, "--num-call", numCall, "--timeout",
-				timeout, "--rate", rate, "--port", port);
-		return httperf1;
+		return httperfString(rate, host, uri, port, numConn, numCall,
+				timeout);
 	}
 
 	private static String httperfString(int rate, String host, String uri,
@@ -160,7 +163,10 @@ public class AutoBench {
 				"--num-call", ncall, 
 				"--timeout", to, 
 				"--rate", rate, 
-				"--port", port);
+				"--port", port,
+				"--send-buffer", sendBuffer,
+				"--recv-buffer", recvBuffer,
+				hog ? "--hog" : "");
 		return httperf1;
 	}
 
@@ -169,10 +175,27 @@ public class AutoBench {
 		if (remote) {
 			initSlave();
 		}
-		
+		if (!remote) {
+			slaveRunner();
+		} else {
+			while (true) {
+				slaveRunner();				
+			}
+		}
+	}
+
+
+
+	private static void slaveRunner() throws IOException {
 		String command = null;
 		ProcessOut run = null;
 
+		File slaveLog = file(cwf(), "output/slave" + AutoBench.slaveId + ".log");
+		
+		FileObject slaveOutput = open(slaveLog, Mode.write_text);
+		slaveOutput.autoFlush();
+		try {
+		
 		FileObject reader;
 		FileObject writer;
 		if (!remote) {
@@ -187,19 +210,36 @@ public class AutoBench {
 		}
 		
 		writer.print("Slave started ok " + slaveId);
-
+		slaveOutput.print("Slave started ok " + slaveId);
+	
 		String line = reader.readLine();
+		slaveOutput.print(" from Master " + line);
 
+		
 		expect("", "ack", line);
 
 		while(line!=null && !line.trim().equals("DIE NOW")) {
 			if (line.trim().equals("command")) {
 				writer.print("ack command", slaveId);
 				command = reader.readLine();
+				slaveOutput.print(" command from Master " + command);
+
 				writer.print ("running ...... command", command);
 				run = run(processTimeout * 60, path, verbose, command);
 				writer.print ("done ...... running command", command);
 				writer.print("EXIT CODE for SLAVE ", slaveId, ": EXIT=", run.exit);
+				
+				slaveOutput.print(" OUTPUT FROM COMMAND " + command);
+				slaveOutput.print(run);
+				
+				try {
+					my results = parseOutput(run.stdout);
+					print(results);
+					print("RESULT:", results.i(req_rate), results.i(error_total));
+				} catch (Exception ex) {
+					
+				}
+				
 				writer.print(run);
 				writer.print ("***done***");
 				if (run.exit != 0) {
@@ -212,6 +252,10 @@ public class AutoBench {
 			System.exit(-666);
 		} else {
 			System.exit(run.exit);
+		}
+		} finally {
+			slaveOutput.flush();
+			slaveOutput.close();
 		}
 	}
 
@@ -267,71 +311,39 @@ public class AutoBench {
 			return null;
 		} else {
 		
-			Double v = get(dbl, out1, replies);
-			
-			if (v== null) {
-				return null;
-			}
-			if (v!=null) {
-				v+= get(dbl, out2, replies);
-				out1.i(replies, str(v));
-			}
-			
-			v = get(dbl, out1, error_total);
-			v+= get(dbl, out2, error_total);
-			out1.i(error_total, str(v));
-			
-			v = get(dbl, out1, conn_rate);
-			v+= get(dbl, out2, conn_rate);
-			out1.i(conn_rate, str(v));
-			
-			v = get(dbl, out1, req_rate);
-			v+= get(dbl, out2, req_rate);
-			out1.i(req_rate, str(v));
-			
-			v = get(dbl, out1, rep_rate_min);
-			v+= get(dbl, out2, rep_rate_min);
-			out1.i(rep_rate_min, str(v));
-	
-			v = get(dbl, out1, rep_rate_avg);
-			v+= get(dbl, out2, rep_rate_avg);
-			out1.i(rep_rate_avg, str(v));
-	
-			v = get(dbl, out1, rep_rate_max);
-			v+= get(dbl, out2, rep_rate_max);
-			out1.i(rep_rate_max, str(v));
-	
-			v = get(dbl, out1, rep_rate_stdv);
-			v+= get(dbl, out2, rep_rate_stdv);
-			out1.i(rep_rate_stdv, str(v));
-	
-			v = get(dbl, out1, status_100);
-			v+= get(dbl, out2, status_100);
-			out1.i(status_100, str(v));
-	
-			v = get(dbl, out1, status_200);
-			v+= get(dbl, out2, status_200);
-			out1.i(status_200, str(v));
-	
-			v = get(dbl, out1, status_300);
-			v+= get(dbl, out2, status_300);
-			out1.i(status_300, str(v));
-	
-			v = get(dbl, out1, status_400);
-			v+= get(dbl, out2, status_400);
-			out1.i(status_400, str(v));
-	
-			v = get(dbl, out1, status_500);
-			v+= get(dbl, out2, status_500);
-			out1.i(status_500, str(v));
-	
-			v = get(dbl, out1, net_io);
-			v+= get(dbl, out2, net_io);
-			out1.i(net_io, str(v));
+			getAddPut(out1, out2, replies);
+			getAddPut(out1, out2, error_total);
+			getAddPut(out1, out2, conn_rate);
+			getAddPut(out1, out2, req_rate);
+			getAddPut(out1, out2, rep_rate_min);
+			getAddPut(out1, out2, rep_rate_avg);
+			getAddPut(out1, out2, rep_rate_max);
+			getAddPut(out1, out2, rep_rate_stdv);
+			getAddPut(out1, out2, status_100);
+			getAddPut(out1, out2, status_200);
+			getAddPut(out1, out2, status_300);
+			getAddPut(out1, out2, status_400);
+			getAddPut(out1, out2, status_500);
 			
 			return out1;
 		}
 
+	}
+
+
+
+	private static void getAddPut(my out1, my out2, Results key) {
+		Double v1, v2;
+		v1 = get(dbl, out1, key);
+		print("Result from 1 ", key, v1);
+		v2 = get(dbl, out2, key);
+		print("Result from 2 ", key, v2);
+		
+		if (v1 == null || v2 == null) {
+			return;
+		}
+		double result = v1 + v2;
+		out1.i(key, sprintf("%2.2f", result));
 	}
 
 	static ProcessInOut inout1;
