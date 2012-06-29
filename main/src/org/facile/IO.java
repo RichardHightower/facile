@@ -856,7 +856,10 @@ public class IO {
 	}
 
 	public static FileObject open(OutputStream outputStream) {
-		return new FileTextWriter(new OutputStreamWriter(outputStream));
+		FileTextWriter fw = new FileTextWriter(new OutputStreamWriter(outputStream));
+		fw.autoFlush();
+		return fw;
+		
 	}
 	
 	public static final String EOF_MARKER = "***** EOF ***** 12345678910";

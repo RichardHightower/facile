@@ -245,24 +245,27 @@ public class AutoBench {
 		my out1 = parseOutput(list.get(0));
 		my out2 = parseOutput(list.get(1));
 		rest(1000);
-		sendToChildren("DIE NOW");
+		if (!remote) sendToChildren("DIE NOW");
 		
 		int times=0;
-		for (ProcessInOut p : processes) {
-			while (!p.isDone()) {
-				rest(1000);
-				times++;
-				if (times > 10) {
-					p.kill();
+		
+		if (!remote) {
+			for (ProcessInOut p : processes) {
+				while (!p.isDone()) {
+					rest(1000);
+					times++;
+					if (times > 10) {
+						p.kill();
+					}
 				}
 			}
 		}
 		
-		if (inout1.processOut().exit == 0 && inout2.processOut().exit != 0) {
+		if (!remote && inout1.processOut().exit == 0 && inout2.processOut().exit != 0) {
 			return out1;
-		} else if (inout1.processOut().exit != 0 && inout2.processOut().exit == 0) {
+		} else if (!remote && inout1.processOut().exit != 0 && inout2.processOut().exit == 0) {
 			return out2;
-		} else if (inout1.processOut().exit != 0 && inout2.processOut().exit != 0) {
+		} else if (!remote && inout1.processOut().exit != 0 && inout2.processOut().exit != 0) {
 			return null;
 		} else {
 		
@@ -380,6 +383,7 @@ public class AutoBench {
 	static List<Socket> slaveSockets = ls(Socket.class);
 	static List<FileObject> toSlaves = ls(FileObject.class);
 	static List<FileObject> fromSlaves = ls(FileObject.class); 
+	static boolean socketsSetup = false;
 	private static void initProcess() throws Exception {
 		
 		if (!remote) {
@@ -399,6 +403,7 @@ public class AutoBench {
 			fromSlaves = ls(inout1.getStdOut(),inout2.getStdOut());
 			toSlaves = ls(inout1.getStdIn(), inout2.getStdIn());
 		} else {
+			if (socketsSetup) return;
 			
 			if (clients==null) {
 				print ("The argument --clients is required if --remote is set");
@@ -409,9 +414,13 @@ public class AutoBench {
 				int port = toInt(hostPort[1]);
 				Socket socket = new Socket(host, port);
 				slaveSockets.add(socket);
-				toSlaves.add(open(socket.getOutputStream()));
-				fromSlaves.add(open(socket.getInputStream()));
+				FileObject fromSlave = open(socket.getInputStream());
+				FileObject toSlave = open(socket.getOutputStream());
+				toSlaves.add(toSlave);
+				fromSlaves.add(fromSlave);
 			}
+			
+			socketsSetup = true;
 
 		}
 	}
