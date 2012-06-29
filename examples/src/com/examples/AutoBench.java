@@ -172,7 +172,6 @@ public class AutoBench {
 		
 		String command = null;
 		ProcessOut run = null;
-		print("Slave started ok " + slaveId);
 
 		FileObject reader;
 		FileObject writer;
@@ -186,6 +185,9 @@ public class AutoBench {
 			writer = open(socketFromSlaveToMaster.getOutputStream());
 			writer.autoFlush();
 		}
+		
+		writer.print("Slave started ok " + slaveId);
+
 		String line = reader.readLine();
 
 		expect("", "ack", line);
@@ -657,6 +659,7 @@ public class AutoBench {
 				try {
 					runIt();
 				} catch (Exception ex) {
+					print (ex.getMessage());
 					ex.printStackTrace();
 					System.exit(-777);
 				}

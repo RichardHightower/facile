@@ -53,3 +53,21 @@ compile.sh~
 run.sh~
 
 test.sh~
+
+master.err.log
+
+master.log
+
+runRemoteMaster.sh~
+
+runRemoteSlave1.sh~
+
+runRemoteSlave2.sh~
+
+slave1.err.log
+
+slave1.log
+
+slave2.err.log
+
+slave2.log

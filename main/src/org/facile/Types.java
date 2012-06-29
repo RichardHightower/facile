@@ -158,6 +158,9 @@ public class Types {
 	}
 
 	public static String toString(Object obj) {
+		if (obj == null) {
+			return "";
+		}
 		if (obj instanceof String) {
 			return (String) obj;
 		} else {

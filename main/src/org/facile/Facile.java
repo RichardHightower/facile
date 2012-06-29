@@ -1259,7 +1259,7 @@ public class Facile {
 		int index=0;
 
 		for (Object arg : args) {
-			builder.append(arg.toString());
+			builder.append(str(arg));
 			builder.append(delim);
 			if (!(index==args.length-1)){
 				builder.append(delim);
