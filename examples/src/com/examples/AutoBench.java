@@ -70,6 +70,8 @@ public class AutoBench {
 	static int slavePort = 4600;
 	private static ServerSocket slaveServerSocket;
 	private static Socket socketFromSlaveToMaster;
+	
+	int numClients = 2;
 
 	public static void runIt() throws Exception {
 
@@ -275,15 +277,17 @@ public class AutoBench {
 
 		//Fill this with the real command.
 		if (serverNum == 1) {
-			cmdLine = httperfString(rate/2, host1, uri1, port1, numConn/2, numCall/2, timeout);
+			cmdLine = httperfString(rate/2, host1, uri1, port1, numConn, numCall, timeout);
 		} else {
-			cmdLine = httperfString(rate/2, host2, uri2, port2, numConn/2, numCall/2, timeout);
+			cmdLine = httperfString(rate/2, host2, uri2, port2, numConn, numCall, timeout);
 		}
 		sendToChildren("command");
 		expectFromChildren("ack command");
 		sendToChildren(cmdLine);
 		List<String> list = readFromChildren("***done***");
 		rest(1000);
+		
+
 		my out1 = parseOutput(list.get(0));
 		my out2 = parseOutput(list.get(1));
 		rest(1000);
@@ -551,10 +555,6 @@ public class AutoBench {
 
 	private static void outputResult(int rate, my server1, my server2) {
 		
-		if (master) {
-			rate = rate / 2;
-		}
-
 		String result1 = createResultForServer(server1);
 		String result2 = createResultForServer(server2);
 
