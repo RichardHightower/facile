@@ -226,8 +226,6 @@ public class AutoBench {
 
 	private static my runSlavesServer(int serverNum, int rate, File outDir, int runNumber) throws Exception {
 		initProcess();
-		expectFromChildren("Slave started ok");		
-		sendToChildren("ack");
 		
 		String cmdLine;
 
@@ -385,6 +383,8 @@ public class AutoBench {
 	static List<FileObject> fromSlaves = ls(FileObject.class); 
 	static boolean socketsSetup = false;
 	private static void initProcess() throws Exception {
+		if (socketsSetup) return;
+
 		
 		if (!remote) {
 			List<File> classPath = Sys.classPath();
@@ -402,8 +402,8 @@ public class AutoBench {
 
 			fromSlaves = ls(inout1.getStdOut(),inout2.getStdOut());
 			toSlaves = ls(inout1.getStdIn(), inout2.getStdIn());
+			
 		} else {
-			if (socketsSetup) return;
 			
 			if (clients==null) {
 				print ("The argument --clients is required if --remote is set");
@@ -423,6 +423,10 @@ public class AutoBench {
 			socketsSetup = true;
 
 		}
+		
+		expectFromChildren("Slave started ok");		
+		sendToChildren("ack");
+
 	}
 
 	private static String calculateClasspath(List<File> classPath) {
