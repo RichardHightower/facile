@@ -2182,17 +2182,6 @@ public class Facile {
 		return ProcessIO.run(timeout, path, verbose, args);
 	}
 
-	public static int toInt(Object obj) {
-		return Types.toInt(obj);
-	}
-	
-	public static double toDouble(Object obj) {
-		return Types.toDouble(obj);
-	}
-
-	public static <T> T coerce(Class<T> clz, Object value) {
-		return Types.coerce(clz, value);
-	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> T get(Class<T> clz, Map map, Object key) {
@@ -2393,4 +2382,26 @@ public class Facile {
 	public static void appendWriteLine(File file, String output) {
 		IO.appendWriteLine(file, output);
 	}
+	
+	public static boolean toBoolean(Object obj) {
+		return Types.toBoolean(obj);
+	}
+	
+	public static float toFloat(Object obj) {
+		return Types.toFloat(obj);
+	}
+	
+	public static double toDouble(Object obj) {
+		return Types.toDouble(obj);
+	}
+	
+	public static int toInt(Object obj) {
+		return Types.toInt(obj);
+	}
+	
+	public static <T> T coerce(Class<T> clz, Object value) {
+		return Types.coerce(clz, value);
+	}
+
+
 }

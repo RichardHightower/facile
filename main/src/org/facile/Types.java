@@ -100,11 +100,44 @@ public class Types {
 			}
 		} catch (Exception ex) {
 			warning(log,
-					"unable to convert to int and there was an exception %s",
+					"unable to convert to double and there was an exception %s",
 					ex.getMessage());
 			return Double.NaN;
 		}
 	}
+	
+	public static float toFloat(Object obj) {
+		try {
+			if (obj instanceof Float) {
+				return (Float) obj;
+			} else if (obj instanceof Number) {
+				return ((Number) obj).floatValue();
+			} else if (obj instanceof CharSequence) {
+				try {
+					return Float.parseFloat(((CharSequence) obj).toString());
+				} catch (Exception ex) {
+					String svalue = str(obj);
+					Matcher re = Regex.re(
+							"[-+]?[0-9]+\\.?[0-9]+([eE][-+]?[0-9]+)?", svalue);
+					if (re.find()) {
+						svalue = re.group(0);
+						return Float.parseFloat(svalue);
+					}
+					warning(log, "unable to convert to float after regex");
+					return Float.NaN;
+				}
+			} else {
+				String str = obj.toString();
+				return toInt(str);
+			}
+		} catch (Exception ex) {
+			warning(log,
+					"unable to convert to float and there was an exception %s",
+					ex.getMessage());
+			return Float.NaN;
+		}
+	}
+
 
 	@SuppressWarnings("unchecked")
 	public static <T> T coerce(Class<T> clz, Object value) {
@@ -113,6 +146,9 @@ public class Types {
 			return (T) i;
 		} else if (clz == dbl || clz == pdouble) {
 			Double i = toDouble(value);
+			return (T) i;
+		}  else if (clz == flt || clz == pfloat) {
+			Float i = toFloat(value);
 			return (T) i;
 		} else if (clz == sarray) {
 			return (T) toStringArray(value);
