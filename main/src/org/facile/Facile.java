@@ -1271,17 +1271,36 @@ public class Facile {
 
 	public static String join(char delim, Object... args) {
 		StringBuilder builder = new StringBuilder(256);
-		int index=0;
-		for (Object arg : args) {
-			builder.append(arg.toString());
-			if (!(index==args.length-1)){
-				builder.append(delim);
+		
+		if (args.length==1 && isArray(args[0])) {
+			Object array = args[0];
+			for (int index = 0; index < len(array); index++) {
+				Object obj = idx(array, index);
+				builder.append(obj.toString());
+				if (!(index==args.length-1)){
+					builder.append(delim);
+				}
+
 			}
-			index++;
+		} else  {
+			int index=0;
+			for (Object arg : args) {
+				builder.append(arg.toString());
+				if (!(index==args.length-1)){
+					builder.append(delim);
+				}
+				index++;
+			}		
 		}
 		return builder.toString();
 	}
-
+	
+	public static String join(char delim, Integer... args) {
+		return join(delim, (Object[])args);
+	}
+	public static String join(Integer... args) {
+		return join((Object[])args);
+	}
 	public static String join(String... args) {
 		return join((Object[])args);
 	}
@@ -1716,6 +1735,9 @@ public class Facile {
 				builder.append(c);
 			}
 		}
+
+		str = builder.toString();
+		list.add(str);
 
 		return list.toArray(new String[list.size()]);
 

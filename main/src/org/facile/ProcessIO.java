@@ -299,7 +299,7 @@ public class ProcessIO {
 					timer.interrupt(); // tell timer to die.
 				}
 				
-				rest(10); // Give time for buffers to get drained.
+				rest(100); // Give time for buffers to get drained.
 				fromProcessError.interrupt(); // Send interrupt... time to
 												// clean up.
 				fromProcessOutput.interrupt();
@@ -327,7 +327,7 @@ public class ProcessIO {
 		FileObject fromProcess;
 		String password;
 		FileObject toProcess;
-		StringBuilder outputBuffer = new StringBuilder(256);
+		StringBuilder outputBuffer = new StringBuilder(1024);
 		boolean sudo;
 		boolean verbose;
 		private BlockingQueue<String> queue;
@@ -390,16 +390,15 @@ public class ProcessIO {
 					
 					fprintln(outputBuffer, line);
 					if (verbose) print(line);
-					if (this.isInterrupted()) {
-						if(queue!=null) {
-							try {
-								queue.put(IO.EOF_MARKER);
-							} catch (InterruptedException e) {
-							}
-						}
-						break;
+				}
+				
+				if(queue!=null) {
+					try {
+						queue.put(IO.EOF_MARKER);
+					} catch (InterruptedException e) {
 					}
 				}
+
 			} finally {
 				fromProcess.close();
 			}
