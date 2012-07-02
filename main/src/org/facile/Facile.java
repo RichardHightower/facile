@@ -157,7 +157,7 @@ public class Facile {
 		log.info(sprint(items));
 	}
 	public static void fprint(Appendable appendable, Object... items) {
-		add(appendable, sprint(items));
+		add(appendable, sprint(items) + "\n");
 	}
 	public static void fprint(FileObject file, Object... items) {
 		file.println(sprint(items));
@@ -198,17 +198,12 @@ public class Facile {
 		return builder.toString();
 	}
 
-	public static void debug(Object... items) {
+	public static void debugPrint(Object... items) {
 		db(items);
 	}
 
 	public static void db(Object... items) {
-		StringBuilder builder = new StringBuilder(256);
-		for (Object item : items) {
-			builder.append(item);
-			builder.append(' ');
-		}
-		fprintln(ERR, str(builder));
+		System.err.println(sprint(items));
 	}
 
 	public static void printf(String fmt, Object... args) {
@@ -228,21 +223,22 @@ public class Facile {
 			printf(fmt, args);
 			return;
 		}
-		log.info(String.format(fmt, args));
+		String message = sprintf(fmt, args);
+		log.info(message);
 	}
 
 	public static void fprintf(StringBuilder builder, String fmt,
 			Object... args) {
-		builder.append((String.format(fmt, args)));
+		builder.append((sprintf(fmt, args)));
 	}
 
 	public static void fprintf(PrintStream out, String fmt, Object... args) {
-		out.append((String.format(fmt, args)));
+		out.append((sprintf(fmt, args)));
 	}
 
 	public static void fprintf(Appendable out, String fmt, Object... args) {
 		try {
-			out.append((String.format(fmt, args)));
+			out.append((sprintf(fmt, args)));
 		} catch (IOException e) {
 			warning(log, e, "problem with fprintf");
 		}
