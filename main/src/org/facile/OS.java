@@ -63,6 +63,19 @@ public class OS {
 		
 		
 	}
+	public static enum FileType {
+		NORMAL,
+		DIRECTORY,
+		SOCKET,
+		LINK
+	}
+	
+	public static enum FilePermission {
+		READ, 
+		WRITE,
+		EXECUTE
+
+	}
 	
 	public static enum Signal {
 		ALL, //0
@@ -282,6 +295,7 @@ public class OS {
 				}
 				
 				pi.command = split[15];
+				
 				pi.arguments = new String[split.length - 16];
 				
 				for (int j=0, i=16; i<split.length; j++, i++) {
@@ -297,7 +311,22 @@ public class OS {
 		return psLines;
 	}
 
-	
+	public static int processSearch(final String processNameRegex) {
+		
+		notNull(processNameRegex);
+		
+		List<ProcessInfo> processes = ps(true);
+		
+		for (ProcessInfo process : processes) {
+			
+			String processFullNameAndArgs = join(' ', process.arguments);
+			Matcher matcher = re(processNameRegex, processFullNameAndArgs);
+			if (matcher.find()) {
+				return process.processId;
+			}
+		}
+		return -1;
+	}
 	public static void main (String [] args) {
 		print (ps());
 	}

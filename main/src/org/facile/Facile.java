@@ -1265,6 +1265,9 @@ public class Facile {
 		return builder.toString();
 	}
 
+	public static String join(char delim, String... args) {
+		return join(delim, (Object[])args);
+	}
 	public static String join(char delim, Object... args) {
 		StringBuilder builder = new StringBuilder(256);
 		

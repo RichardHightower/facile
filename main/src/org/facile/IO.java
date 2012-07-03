@@ -137,7 +137,7 @@ public class IO {
 				for (String input : list) {
 					if (regex != null) {
 						Matcher matcher = re(regex, input);
-						if (matcher.matches()) {
+						if (matcher.find()) {
 							if (!dirsOnly) {
 								outList.add(file);
 							}

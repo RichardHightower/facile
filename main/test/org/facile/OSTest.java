@@ -180,5 +180,21 @@ public class OSTest {
 
 	}
 
+	@Test
+	public void killSleep2() {
+		runAsync(0, null, false, "sleep", "1000");
+		
+		int id = OS.processSearch("sleep 1000");
+		
+		assertTrue(id!=-1);
+		
+		OS.kill(id);
+
+		id = OS.processSearch("sleep");
+		
+		assertTrue(id==-1);
+
+
+	}
 
 }
