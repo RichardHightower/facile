@@ -25,6 +25,9 @@ public class OS {
 
 	public static DateFormat lstartFormatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
 	public static DateFormat fileDateFormatterNotISO = new SimpleDateFormat("MMM dd HH:mm:ss yyyy");
+	
+	//2011-11-29 23:32:44.803207633 -0800
+	public static DateFormat fileDateFormatterISO = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss yyyy Z");
 
 	
 	public static enum ProcessState {
@@ -69,7 +72,10 @@ public class OS {
 		NORMAL,
 		DIRECTORY,
 		SOCKET,
-		LINK
+		LINK,
+		FIFO,
+		CHAR_SPECIAL,
+		BLOCK_SPECIAL
 	}
 	
 	public static enum FilePermissionType {
@@ -81,9 +87,38 @@ public class OS {
 	
 	//http://www.thegeekstuff.com/2009/07/linux-ls-command-examples/
 	public static class FilePermission {
-		public EnumSet<FilePermissionType> group;
-		public EnumSet<FilePermissionType> user;
-		public EnumSet<FilePermissionType> world;
+		public EnumSet<FilePermissionType> owner = EnumSet.noneOf(FilePermissionType.class);
+		public EnumSet<FilePermissionType> group = EnumSet.noneOf(FilePermissionType.class);
+		public EnumSet<FilePermissionType> other = EnumSet.noneOf(FilePermissionType.class);
+		
+		public String toString() {
+			Appendable buf = buf();
+			
+			if (owner.contains(FilePermissionType.READ)) add(buf, "r" );
+			else add(buf, "-" );			
+			if (owner.contains(FilePermissionType.WRITE)) add(buf, "w" );
+			else add(buf, "-" );
+			if (owner.contains(FilePermissionType.EXECUTE)) add(buf, "x" );
+			else add(buf, "-" );
+
+			if (group.contains(FilePermissionType.READ)) add(buf, "r" );
+			else add(buf, "-" );			
+			if (group.contains(FilePermissionType.WRITE)) add(buf, "w" );
+			else add(buf, "-" );
+			if (group.contains(FilePermissionType.EXECUTE)) add(buf, "x" );
+			else add(buf, "-" );
+			
+			if (other.contains(FilePermissionType.READ)) add(buf, "r" );
+			else add(buf, "-" );			
+			if (other.contains(FilePermissionType.WRITE)) add(buf, "w" );
+			else add(buf, "-" );
+			if (other.contains(FilePermissionType.EXECUTE)) add(buf, "x" );
+			else add(buf, "-" );
+
+			
+			return str(buf);
+				
+		}
 	}
 	
 	public static class FileInfo {
@@ -133,6 +168,38 @@ public class OS {
 		return exec("kill -" + s.ordinal() +' '+ join(' ', processIds));
 	}
 
+	public static List<FileInfo> recursiveLs () {
+		ProcessOut pout = null;
+		if (Sys.os().equals("Mac OS X")) {
+			 pout = run("ls -lTR " );
+		} else {
+			pout = run("ls -lR --time-style=full-iso " );
+		}
+		if (pout.exit!=0) {
+			warning(log, "Unable to run ls command, make sure you OS is supported " + pout.commandLine);
+			return Collections.<FileInfo>emptyList();
+		}
+		String stdout = pout.stdout;
+
+		return parseLSCommandOutput(stdout);
+	}
+
+	public static List<FileInfo> ls (String file) {
+		ProcessOut pout = null;
+		if (Sys.os().equals("Mac OS X")) {
+			 pout = run("ls -lT " + file);
+		} else {
+			pout = run("ls -l --time-style=full-iso " + file);
+		}
+		if (pout.exit!=0) {
+			warning(log, "Unable to run ls command, make sure you OS is supported " + pout.commandLine);
+			return Collections.<FileInfo>emptyList();
+		}
+		String stdout = pout.stdout;
+
+		return parseLSCommandOutput(stdout);
+	}
+
 	public static List<FileInfo> ls () {
 		ProcessOut pout = null;
 		if (Sys.os().equals("Mac OS X")) {
@@ -140,17 +207,22 @@ public class OS {
 		} else {
 			pout = run("ls -l --time-style=full-iso");
 		}
+		if (pout.exit!=0) {
+			warning(log, "Unable to run ls command, make sure you OS is supported " + pout.commandLine);
+			return Collections.<FileInfo>emptyList();
+		}
 		String stdout = pout.stdout;
+
+		return parseLSCommandOutput(stdout);
+	}
+
+	public static List<FileInfo> parseLSCommandOutput(String stdout) {
 		String[] lines = toLines(stdout);
 		
 	
 		
 		List<FileInfo> files = new ArrayList<FileInfo>(lines.length);
 		
-		if (pout.exit!=0) {
-			warning(log, "Unable to run ls command, make sure you OS is supported");
-			return files;
-		}
 		
 		//0          1 2      3        4        5   6  7     8-*
 		//-rw-r----- 1 ramesh team-dev 9275204 Jun 13 15:27 mthesaur.txt.gz
@@ -161,17 +233,24 @@ public class OS {
 
 		int count = 0;
 		for (String line : lines) {
+			
+			//Skip the first line. 
 			if (count==0) {
 				count++;
 				continue;
 			}
 			count++;
+			
+			
 			FileInfo info = new FileInfo();
 			String[] split = split(line);
+			
+			//Avoid a parse problem if length is under 8
 			if (split.length<8) {
 				continue;
 			}
 
+			//First field is permissions.
 			String typePermissions = split[0];
 			char type = typePermissions.charAt(0);
 			switch (type) {
@@ -187,7 +266,21 @@ public class OS {
 			case 'l' :
 				info.type = FileType.LINK;
 				break;
+			case 'c' :
+				info.type = FileType.CHAR_SPECIAL;
+				break;	
+			case 'b' :
+				info.type = FileType.BLOCK_SPECIAL;
+				break;	
+			case 'p' :
+				info.type = FileType.FIFO;
+				break;	
+	
 			}
+			
+			FilePermission filePermission = parsePermissions(typePermissions);
+			info.permission = filePermission;
+			
 			String links = split[1];
 			info.numLinks = toInt(links);
 			
@@ -197,10 +290,28 @@ public class OS {
 			info.group = group;
 			String size = split[4];
 			info.size = toInt(size);
-			String date = join(' ', split[5], split[6], split[7], split[8]);
+			
+			boolean isoDate = Character.isDigit(split[5].charAt(0));
+			
+			String date = null;
+			if (!isoDate) {
+				date = join(' ', split[5], split[6], split[7], split[8]);
+			} else {
+				date = join(' ', split[5], split[6], split[7]);				
+			}
 			Date fileDate = null;
 			try {
-				fileDate = fileDateFormatterNotISO.parse(date);
+				if (!isoDate) {
+					fileDate = fileDateFormatterNotISO.parse(date);
+				} else {
+					
+					//2011-11-29 23:32:44.803207633 -0800
+					//Matcher re = Regex.re("/({digit}{4,4}-{digit}{2,2}-{digit}{2,2}) " +
+					//		"({digit}{2,2}:{digit}{2,2}:{digit}{2,2}).* -({digit}{4,4})/", date);
+					//date = join(' ', re.group(1), re.group(2), re.group(3));
+					//fileDate = fileDateFormatterISO.parse(date);
+					
+				}
 			} catch (ParseException e) {
 				warning(log, "Unable to parse file date from ls command.");
 				e.printStackTrace();
@@ -221,6 +332,55 @@ public class OS {
 		}
 		
 		return files;
+	}
+
+	public static FilePermission parsePermissions(String typePermissions) {
+		char read, write, execute;
+		FilePermission fp = new FilePermission();
+
+		
+		read = typePermissions.charAt(1);
+		write = typePermissions.charAt(2);
+		execute = typePermissions.charAt(3);
+		
+		
+		if (read=='r') {
+			fp.owner.add(FilePermissionType.READ);
+		}
+		if (write=='w') {
+			fp.owner.add(FilePermissionType.WRITE);
+		}
+		if (execute=='x') {
+			fp.owner.add(FilePermissionType.EXECUTE);
+		}
+		
+		read = typePermissions.charAt(4);
+		write = typePermissions.charAt(5);
+		execute = typePermissions.charAt(6);
+		if (read=='r') {
+			fp.group.add(FilePermissionType.READ);
+		}
+		if (write=='w') {
+			fp.group.add(FilePermissionType.WRITE);
+		}
+		if (execute=='x') {
+			fp.group.add(FilePermissionType.EXECUTE);
+		}
+		
+		read = typePermissions.charAt(7);
+		write = typePermissions.charAt(8);
+		execute = typePermissions.charAt(9);
+		if (read=='r') {
+			fp.other.add(FilePermissionType.READ);
+		}
+		if (write=='w') {
+			fp.other.add(FilePermissionType.WRITE);
+		}
+		if (execute=='x') {
+			fp.other.add(FilePermissionType.EXECUTE);
+		}
+
+		return fp;
 	}
 
 	public static List<ProcessInfo> ps () {

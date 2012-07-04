@@ -199,13 +199,34 @@ public class OSTest {
 	}
 	
 	@Test
-	public void ls() {
+	public void lsTest() {
 		print (Sys.os());
 		List<FileInfo> ls = OS.ls();
 		
 		for (FileInfo file : ls) {
 			print (file);
 		}
+		
+		print (Sys.os());
+		ls = OS.recursiveLs();
+		
+		for (FileInfo file : ls) {
+			print (file);
+		}
+
+	}
+
+	String lsSample = lines(
+	"lrwxr-xr-x    1 rick  staff      29 Jun 14 14:08:19 2011 webdocs -> /Library/WebServer/Documents/",
+	"-rw-rw-r--  1 rick     rick    378 2011-11-29 23:32:44.803207633 -0800 user-data.properties");
+
+	
+	@Test 
+	public void lsParse() {
+		
+		List<FileInfo> files = OS.parseLSCommandOutput(lsSample);
+		print(files);
+		
 	}
 	
 
