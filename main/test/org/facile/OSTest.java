@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.facile.OS.ElaspedTime;
+import org.facile.OS.FileInfo;
 import org.facile.OS.ProcessInfo;
 import org.junit.Test;
 
@@ -196,5 +197,16 @@ public class OSTest {
 
 
 	}
+	
+	@Test
+	public void ls() {
+		print (Sys.os());
+		List<FileInfo> ls = OS.ls();
+		
+		for (FileInfo file : ls) {
+			print (file);
+		}
+	}
+	
 
 }

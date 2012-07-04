@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -23,6 +24,7 @@ public class OS {
 	private static final Logger log = log(os);
 
 	public static DateFormat lstartFormatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+	public static DateFormat fileDateFormatterNotISO = new SimpleDateFormat("MMM dd HH:mm:ss yyyy");
 
 	
 	public static enum ProcessState {
@@ -70,11 +72,39 @@ public class OS {
 		LINK
 	}
 	
-	public static enum FilePermission {
+	public static enum FilePermissionType {
 		READ, 
 		WRITE,
 		EXECUTE
 
+	}
+	
+	//http://www.thegeekstuff.com/2009/07/linux-ls-command-examples/
+	public static class FilePermission {
+		public EnumSet<FilePermissionType> group;
+		public EnumSet<FilePermissionType> user;
+		public EnumSet<FilePermissionType> world;
+	}
+	
+	public static class FileInfo {
+		public FileType type;
+		public FilePermission permission;
+		public int numLinks;
+		public String user;
+		public String group;
+		public int size;
+		public String name;
+		public Date date;
+		@Override
+		public String toString() {
+			return "FileInfo [type=" + type + ", permission=" + permission
+					+ ", numLinks=" + numLinks + ", user=" + user + ", group="
+					+ group + ", size=" + size + ", name=" + name + ", date="
+					+ date + "]\n";
+		}
+		
+		
+		
 	}
 	
 	public static enum Signal {
@@ -101,6 +131,96 @@ public class OS {
 	
 	public static int kill (Signal s, int... processIds) {
 		return exec("kill -" + s.ordinal() +' '+ join(' ', processIds));
+	}
+
+	public static List<FileInfo> ls () {
+		ProcessOut pout = null;
+		if (Sys.os().equals("Mac OS X")) {
+			 pout = run("ls -lT");
+		} else {
+			pout = run("ls -l --time-style=full-iso");
+		}
+		String stdout = pout.stdout;
+		String[] lines = toLines(stdout);
+		
+	
+		
+		List<FileInfo> files = new ArrayList<FileInfo>(lines.length);
+		
+		if (pout.exit!=0) {
+			warning(log, "Unable to run ls command, make sure you OS is supported");
+			return files;
+		}
+		
+		//0          1 2      3        4        5   6  7     8-*
+		//-rw-r----- 1 ramesh team-dev 9275204 Jun 13 15:27 mthesaur.txt.gz
+		//0             1 2     3          4   5  6   7        8   9-* Mac OSX 
+		//lrwxr-xr-x    1 rick  staff      29 Jun 14 14:08:19 2011 webdocs -> /Library/WebServer/Documents/
+		//0             1 2     3          4   5           6                7     8-* 		
+		//-rw-rw-r--  1 rick     rick    378 2011-11-29 23:32:44.803207633 -0800 user-data.properties
+
+		int count = 0;
+		for (String line : lines) {
+			if (count==0) {
+				count++;
+				continue;
+			}
+			count++;
+			FileInfo info = new FileInfo();
+			String[] split = split(line);
+			if (split.length<8) {
+				continue;
+			}
+
+			String typePermissions = split[0];
+			char type = typePermissions.charAt(0);
+			switch (type) {
+			case '-' :
+				info.type = FileType.NORMAL;
+				break;
+			case 'd' :
+				info.type = FileType.DIRECTORY;
+				break;
+			case 's' :
+				info.type = FileType.SOCKET;
+				break;
+			case 'l' :
+				info.type = FileType.LINK;
+				break;
+			}
+			String links = split[1];
+			info.numLinks = toInt(links);
+			
+			String user = split[2];
+			info.user =  user;
+			String group = split[3];
+			info.group = group;
+			String size = split[4];
+			info.size = toInt(size);
+			String date = join(' ', split[5], split[6], split[7], split[8]);
+			Date fileDate = null;
+			try {
+				fileDate = fileDateFormatterNotISO.parse(date);
+			} catch (ParseException e) {
+				warning(log, "Unable to parse file date from ls command.");
+				e.printStackTrace();
+			}
+			info.date = fileDate;
+			
+			StringBuilder builder = new StringBuilder();
+			
+			for (int index=9; index < split.length; index++) {
+				builder.append(split[index]);
+				builder.append(' ');
+			}
+			
+			String fileName = builder.toString();
+			info.name = fileName;
+			print (info);
+			
+		}
+		
+		return files;
 	}
 
 	public static List<ProcessInfo> ps () {
