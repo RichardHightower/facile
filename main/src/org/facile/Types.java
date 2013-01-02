@@ -1,7 +1,11 @@
 package org.facile;
-
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -13,6 +17,28 @@ public class Types {
 	static Class<Types> types = Types.class;
 
 	private static final Logger log = log(types);
+
+	public static int toInt(byte[] bytes, int offset) {
+		
+		ByteArrayInputStream bis = new ByteArrayInputStream (bytes, offset, bytes.length);
+		DataInputStream instream = new DataInputStream(bis);
+		try {
+			return instream.readInt();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
+	}
+
+	public static int toInt(byte[] bytes) {
+		ByteArrayInputStream bis = new ByteArrayInputStream (bytes);
+		DataInputStream instream = new DataInputStream(bis);
+		try {
+			return instream.readInt();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	public static int toInt(Object obj) {
 		try {
@@ -56,24 +82,69 @@ public class Types {
 		}
 	}
 
+	public static long toLong(Object obj) {
+		try {
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue();
+			} else if (obj instanceof CharSequence) {
+				try {
+					return Long.parseLong(((CharSequence) obj).toString());
+				} catch (Exception ex) {
+					char[] chars = chars(obj);
+					Appendable buf = buf(chars.length);
+					boolean found = false;
+					for (char c : chars) {
+						if (Character.isDigit(c) && !found) {
+							found = true;
+							add(buf, c);
+						} else if (Character.isDigit(c) && found) {
+							add(buf, c);
+						} else if (!Character.isDigit(c) && found) {
+						}
+					}
+					try {
+						if (len(buf) > 0) {
+							return Long.parseLong(str(buf));
+						}
+					} catch (Exception ex2) {
+						// noop
+					}
+					warning(log, "unable to convert to int");
+					return obj.hashCode();
+				}
+			} else {
+				String str = obj.toString();
+				return toLong(str);
+			}
+		} catch (Exception ex) {
+			warning(log,
+					"unable to convert to long and there was an exception %s",
+					ex.getMessage());
+			return obj.hashCode();
+		}
+	}
+
 	public static boolean toBoolean(Object obj) {
-		
-		Set<String> trueSet = set("t", "true", "True", "y", "yes", "1", "aye", "ofcourse", "T", "TRUE", "ok");
-		if (obj instanceof String || obj instanceof CharSequence || obj.getClass() == char[].class) {
+
+		Set<String> trueSet = set("t", "true", "True", "y", "yes", "1", "aye",
+				"ofcourse", "T", "TRUE", "ok");
+		if (obj instanceof String || obj instanceof CharSequence
+				|| obj.getClass() == char[].class) {
 			String str = str(obj);
-			if (str.length()==0) {
+			if (str.length() == 0) {
 				return false;
 			} else {
 				return isIn(str, trueSet);
 			}
 		} else if (obj instanceof Boolean) {
-			return ((Boolean)obj).booleanValue();
+			return ((Boolean) obj).booleanValue();
 		} else if (isArray(obj) || obj instanceof Collection) {
 			return len(obj) > 0;
 		} else {
 			return toBoolean(str(obj));
 		}
 	}
+
 	public static double toDouble(Object obj) {
 		try {
 			if (obj instanceof Double) {
@@ -105,7 +176,7 @@ public class Types {
 			return Double.NaN;
 		}
 	}
-	
+
 	public static float toFloat(Object obj) {
 		try {
 			if (obj instanceof Float) {
@@ -138,36 +209,37 @@ public class Types {
 		}
 	}
 
-
 	@SuppressWarnings("unchecked")
 	public static <T> T coerce(Class<T> clz, Object value) {
 		if (clz == integer || clz == pint) {
 			Integer i = toInt(value);
 			return (T) i;
+		} else if (clz == lng || clz == plong) {
+			Long l = toLong(value);
+			return (T) l;
 		} else if (clz == dbl || clz == pdouble) {
 			Double i = toDouble(value);
 			return (T) i;
-		}  else if (clz == flt || clz == pfloat) {
+		} else if (clz == flt || clz == pfloat) {
 			Float i = toFloat(value);
 			return (T) i;
 		} else if (clz == sarray) {
 			return (T) toStringArray(value);
-		}  else if (clz == bool || clz == pboolean) {
+		} else if (clz == bool || clz == pboolean) {
 			Boolean b = toBoolean(value);
 			return (T) b;
 		} else if (clz == fileT) {
 			return (T) toFile(value);
-		}
-		else {// TODO toFloat, toList, toArray
-	
+		} else {// TODO toFloat, toList, toArray
+
 			return (T) value;
 		}
 	}
 
 	public static File toFile(Object value) {
 		if (value instanceof File) {
-			return (File)value;
-		} else if (value instanceof CharSequence){
+			return (File) value;
+		} else if (value instanceof CharSequence) {
 			return file(str(value));
 		} else {
 			return toFile(value.toString());
@@ -202,6 +274,33 @@ public class Types {
 		} else {
 			return obj.toString();
 		}
+	}
+
+	public static Number toWrapper(long l) {
+		if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE){
+			return toWrapper((int)l);
+		} else {
+			return Long.valueOf(l);
+		}
+	}
+	public static Number toWrapper(int i) {
+		if (i >= Byte.MIN_VALUE && i <= Byte.MAX_VALUE) {
+			return Byte.valueOf((byte)i);
+		} else if (i >= Short.MIN_VALUE && i <= Short.MAX_VALUE) {
+			return Short.valueOf((short)i);
+		} else {
+			return Integer.valueOf(i);
+		} 
+	}
+
+	public static boolean isBasicType(Object value) {
+		return (value instanceof Number || value instanceof CharSequence || 
+		value instanceof Date || value instanceof Calendar);
+	}
+	
+	public static boolean isBasicType(Class<?> theClass) {
+		return (number.isAssignableFrom(theClass) || chars.isAssignableFrom(theClass) || date.isAssignableFrom(theClass)
+				|| calendar.isAssignableFrom(theClass) || theClass.isPrimitive());
 	}
 
 }

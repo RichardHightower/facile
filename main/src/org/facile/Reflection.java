@@ -5,12 +5,20 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import org.facile.Facile.Entry;
 import org.facile.Facile.Func;
+import org.facile.reflect.FieldAccess;
+import org.facile.reflect.ReflectField;
+import org.facile.reflect.UnsafeField;
+
 import static org.facile.Facile.*;
 
 public class Reflection {
@@ -47,6 +55,8 @@ public class Reflection {
 	public static boolean isArray(Object obj) {
 		return obj.getClass().isArray();
 	}
+	
+	
 
 
 	public static boolean isStaticField(Field field) {
@@ -318,6 +328,137 @@ public class Reflection {
 		return object;
 
 	}
+	
+	
+
+	public static List<Method> getPropertyGetterMethods(Class<? extends Object> theClass) {
+		
+
+		Method[] methods = theClass.getMethods();
+
+		List<Method> methodList = new ArrayList<Method>(methods.length);
+
+		for (int index = 0; index < methods.length; index++) {
+		    Method method = methods[index];
+		    String name = method.getName();
+
+		    if (method.getParameterTypes().length > 0
+		            || method.getReturnType() == Void.class
+		            || !(name.startsWith("get") || name
+		                    .startsWith("is"))
+		            || name.equals("getClass")) {
+		        continue;
+		    }
+		    methodList.add(method);
+
+		}
+		return methodList;
+	}
+
+
+	private static boolean _useUnsafe;
+	static {
+		try {
+			Class.forName("sun.misc.Unsafe");
+			_useUnsafe = true;
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			_useUnsafe = false;
+		}
+	}
+	
+	private static final boolean useUnsafe = _useUnsafe;
+	
+	
+	
+	public static Map<String, Object> toMap(final Object object) {
+		Map<String, Object> map = new HashMap<>();
+		class FieldToEntryConverter implements Converter<Entry<String, Object>, FieldAccess> {
+			@Override
+			public Entry<String, Object> convert(FieldAccess from) {
+				if (from.isReadOnly()) {
+					return null;
+				}
+				Entry <String, Object> entry = new EntryImpl<>(from.getName(), from.getValue(object));
+				return entry;
+			}
+		}
+
+		List<FieldAccess> fields = getAllAccessorFields(object.getClass());
+		List<Entry<String, Object>> entries = mapFilterNulls(new FieldToEntryConverter(), fields);
+		
+		map.put("class", object.getClass().getName());
+		
+		for (Entry<String, Object> entry : entries) {
+			Object value = entry.value();
+			if (value==null) {
+				continue;
+			}
+			if (Types.isBasicType(value)) {
+				map.put(entry.key(), entry.value());
+			} else if (isArray(value) && Types.isBasicType(value.getClass().getComponentType())) {
+				map.put(entry.key(), entry.value());
+			} else if (isArray(value)) {
+			}
+			else if (value instanceof Collection) {				
+			
+			} else {
+				map.put(entry.key(), toMap(value));
+			}
+		}
+		return map;
+	}
+
+	public static class FieldConverter implements Converter<FieldAccess, Field> {
+		@Override
+		public FieldAccess convert(Field from) {
+			if (useUnsafe) {
+				return new UnsafeField(from);
+			} else {
+				return new ReflectField(from);
+			}
+		}
+	}
+	
+
+	
+	static Map<Class<? extends Object>, List<FieldAccess>> allAccessorFieldsCache = new ConcurrentHashMap<>();
+	
+	public static List<FieldAccess> getAllAccessorFields(Class<? extends Object> theClass) {
+		List<FieldAccess> list = allAccessorFieldsCache.get(theClass);
+		if (list==null) {
+			list = map(new FieldConverter(), getAllFields(theClass));
+		} else {
+			allAccessorFieldsCache.put(theClass, list);
+		}
+		return list;
+	}
+     
+	public static List<Field> getAllFields(Class<? extends Object> theClass) {
+		List<Field> list = getFields(theClass);	
+		while (theClass != object) {
+			theClass = theClass.getSuperclass();
+			getFields(theClass, list);
+		}
+		return list;
+	}
+
+	public static void getFields(Class<? extends Object> theClass, List<Field> list) {
+		List<Field> more = getFields(theClass);
+		list.addAll(more);
+	}
+
+	public static List<Field> getFields(Class<? extends Object> theClass) {
+		List<Field> list = list(theClass.getDeclaredFields());
+		for (Field field : list) {
+			field.setAccessible(true);
+		}
+		return list;
+	}
+	
+
+
+
 
 
 }

@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -49,16 +50,26 @@ public class Facile {
 	public static final Class<String[]> sarray = String[].class;
 	public static final Class<Boolean> bool = Boolean.class;
 	public static final Class<Integer> integer = Integer.class;
+	public static final Class<Number> number = Number.class;
+	public static final Class<CharSequence> chars = CharSequence.class;
+
+	
 	public static final Class<Float> flt = Float.class;
 	public static final Class<Long> lng = Long.class;
 	public static final Class<Double> dbl = Double.class;
 	public static final Class<?> pint = int.class;
 	public static final Class<?> pboolean = boolean.class;
-	public static final Class<Float> pfloat = float.class;
+	public static final Class<?> pfloat = float.class;
 	public static final Class<?> pdouble = double.class;
 	public static final Class<?> plong = long.class;
+	public static final Class<?> pshort = short.class;
+	public static final Class<?> pchar = char.class;
+	public static final Class<?> pbyte = byte.class;
+
 
 	public static final Class<Date> date = Date.class;
+	public static final Class<Calendar> calendar = Calendar.class;
+
 	public static final Class<String[]> stringA = String[].class;
 	public static final Class<File> fileT = File.class;
 	public static final boolean debug;
@@ -437,7 +448,7 @@ public class Facile {
 		V value();
 	}
 
-	private static class EntryImpl<K, V> implements Entry<K, V> {
+	public static class EntryImpl<K, V> implements Entry<K, V> {
 		EntryImpl(K k, V v) {
 			this.k = k;
 			this.v = v;
@@ -465,7 +476,7 @@ public class Facile {
 		return new EntryImpl<K, V>(k, v);
 	}
 
-	public static <V> List<V> ls(final V... array) {
+	public static <V> List<V> ls(@SuppressWarnings("unchecked") final V... array) {
 		return list(array);
 	}
 
@@ -517,6 +528,7 @@ public class Facile {
 		return list;
 	}
 
+	@SafeVarargs
 	public static <V> List<V> lsRange(int start, int finish, final V... array) {
 		List<V> list = new ArrayList<V>(finish - start);
 		for (; start < finish; start++) {
@@ -593,6 +605,7 @@ public class Facile {
 		return true;
 	}
 
+	@SafeVarargs
 	public static <V> V[] array(final V... array) {
 		return array;
 	}
@@ -605,6 +618,7 @@ public class Facile {
 		return array;
 	}
 
+	@SafeVarargs
 	public static <V> V[] ary(final V... array) {
 		return array;
 	}
@@ -627,7 +641,11 @@ public class Facile {
 		return array(list);
 	}
 
+	@SafeVarargs
 	public static <V> List<V> list(final V... array) {
+		if (array==null) {
+			return null;
+		}
 		ArrayList<V> list = new ArrayList<V>(array.length);
 		for (V o : array) {
 			list.add(o);
@@ -709,6 +727,7 @@ public class Facile {
 		return builder.toString();
 	}
 
+	@SafeVarargs
 	public static <V> Set<V> set(final V... array) {
 		return new HashSet<V>(list(array));
 	}
@@ -851,6 +870,7 @@ public class Facile {
 		return map;
 	}
 
+	@SafeVarargs
 	public static <K, V> Map<K, V> mp(K k0, V v0, K k1, V v1, K k2, V v2, K k3,
 			V v3, K k4, V v4, K k5, V v5, K k6, V v6, K k7, V v7, K k8, V v8,
 			K k9, V v9, Entry<K, V>... entries) {
@@ -900,6 +920,7 @@ public class Facile {
 		return map;
 	}
 
+	@SafeVarargs
 	public static <K, V> Map<K, V> mp(Entry<K, V>... entries) {
 		HashMap<K, V> map = new HashMap<K, V>(entries.length);
 		for (Entry<K, V> entry : entries) {
@@ -955,11 +976,13 @@ public class Facile {
 		enumerate(fn(func, methodName), c);
 	}
 	
+	@SafeVarargs
 	public static <T> void enumerate(Object func, T...c) {
 		enumerate(f(func), c);
 	}
 
 	
+	@SafeVarargs
 	public static <T> void enumerate(Object func, Object methodName, T... c) {
 		enumerate(fn(func, methodName), c);
 	}
@@ -993,6 +1016,7 @@ public class Facile {
 
 	}
 
+	@SafeVarargs
 	public static <T> void enumerate(Enumerate<T> e, T... c) {
 		int index = 0;
 		for (T t : c) {
@@ -1078,6 +1102,7 @@ public class Facile {
 		return doGfilter(f, list(in));
 	}
 
+	@SafeVarargs
 	public static <T> T[] gfilter(Filter<T> f, T... in) {
 		return doGfilterAsArray(f, list(in));
 	}
@@ -1124,7 +1149,7 @@ public class Facile {
 
 		return mapList;
 	}
-
+    
 	public static <TO, FROM> List<TO> map(Converter<TO, FROM> converter,
 			List<FROM> fromList) {
 
@@ -1132,6 +1157,21 @@ public class Facile {
 
 		for (FROM from : fromList) {
 			toList.add(converter.convert(from));
+		}
+
+		return toList;
+	}
+	
+	public static <TO, FROM> List<TO> mapFilterNulls(Converter<TO, FROM> converter,
+			List<FROM> fromList) {
+
+		ArrayList<TO> toList = new ArrayList<TO>(fromList.size());
+
+		for (FROM from : fromList) {
+			TO converted = converter.convert(from);
+			if (converted!=null) {
+				toList.add(converted);
+			}
 		}
 
 		return toList;
@@ -1219,7 +1259,6 @@ public class Facile {
 		return greduce(f, list(array));
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <T> T greduce(Func<?> f, T array) {
 		return greduce(f, list(array));
 	}
@@ -1944,6 +1983,7 @@ public class Facile {
 		return ls;
 	}
 
+	@SafeVarargs
 	public static <T> void notNull(T... objects) {
 		if (objects == null) {
 			throw new IllegalArgumentException(
@@ -2203,6 +2243,14 @@ public class Facile {
 		return ProcessIO.run(timeout, path, verbose, args);
 	}
 
+	@SuppressWarnings({"rawtypes" })
+	public static <T> T get(Class<T> clz, Object map, Object key) {
+		if (map instanceof Map) {
+			return get(clz, (Map)map, key);
+		} else {
+			return null;
+		}
+	}	
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static <T> T get(Class<T> clz, Map map, Object key) {
@@ -2424,5 +2472,8 @@ public class Facile {
 		return Types.coerce(clz, value);
 	}
 
+	public static Number toWrapper(int i) {
+		return Types.toWrapper(i);
+	}
 
 }

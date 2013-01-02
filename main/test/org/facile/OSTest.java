@@ -216,17 +216,25 @@ public class OSTest {
 
 	}
 
-	String lsSample = lines(
-	"lrwxr-xr-x    1 rick  staff      29 Jun 14 14:08:19 2011 webdocs -> /Library/WebServer/Documents/",
-	"-rw-rw-r--  1 rick     rick    378 2011-11-29 23:32:44.803207633 -0800 user-data.properties");
+	String lsSample = lines("",
+	"lrwxr-xr-x    4 rick  staff      29 Jun 14 14:08:19 2011 webdocs -> /Library/WebServer/Documents/",
+	"-rw-rw-r--  3 rick     staff    378 2011-11-29 23:32:44.803207633 -0800 user-data.properties");
 
 	
 	@Test 
 	public void lsParse() {
 		
 		List<FileInfo> files = OS.parseLSCommandOutput(lsSample);
-		print(files);
 		
+		assertEquals("Tue Nov 29 23:32:44 PST 2011", ""+files.get(1).date);
+		assertEquals("user-data.properties", ""+files.get(1).name);
+		assertEquals("rw-rw-r--", ""+files.get(1).permission);
+		assertEquals("staff", ""+files.get(1).group);
+		assertEquals("rick", ""+files.get(1).user);
+		assertEquals("378", ""+files.get(1).size);
+		assertEquals("3", ""+files.get(1).numLinks);
+		
+
 	}
 	
 

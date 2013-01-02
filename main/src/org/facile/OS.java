@@ -27,7 +27,7 @@ public class OS {
 	public static DateFormat fileDateFormatterNotISO = new SimpleDateFormat("MMM dd HH:mm:ss yyyy");
 	
 	//2011-11-29 23:32:44.803207633 -0800
-	public static DateFormat fileDateFormatterISO = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss yyyy Z");
+	public static DateFormat fileDateFormatterISO = new SimpleDateFormat("yyyy MM dd HH mm ss Z");
 
 	
 	public static enum ProcessState {
@@ -304,30 +304,27 @@ public class OS {
 				if (!isoDate) {
 					fileDate = fileDateFormatterNotISO.parse(date);
 				} else {
-					
-					//2011-11-29 23:32:44.803207633 -0800
-					//Matcher re = Regex.re("/({digit}{4,4}-{digit}{2,2}-{digit}{2,2}) " +
-					//		"({digit}{2,2}:{digit}{2,2}:{digit}{2,2}).* -({digit}{4,4})/", date);
-					//date = join(' ', re.group(1), re.group(2), re.group(3));
-					//fileDate = fileDateFormatterISO.parse(date);
-					
+					 String[] split2 = split(date, "-:.");
+					 date = join(' ', split2[0], split2[1], split2[2], split2[3], split2[4], "-"+split2[6]);
+					 fileDate = fileDateFormatterISO.parse(date);
+
 				}
 			} catch (ParseException e) {
-				warning(log, "Unable to parse file date from ls command.");
-				e.printStackTrace();
+				warning(log, e, "Unable to parse file date from ls command.");
 			}
 			info.date = fileDate;
 			
 			StringBuilder builder = new StringBuilder();
 			
-			for (int index=9; index < split.length; index++) {
+			for (int index = isoDate ? 8 : 9; index < split.length; index++) {
 				builder.append(split[index]);
 				builder.append(' ');
 			}
 			
 			String fileName = builder.toString();
-			info.name = fileName;
-			print (info);
+			info.name = fileName.trim();
+			
+			files.add(info);
 			
 		}
 		
