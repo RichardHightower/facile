@@ -21,7 +21,7 @@ public class UnsafeField implements FieldAccess {
 
 	static final Unsafe unsafe = getUnsafe();
 	protected final Field field;
-	protected final long offset;
+	protected  long offset;
 	protected final boolean isFinal;
 	protected final Object base;
 	protected final boolean isStatic;
@@ -32,14 +32,20 @@ public class UnsafeField implements FieldAccess {
 	private final String name;
 
 	public UnsafeField(Field f) {
-		
+		System.out.println("Unsafe field " + f);
 		name = f.getName();
+		field = f;
+		
 		if (!name.startsWith("$")) {
-			offset = unsafe.objectFieldOffset(f);
+			try {
+				offset = unsafe.objectFieldOffset(f);
+			}catch (Exception ex) {
+				ex.printStackTrace();
+				System.out.println(f);
+			}
 		} else {
 			offset = -1;
 		}
-		field = f;
 		isFinal = Modifier.isFinal(field.getModifiers());
 		isStatic = Modifier.isStatic(field.getModifiers());
 		
@@ -340,4 +346,109 @@ public class UnsafeField implements FieldAccess {
 		return name;
 	}
 
+
+	@Override
+	public void setValue(Object obj, Object value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void setBoolean(Object obj, boolean value) {
+		
+		if (isVolatile) {
+			 unsafe.putBooleanVolatile(obj, offset, value);
+		} else {
+			 unsafe.putBoolean(obj, offset, value);
+		}
+	
+	}
+
+
+	@Override
+	public void setInt(Object obj, int value) {
+		if (isVolatile) {
+			 unsafe.putIntVolatile(obj, offset, value);
+		} else {
+			 unsafe.putInt(obj, offset, value);
+		}
+		
+	}
+
+
+	@Override
+	public void setShort(Object obj, short value) {
+		if (isVolatile) {
+			 unsafe.putShortVolatile(obj, offset, value);
+		} else {
+			 unsafe.putShort(obj, offset, value);
+		}
+		
+		
+	}
+
+
+	@Override
+	public void setChar(Object obj, char value) {
+		if (isVolatile) {
+			 unsafe.putCharVolatile(obj, offset, value);
+		} else {
+			 unsafe.putChar(obj, offset, value);
+		}
+		
+	}
+
+
+	@Override
+	public void setLong(Object obj, long value) {
+		if (isVolatile) {
+			 unsafe.putLongVolatile(obj, offset, value);
+		} else {
+			 unsafe.putLong(obj, offset, value);
+		}
+		
+	}
+
+
+	@Override
+	public void setDouble(Object obj, double value) {
+		if (isVolatile) {
+			 unsafe.putDoubleVolatile(obj, offset, value);
+		} else {
+			 unsafe.putDouble(obj, offset, value);
+		}
+		
+	}
+
+
+	@Override
+	public void setFloat(Object obj, float value) {
+		if (isVolatile) {
+			 unsafe.putFloatVolatile(obj, offset, value);
+		} else {
+			 unsafe.putFloat(obj, offset, value);
+		}
+	}
+
+
+	@Override
+	public void setByte(Object obj, byte value) {
+		if (isVolatile) {
+			 unsafe.putByteVolatile(obj, offset, value);
+		} else {
+			 unsafe.putByte(obj, offset, value);
+		}
+	}
+
+
+	@Override
+	public void setObject(Object obj, Object value) {
+		if (isVolatile) {
+			 unsafe.putObjectVolatile(obj, offset, value);
+		} else {
+			 unsafe.putObject(obj, offset, value);
+		}
+		
+	}
 }

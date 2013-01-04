@@ -197,4 +197,64 @@ public class ReflectField implements FieldAccess {
 		return name;
 	}
 
+	@Override
+	public void setValue(Object obj, Object value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setBoolean(Object obj, boolean value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setInt(Object obj, int value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setShort(Object obj, short value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setChar(Object obj, char value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setLong(Object obj, long value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDouble(Object obj, double value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setFloat(Object obj, float value) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setByte(Object obj, byte vaue) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setObject(Object obj, Object value) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

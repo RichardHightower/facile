@@ -71,6 +71,8 @@ public class Facile {
 	public static final Class<Calendar> calendar = Calendar.class;
 
 	public static final Class<String[]> stringA = String[].class;
+	public static final Class<int[]> intA = int[].class;
+
 	public static final Class<File> fileT = File.class;
 	public static final boolean debug;
 	public static final PrintStream OUT = System.out;
