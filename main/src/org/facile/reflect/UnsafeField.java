@@ -36,22 +36,14 @@ public class UnsafeField implements FieldAccess {
 		name = f.getName();
 		field = f;
 		
-		if (!name.startsWith("$")) {
-			try {
-				offset = unsafe.objectFieldOffset(f);
-			}catch (Exception ex) {
-				ex.printStackTrace();
-				System.out.println(f);
-			}
-		} else {
-			offset = -1;
-		}
 		isFinal = Modifier.isFinal(field.getModifiers());
 		isStatic = Modifier.isStatic(field.getModifiers());
 		
 		if (isStatic) {
 			base = unsafe.staticFieldBase(field);
+			offset = unsafe.staticFieldOffset(field);
 		} else {
+			offset = unsafe.objectFieldOffset(field);
 			base = null;
 		}
 		isVolatile = Modifier.isVolatile(field.getModifiers());
