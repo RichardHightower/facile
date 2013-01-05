@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -381,10 +382,13 @@ public class Reflection {
 			return map;
 		}
 
-		List<FieldAccess> fields = getAllAccessorFields(object.getClass());
+		List<FieldAccess> fields = getAllAccessorFields(clazz);
 
 		for (FieldAccess field : fields) {
-
+			Object value = map.get(field.getName());
+			if (value!=null) {
+				field.setValue(newInstance, value);
+			}
 		}
 
 		return newInstance;
@@ -406,6 +410,9 @@ public class Reflection {
 			}
 		}
 		List<FieldAccess> fields = getAllAccessorFields(object.getClass());
+		fields = new ArrayList<>(fields);
+		Collections.reverse(fields); //make super classes fields first that their values get overriden by subclass fields with the same name
+
 		List<Entry<String, Object>> entries = mapFilterNulls(
 				new FieldToEntryConverter(), fields);
 

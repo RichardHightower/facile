@@ -65,22 +65,127 @@ public class Types {
 							return Integer.parseInt(str(buf));
 						}
 					} catch (Exception ex2) {
-						// noop
-					}
-					warning(log, "unable to convert to int");
-					return obj.hashCode();
+						warning(log, ex,
+								"unable to convert to int and there was an exception %s",
+								ex.getMessage());
+					}					
 				}
 			} else {
-				String str = obj.toString();
-				return toInt(str);
 			}
 		} catch (Exception ex) {
-			warning(log,
+			warning(log, ex,
 					"unable to convert to int and there was an exception %s",
 					ex.getMessage());
-			return obj.hashCode();
 		}
+		die("Unable to convert %s to a int", obj.getClass());
+		return -666; //die throws an exception
+
 	}
+
+
+	public static byte toByte(Object obj) {
+		try {
+			if (obj instanceof Number) {
+				return ((Number) obj).byteValue();
+			} else if (obj instanceof CharSequence) {
+				try {
+					return Byte.parseByte(((CharSequence) obj).toString());
+				} catch (Exception ex) {
+					char[] chars = chars(obj);
+					Appendable buf = buf(chars.length);
+					boolean found = false;
+					for (char c : chars) {
+						if (Character.isDigit(c) && !found) {
+							found = true;
+							add(buf, c);
+						} else if (Character.isDigit(c) && found) {
+							add(buf, c);
+						} else if (!Character.isDigit(c) && found) {
+						}
+					}
+					try {
+						if (len(buf) > 0) {
+							return Byte.parseByte(str(buf));
+						}
+					} catch (Exception ex2) {
+						warning(log, ex,
+								"unable to convert to byte and there was an exception %s",
+								ex.getMessage());
+					}					
+				}
+			} else {
+			}
+		} catch (Exception ex) {
+			warning(log, ex,
+					"unable to convert to byte and there was an exception %s",
+					ex.getMessage());
+		}
+		die("Unable to convert %s to a byte", obj.getClass());
+		return -66; //die throws an exception
+
+	}
+	
+	public static short toShort(Object obj) {
+		try {
+			if (obj instanceof Number) {
+				return ((Number) obj).shortValue();
+			} else if (obj instanceof CharSequence) {
+				try {
+					return Short.parseShort(((CharSequence) obj).toString());
+				} catch (Exception ex) {
+					char[] chars = chars(obj);
+					Appendable buf = buf(chars.length);
+					boolean found = false;
+					for (char c : chars) {
+						if (Character.isDigit(c) && !found) {
+							found = true;
+							add(buf, c);
+						} else if (Character.isDigit(c) && found) {
+							add(buf, c);
+						} else if (!Character.isDigit(c) && found) {
+						}
+					}
+					try {
+						if (len(buf) > 0) {
+							return Short.parseShort(str(buf));
+						}
+					} catch (Exception ex2) {
+						warning(log, ex,
+								"unable to convert to short and there was an exception %s",
+								ex.getMessage());
+					}					
+				}
+			} else {
+			}
+		} catch (Exception ex) {
+			warning(log, ex,
+					"unable to convert to byte and there was an exception %s",
+					ex.getMessage());
+		}
+		die("Unable to convert %s to a short", obj.getClass());
+		return -66; //die throws an exception
+
+	}
+	
+	
+	public static char toChar(Object obj) {
+		try {
+			if (obj instanceof Character) {
+				return ((Character) obj).charValue();
+			} else if (obj instanceof CharSequence) {
+				obj.toString().charAt(0);
+			} else {
+			}
+		} catch (Exception ex) {
+			warning(log, ex,
+					"unable to convert to byte and there was an exception %s",
+					ex.getMessage());
+		}
+		die("Unable to convert %s to a byte", obj.getClass());
+		return 'Z'; //die throws an exception
+
+	}
+
 
 	public static long toLong(Object obj) {
 		try {
@@ -107,21 +212,24 @@ public class Types {
 							return Long.parseLong(str(buf));
 						}
 					} catch (Exception ex2) {
-						// noop
+						warning(log, ex,
+								"unable to convert to long and there was an exception %s",
+								ex.getMessage());
+
 					}
-					warning(log, "unable to convert to int");
-					return obj.hashCode();
 				}
 			} else {
-				String str = obj.toString();
-				return toLong(str);
 			}
-		} catch (Exception ex) {
-			warning(log,
+		} catch (Exception ex) {		
+			warning(log, ex,
 					"unable to convert to long and there was an exception %s",
 					ex.getMessage());
-			return obj.hashCode();
+
 		}
+		
+		die("Unable to convert %s to a long", obj.getClass());
+		return -666; //die throws an exception
+
 	}
 
 	public static boolean toBoolean(Object obj) {
@@ -166,15 +274,16 @@ public class Types {
 					return Double.NaN;
 				}
 			} else {
-				String str = obj.toString();
-				return toInt(str);
 			}
 		} catch (Exception ex) {
-			warning(log,
+			warning(log, ex,
 					"unable to convert to double and there was an exception %s",
 					ex.getMessage());
-			return Double.NaN;
 		}
+		
+		die("Unable to convert %s to a double", obj.getClass());
+		return -666d; //die throws an exception
+
 	}
 
 	public static float toFloat(Object obj) {
@@ -198,15 +307,16 @@ public class Types {
 					return Float.NaN;
 				}
 			} else {
-				String str = obj.toString();
-				return toInt(str);
 			}
 		} catch (Exception ex) {
 			warning(log,
 					"unable to convert to float and there was an exception %s",
 					ex.getMessage());
-			return Float.NaN;
 		}
+		
+		die("Unable to convert %s to a float", obj.getClass());
+		return -666f; //die throws an exception
+
 	}
 
 	@SuppressWarnings("unchecked")

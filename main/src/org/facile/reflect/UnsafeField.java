@@ -32,7 +32,6 @@ public class UnsafeField implements FieldAccess {
 	private final String name;
 
 	public UnsafeField(Field f) {
-		System.out.println("Unsafe field " + f);
 		name = f.getName();
 		field = f;
 		
@@ -341,8 +340,51 @@ public class UnsafeField implements FieldAccess {
 
 	@Override
 	public void setValue(Object obj, Object value) {
-		// TODO Auto-generated method stub
-		
+
+		if (type == pint) {
+			if (value==null) {
+				return;
+			}
+			setInt(obj, toInt(value));
+		} else if (type == plong) {
+			if (value==null) {
+				return;
+			}
+			setLong(obj, toLong(value));
+		} else if (type == pbyte) {
+			if (value==null) {
+				return;
+			}
+			setByte(obj, toByte(value));
+
+		} else if (type == pshort) {
+			if (value==null) {
+				return;
+			}
+			setShort(obj, toShort(value));
+
+		} else if (type == pchar) {
+			if (value==null) {
+				return;
+			}
+			setChar(obj, toChar(value));
+
+		} else if (type == pdouble) {
+			if (value==null) {
+				return;
+			}
+			setDouble(obj, toDouble(value));
+			
+		} else if (type == pfloat) {
+			if (value==null) {
+				return;
+			}
+			setFloat(obj, toFloat(value));
+			
+		} else {
+			setObject(obj, value);
+		}
+
 	}
 
 
@@ -443,4 +485,16 @@ public class UnsafeField implements FieldAccess {
 		}
 		
 	}
+
+
+	@Override
+	public String toString() {
+		return "UnsafeField [field=" + field + ", offset=" + offset
+				+ ", isFinal=" + isFinal + ", base=" + base + ", isStatic="
+				+ isStatic + ", isVolatile=" + isVolatile + ", qualified="
+				+ qualified + ", readOnly=" + readOnly + ", type=" + type
+				+ ", name=" + name + "]";
+	}
+	
+	
 }

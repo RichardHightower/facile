@@ -1,6 +1,7 @@
 package org.facile;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +11,13 @@ import static org.junit.Assert.*;
 
 public class MapTest {
 
-	public static class Employee {
+	public static class Person  {
+		@SuppressWarnings("unused")
+		private String name = "Human";
+
+	}
+	
+	public static class Employee extends Person {
 		private String name = "Rick";
 		private int age = 100;
 		private Employee boss;
@@ -24,6 +31,15 @@ public class MapTest {
 				nums3.add(num);
 			}
 		}
+		@Override
+		public String toString() {
+			return "Employee [name=" + name + ", age=" + age + ", boss=" + boss
+					+ ", emps=" + emps + ", nums=" + Arrays.toString(nums)
+					+ ", nums2=" + Arrays.toString(nums2) + ", nums3=" + nums3
+					+ "]";
+		}
+		
+		
 
 	}
 	
@@ -70,4 +86,38 @@ public class MapTest {
 		
 		
 	}
+	
+	
+	@Test
+	public void testMapToObject() {
+		
+		Map<String, Object> mp = mp(
+				"name", "Sam", 
+				"nums", new int[]{9,10,11},
+				"nums3", ilist(1, 2, 3, 4, 5),
+				"nums2", new Integer[]{12,13,14},
+				"class", "org.facile.MapTest$Employee",
+				"age", 26,
+				"boss", new Employee(),
+				"emps", ls(new Employee(), new Employee(), new Employee())
+				);
+		Employee employee = fromMap(mp, Employee.class);
+		
+		System.out.println(employee);
+		assertEquals("Sam", employee.name);
+		assertEquals(3, employee.nums.length);
+		assertEquals(9, employee.nums[0]);
+		assertEquals(11, employee.nums[2]);
+		assertEquals(13, employee.nums2[1].intValue());
+		assertEquals(26, employee.age);
+		assertEquals("Rick", employee.boss.name);
+		assertEquals("Rick", employee.emps.get(0).name);
+		assertEquals(5, employee.nums3.size());
+		assertEquals(5, idx(employee.nums3, 4).intValue());
+
+		
+	}
+
+
+
 }

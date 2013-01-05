@@ -2470,6 +2470,24 @@ public class Facile {
 		return Types.toInt(obj);
 	}
 	
+	public static long toLong(Object obj) {
+		return Types.toLong(obj);
+	}
+
+
+	public static char toChar(Object obj) {
+		return Types.toChar(obj);
+	}
+	
+	public static byte toByte(Object obj) {
+		return Types.toByte(obj);
+	}
+	
+	public static short toShort(Object obj) {
+		return Types.toShort(obj);
+	}
+
+
 	public static <T> T coerce(Class<T> clz, Object value) {
 		return Types.coerce(clz, value);
 	}
@@ -2477,5 +2495,12 @@ public class Facile {
 	public static Number toWrapper(int i) {
 		return Types.toWrapper(i);
 	}
+	
+	public static Object fromMap(Map<String, Object> map) {
+		return Reflection.fromMap(map);
+	}
 
+	public static <T> T fromMap(Map<String, Object> map, Class<T> clazz) {
+		return Reflection.fromMap(map, clazz);
+	}
 }
