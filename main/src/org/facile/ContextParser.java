@@ -217,9 +217,10 @@ public class ContextParser {
 		
 		private Map<String, ?> arguments;
 
+		@SuppressWarnings("rawtypes")
 		public Ctx(Map<String, ?> arguments, Class<?> mainClass) {
 			if (arguments==null) {
-				 Map<String, List<String>> mp = mp(string, slist);		
+				 Map<String, List> mp = mp(string, List.class);		
 				 mp.put("all",  ls(string));
 				 this.arguments = mp;
 			}else {

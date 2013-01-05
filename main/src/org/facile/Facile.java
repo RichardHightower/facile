@@ -46,7 +46,7 @@ public class Facile {
 
 	public static final Class<Object> object = Object.class;
 	public static final Class<String> string = String.class;
-	public static final Class<List<String>> slist = null;
+	public static final Class<List> slist = List.class;
 	public static final Class<String[]> sarray = String[].class;
 	public static final Class<Boolean> bool = Boolean.class;
 	public static final Class<Integer> integer = Integer.class;
@@ -72,6 +72,13 @@ public class Facile {
 
 	public static final Class<String[]> stringA = String[].class;
 	public static final Class<int[]> intA = int[].class;
+	public static final Class<byte[]> byteA = byte[].class;
+	public static final Class<short[]> shortA = short[].class;
+	public static final Class<char[]> charA = char[].class;
+	public static final Class<long[]> longA = long[].class;
+	public static final Class<float[]> floatA = float[].class;
+	public static final Class<double[]> doubleA = double[].class;
+	public static final Class<Object[]> objectA = Object[].class;
 
 	public static final Class<File> fileT = File.class;
 	public static final boolean debug;
@@ -2177,6 +2184,8 @@ public class Facile {
 			return ((CharSequence)obj).length();
 		}else if (obj instanceof Collection) {
 			return ((Collection<?>)obj).size();
+		}else if (obj instanceof Map) {
+			return ((Map<?,?>)obj).size();
 		} else {
 			throw new AssertionException("Not an array like object");
 		}

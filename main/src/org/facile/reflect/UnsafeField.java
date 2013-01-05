@@ -3,6 +3,8 @@ package org.facile.reflect;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import org.facile.Types;
+
 import sun.misc.Unsafe;
 
 import static org.facile.Facile.*;
@@ -342,47 +344,26 @@ public class UnsafeField implements FieldAccess {
 	public void setValue(Object obj, Object value) {
 
 		if (type == pint) {
-			if (value==null) {
-				return;
-			}
 			setInt(obj, toInt(value));
 		} else if (type == plong) {
-			if (value==null) {
-				return;
-			}
 			setLong(obj, toLong(value));
 		} else if (type == pbyte) {
-			if (value==null) {
-				return;
-			}
 			setByte(obj, toByte(value));
 
 		} else if (type == pshort) {
-			if (value==null) {
-				return;
-			}
 			setShort(obj, toShort(value));
 
 		} else if (type == pchar) {
-			if (value==null) {
-				return;
-			}
 			setChar(obj, toChar(value));
 
 		} else if (type == pdouble) {
-			if (value==null) {
-				return;
-			}
 			setDouble(obj, toDouble(value));
 			
 		} else if (type == pfloat) {
-			if (value==null) {
-				return;
-			}
 			setFloat(obj, toFloat(value));
 			
 		} else {
-			setObject(obj, value);
+			setObject(obj, Types.coerce(type, value));
 		}
 
 	}

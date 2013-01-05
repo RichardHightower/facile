@@ -76,16 +76,11 @@ public class ArgumentParsingAndTypesTest {
 		expect(123, i);
 		
 		
-		MyClass foo = new MyClass();
-		i = toInt(foo);
-		expect(123, i);
 		
 		Double d = Double.valueOf("123.2");
 		i = toInt(d);
 		expect(123, i);
 		
-		MyClass2 bar = new MyClass2();
-		i = toInt(bar);
 
 
 	}
@@ -96,15 +91,12 @@ public class ArgumentParsingAndTypesTest {
 		double i = 0.0;
 		
 		MyClass foo = new MyClass();
-		i = toDouble(foo);
+		i = toDouble(str(foo));
 		expect(123.0, i);
 		
-		Float d = Float.valueOf("123.2");
-		i = toDouble(d);
-		expect(123.1, 123.2, i);
 		
 		MyClass2 bar = new MyClass2();
-		i = toDouble(bar);
+		i = toDouble(str(bar));
 		print(i);
 
 		i = toDouble(s);
@@ -119,6 +111,7 @@ public class ArgumentParsingAndTypesTest {
 		
 		Map<String, ?> args = cmdToMap(aargs);
 		
+		@SuppressWarnings("unchecked")
 		List<String> cmdLine = get(slist, args, "all");
 		assertNotNull(cmdLine);
 		
@@ -129,6 +122,7 @@ public class ArgumentParsingAndTypesTest {
 		assertEquals(10, numCall);
 		
 		
+		@SuppressWarnings("unchecked")
 		List<String> actions = get(slist, args, "actions");
 		expect(isIn("start", actions));
 		expect(1 , len(actions));

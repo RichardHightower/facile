@@ -9,8 +9,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -369,6 +375,7 @@ public class Reflection {
 		return (T) fromMap(map);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static Object fromMap(Map<String, Object> map) {
 		String className = (String) map.get("class");
 		Object newInstance = null;
@@ -385,13 +392,93 @@ public class Reflection {
 		List<FieldAccess> fields = getAllAccessorFields(clazz);
 
 		for (FieldAccess field : fields) {
-			Object value = map.get(field.getName());
-			if (value!=null) {
+			String name = field.getName();
+			Object value = map.get(name);
+			if (value instanceof Map && Types.getKeyType((Map<?, ?>) value) == string) {
+				value = fromMap((Map<String, Object>) value);
+			} else if (value instanceof Collection) {
+				Class<?> componentType = getComponentType((Collection<?>) value);
+				if (Types.isMap(componentType)) {
+					handleCollectionOfMaps(newInstance, field,
+							(Collection<Map<?, ?>>) value);
+					continue;
+				}
+			}
+
+			if (value != null) {
 				field.setValue(newInstance, value);
 			}
 		}
 
 		return newInstance;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static void handleCollectionOfMaps(Object newInstance,
+			FieldAccess field, Collection<Map<?, ?>> value) {
+
+		Class<?> type = field.getType();
+		Collection<Object> target = null;
+		try {
+			if (!type.isInterface()) {
+				Constructor<?> constructor = type.getConstructor(pint);
+				constructor.setAccessible(true);
+				target = (Collection<Object>) constructor.newInstance(value
+						.size());
+			} else {
+				// the type was an interface so let's see if we can figure out
+				// what it should be
+				Collection<Object> value2 = (Collection<Object>) field
+						.getValue(newInstance);
+
+				if (value2 != null) {
+					
+					if (Types.isModifiableCollection(value2)) {
+						target = value2;
+					}
+				} 
+				if (target==null) {
+					target = (Collection<Object>) createCollection(type, value.size());
+				}
+			}
+
+			if (value.size() > 0) {
+				Map<?, ?> item = value.iterator().next();
+				if (Types.getKeyType(item) == string) {
+					for (Map<?, ?> i : value) {
+						target.add(fromMap((Map<String, Object>) i));
+						field.setValue(newInstance, target);
+						return;
+					}
+				} else {
+					warning(log,
+							"This should not happen, but for some reason there is a type and we don't know how to convert it");
+
+				}
+			} else {
+				field.setValue(newInstance, target);
+				return;
+			}
+
+		} catch (Exception e) {
+			warning(log,
+					e,
+					"This should not happen, but for some reason we were not able to get the constructor");
+		}
+	}
+
+	public static Collection<Object> createCollection(Class<?> type, int size) {
+		if (type==List.class) {
+			return new ArrayList<Object>(size);
+		} else if (type == SortedSet.class) {
+			return new TreeSet<Object>();
+		} else if (type == Set.class) {
+			return new HashSet<Object>(size);
+		} else if (type==Queue.class) {
+			return new LinkedList<Object>();
+		} else {
+			return new ArrayList<Object>(size);
+		}
 	}
 
 	public static Map<String, Object> toMap(final Object object) {
@@ -411,7 +498,9 @@ public class Reflection {
 		}
 		List<FieldAccess> fields = getAllAccessorFields(object.getClass());
 		fields = new ArrayList<>(fields);
-		Collections.reverse(fields); //make super classes fields first that their values get overriden by subclass fields with the same name
+		Collections.reverse(fields); // make super classes fields first that
+										// their values get overriden by
+										// subclass fields with the same name
 
 		List<Entry<String, Object>> entries = mapFilterNulls(
 				new FieldToEntryConverter(), fields);
