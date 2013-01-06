@@ -403,7 +403,7 @@ public class Reflection {
 					handleCollectionOfMaps(newInstance, field,
 							(Collection<Map<?, ?>>) value);
 					continue;
-				}
+				} 
 			}
 
 			if (value != null) {
@@ -483,7 +483,13 @@ public class Reflection {
 	}
 
 	public static Map<String, Object> toMap(final Object object) {
+		
+		if (object==null) {
+			return null;
+		}
+		
 		Map<String, Object> map = new HashMap<>();
+		
 
 		class FieldToEntryConverter implements
 				Converter<Entry<String, Object>, FieldAccess> {
@@ -535,7 +541,11 @@ public class Reflection {
 					List<Map<String, Object>> list = new ArrayList<>(
 							collection.size());
 					for (Object item : collection) {
-						list.add(toMap(item));
+						if (item!=null) {
+							list.add(toMap(item));
+						} else {
+							
+						}
 					}
 					map.put(entry.key(), list);
 				}

@@ -1,18 +1,13 @@
 package org.facile;
 
-import static org.facile.Facile.pbyte;
-import static org.facile.Facile.pchar;
-import static org.facile.Facile.pdouble;
-import static org.facile.Facile.pfloat;
-import static org.facile.Facile.pint;
-import static org.facile.Facile.plong;
-import static org.facile.Facile.pshort;
+import static org.facile.Facile.*;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -179,14 +174,34 @@ public class BinaryEncoder {
 			encodeMap((Map)value);
 		} else if (Facile.isArray(value)) {
 			encodeArray(value);
+		} else if (value instanceof Collection) {
+			encodeArray((Collection)value);
 		} else if (value instanceof Calendar) {
 			encodeDate((Calendar) value);
-		} 
+		} else {
+			encodeObject(value);
+		}
 
 	}
 
+	public void encodeObject(Object value) throws IOException {
+		System.out.println("encode object " + value.getClass().getName());
+		output.write(OBJECT);
+		encodeMap(Reflection.toMap(value));		
+	}
+
+	public void encodeArray(Collection<?> value) throws IOException {
+		Class<?> componentType = Reflection.getComponentType(value);
+		Object array = Types.toArray(value);
+		encodeArray(array, componentType);
+	}
+
+	
 	public void encodeArray(Object value) throws IOException {
 		Class<?> componentType = value.getClass().getComponentType();
+		encodeArray(value, componentType);
+	}
+	public void encodeArray(Object value, Class<?> componentType) throws IOException {
 		if (componentType.isPrimitive()) {
 			if (componentType == pint) {
 				encodeIntArray((int []) value);
@@ -203,6 +218,32 @@ public class BinaryEncoder {
 			} else if (componentType == pbyte) {
 				encodeByteArray((byte []) value);									
 			}
+		} else if (Types.isBasicType(componentType)) {
+			if (componentType == integer) {
+				encodeIntArray((Integer []) value);
+			} else if (componentType == Short.class) {
+				encodeShortArray((Short []) value);
+			} else if (componentType == Long.class) {
+				encodeLongArray((Long []) value);					
+			} else if (componentType == Character.class) {
+				encodeCharArray((Character []) value);									
+			} else if (componentType == Double.class) {
+				encodeDoubleArray((Double []) value);									
+			} else if (componentType == Float.class) {
+				encodeFloatArray((Float []) value);									
+			} else if (componentType == Byte.class) {
+				encodeByteArray((Byte []) value);									
+			} else if (componentType == Date.class) {
+				encodeDateArray((Date []) value);									
+			} else if (componentType == Calendar.class) {
+				encodeDateArray((Calendar []) value);									
+			} else if (Types.isCharSequence(componentType)) {
+				encodeStringArray((CharSequence []) value);									
+			}	
+		} else if (Types.isMap(componentType)) {
+			encodeMapArray((Map []) value);									
+		} else {
+			encodeObjectArray((Object []) value);									
 		}
 
 	}
@@ -667,8 +708,27 @@ public class BinaryEncoder {
 			encodeShort(value);
 		}
 	}
+	
+	public void encodeShortArray(Short[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(SHORT);
+		encodeInteger(array.length);
+		for (short value : array) {
+			encodeShort(value);
+		}
+	}
+
 
 	public void encodeCharArray(char[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(CHAR);
+		encodeInteger(array.length);
+		for (char value : array) {
+			encodeChar(value);
+		}
+	}
+
+	public void encodeCharArray(Character[] array) throws IOException {
 		output.writeByte(ARRAY);
 		output.writeByte(CHAR);
 		encodeInteger(array.length);
@@ -686,7 +746,25 @@ public class BinaryEncoder {
 		}
 	}
 
+	public void encodeLongArray(Long[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(LONG);
+		encodeInteger(array.length);
+		for (long value : array) {
+			encodeLong(value);
+		}
+	}
+
 	public void encodeIntArray(int[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(INT);
+		encodeInteger(array.length);
+		for (int value : array) {
+			encodeInteger(value);
+		}
+	}
+
+	public void encodeIntArray(Integer[] array) throws IOException {
 		output.writeByte(ARRAY);
 		output.writeByte(INT);
 		encodeInteger(array.length);
@@ -704,7 +782,73 @@ public class BinaryEncoder {
 		}
 	}
 
+	public void encodeByteArray(Byte[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(BYTE);
+		encodeInteger(array.length);
+		for (byte value : array) {
+			output.writeByte(value);
+		}
+	}
+
+	public void encodeDateArray(Date[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(DATE_ALL);
+		encodeInteger(array.length);
+		for (Date value : array) {
+			encodeDate(value);
+		}
+	}
+
+	public void encodeDateArray(Calendar[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(DATE_ALL);
+		encodeInteger(array.length);
+		for (Calendar value : array) {
+			encodeDate(value);
+		}
+	}
+	
+
+	public void encodeStringArray(CharSequence[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(STRING);
+		encodeInteger(array.length);
+		for (CharSequence value : array) {
+			encodeString(value);
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	public void encodeMapArray(Map[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(MAP);
+		encodeInteger(array.length);
+		for (Map value : array) {
+			encodeMap(value);
+		}
+	}
+
+	public void encodeObjectArray(Object[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(OBJECT);
+		encodeInteger(array.length);
+		for (Object value : array) {
+			encodeObject(value);
+		}
+	}
+	
 	public void encodeDoubleArray(double[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(DOUBLE);
+		encodeInteger(array.length);
+		for (double value : array) {
+			encodeDouble(value);
+		}
+
+	}
+
+	public void encodeDoubleArray(Double[] array) throws IOException {
 		output.writeByte(ARRAY);
 		output.writeByte(DOUBLE);
 		encodeInteger(array.length);
@@ -722,4 +866,15 @@ public class BinaryEncoder {
 			encodeFloat(value);
 		}
 	}
+	
+
+	public void encodeFloatArray(Float[] array) throws IOException {
+		output.writeByte(ARRAY);
+		output.writeByte(FLOAT);
+		encodeInteger(array.length);
+		for (float value : array) {
+			encodeFloat(value);
+		}
+	}
+
 }

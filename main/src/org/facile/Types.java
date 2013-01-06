@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -353,9 +354,14 @@ public class Types {
 		} else if (clz == fileT) {
 			return (T) toFile(value);
 		} else if (isMap(clz)) {
+			if (value instanceof Map) {
+				return (T) value;
+			}
 			return (T) toMap(value);
 		} else if (clz.isArray()) {
 			return (T) toArray(clz, value);
+		} else if (isCollection(clz)) {
+			return toCollection(clz, value);
 		}
 		else if (clz!= null && clz.getPackage() != null && !clz.getPackage().getName().startsWith("java")
 				&& isMap(value.getClass()) && isKeyTypeString(value)) {
@@ -537,17 +543,67 @@ public class Types {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T toCollection(Class<T> clz, Object value) {
-		return null;
+		if (isList(clz)) {
+			return (T) toList(value);
+		} else if (isSortedSet(clz)) {
+			return (T)  toSortedSet(value);
+		} else if (isSet(clz)) {
+			return  (T) toSet(value);			
+		} else {
+			return  (T) toList(value);			
+		}
 	}
 
-	public static <T> T toList(Class<T> clz, Object value) {
-		return null;
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static List toList(Object value) {
+		if (value instanceof List) {
+			return (List)value;
+		} else if (value instanceof Collection) {
+			return new ArrayList((Collection) value);			
+		} else {
+			ArrayList list = new ArrayList(len(value));
+			Iterator<Object> iterator = iterator(object, value);
+			while(iterator.hasNext()) {
+				list.add(iterator.next());
+			}
+			return list;
+		}
 	}
 
-	public static <T> T toSet(Class<T> clz, Object value) {
-		return null;
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Set toSet(Object value) {
+		if (value instanceof Set) {
+			return (Set)value;
+		} else if (value instanceof Collection) {
+			return new HashSet((Collection) value);			
+		} else {
+			HashSet set = new HashSet(len(value));
+			Iterator<Object> iterator = iterator(object, value);
+			while(iterator.hasNext()) {
+				set.add(iterator.next());
+			}
+			return set;
+		}
 	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static SortedSet toSortedSet(Object value) {
+		if (value instanceof Set) {
+			return (SortedSet)value;
+		} else if (value instanceof Collection) {
+			return new TreeSet((Collection) value);			
+		} else {
+			TreeSet set = new TreeSet();
+			Iterator<Object> iterator = iterator(object, value);
+			while(iterator.hasNext()) {
+				set.add(iterator.next());
+			}
+			return set;
+		}
+	}
+
 
 	public static boolean isKeyTypeString(Object value) {
 		return getKeyType((Map<?, ?>) value) == string;
@@ -632,6 +688,10 @@ public class Types {
 		return isType(thisType, Map.class);
 	}
 
+	public static boolean isCharSequence(Class<?> thisType) {
+		return isType(thisType, CharSequence.class);
+	}
+
 	public static boolean isCollection(Class<?> thisType) {
 		return isType(thisType, Collection.class);
 	}
@@ -642,6 +702,10 @@ public class Types {
 
 	public static boolean isSet(Class<?> thisType) {
 		return isType(thisType, Set.class);
+	}
+
+	public static boolean isSortedSet(Class<?> thisType) {
+		return isType(thisType, SortedSet.class);
 	}
 
 	public static boolean isType(Class<?> thisType, Class<?> isThisType) {
@@ -687,5 +751,19 @@ public class Types {
 			return null;
 		}
 	}
+	
+	public static Object toArray(Collection<?> value) {
+		Class<?> componentType = Reflection.getComponentType(value);
+		Object array = Array.newInstance(componentType, value.size());
+		@SuppressWarnings("unchecked")
+		Iterator<Object> iterator = (Iterator<Object>) value.iterator();
+		int index=0;
+		while (iterator.hasNext()) {
+			idx(array, index, iterator.next());
+			index++;
+		}
+		return array;
+	}
+
 
 }

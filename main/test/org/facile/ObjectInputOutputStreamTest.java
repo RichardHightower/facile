@@ -7,8 +7,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.facile.ObjectInputStream;
@@ -1005,6 +1008,72 @@ public class ObjectInputOutputStreamTest {
 		prepareInput();
 		Date date = (Date) input.readObject();
 		assertEquals(cal.getTime(), date);
+
+	}
+
+	public static class Person  {
+		@SuppressWarnings("unused")
+		private String name = "Human";
+
+	}
+	
+	public static class Employee extends Person {
+		private String name = "Rick";
+		private int age = 100;
+		private Employee boss;
+		private List<Employee> emps;
+
+		int [] nums = {1,2,3,4};
+		Integer [] nums2 = {1,2,3,4};
+		List <Integer> nums3 = new ArrayList<>();
+		{
+			for (Integer num : nums2) {
+				nums3.add(num);
+			}
+		}
+		@Override
+		public String toString() {
+			return "Employee [name=" + name + ", age=" + age + ", boss=" + boss
+					+ ", emps=" + emps + ", nums=" + Arrays.toString(nums)
+					+ ", nums2=" + Arrays.toString(nums2) + ", nums3=" + nums3
+					+ "]";
+		}
+		
+		
+
+	}
+	
+	
+	@Test
+	public void testInstance() throws IOException, ClassNotFoundException {
+		
+		Map<String, Object> mp = mp(
+				"name", "Sam", 
+				"nums", ilist(9,10,11),
+				"nums3", new int[] {1, 2, 3, 4, 5},
+				"nums2", new Integer[]{12,13,14},
+				"class", "org.facile.ObjectInputOutputStreamTest$Employee",
+				"age", (short)26
+				//"boss", new Employee(),
+				//"emps", ls(new Employee(), new Employee(), new Employee())
+				);
+		Employee employeeOrginal = fromMap(mp, Employee.class);
+
+		output.writeObject(employeeOrginal);
+		prepareInput();
+		Employee employee = (Employee) input.readObject();
+
+		System.out.println(employee);
+		assertEquals("Sam", employee.name);
+		assertEquals(3, employee.nums.length);
+		assertEquals(9, employee.nums[0]);
+		assertEquals(11, employee.nums[2]);
+		assertEquals(13, employee.nums2[1].intValue());
+		assertEquals(26, employee.age);
+		//assertEquals("Rick", employee.boss.name); //TODO
+		//assertEquals("Rick", employee.emps.get(0).name);
+		assertEquals(5, employee.nums3.size());
+		assertEquals(5, idx(employee.nums3, 4).intValue());
 
 	}
 

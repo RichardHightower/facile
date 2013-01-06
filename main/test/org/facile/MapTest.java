@@ -233,8 +233,8 @@ public class MapTest {
 		assertEquals(26, employee.age);
 		assertEquals("Rick", employee.boss.name);
 		assertEquals("Rick", employee.emps.get(0).name);
-		//assertEquals(5, employee.nums3.size());
-		//assertEquals(5, idx(employee.nums3, 4).intValue());
+		assertEquals(5, employee.nums3.size());
+		assertEquals(5, idx(employee.nums3, 4).intValue());
 
 		
 	}

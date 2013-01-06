@@ -60,8 +60,15 @@ public class BinaryDecoder {
 		} else if (type == BinaryEncoder.BIG_INT){
 			return decodeBigInteger(type);
 		} else {
-			return null;
+			return decodeObject(type);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public Object decodeObject(byte type) throws IOException {
+		@SuppressWarnings("rawtypes")
+		Map map = decodeMap(true);
+		return Reflection.fromMap((Map<String, Object>)map);
 	}
 
 	public BigInteger decodeBigInteger() throws IOException {
