@@ -46,6 +46,7 @@ public class Facile {
 
 	public static final Class<Object> object = Object.class;
 	public static final Class<String> string = String.class;
+	@SuppressWarnings("rawtypes")
 	public static final Class<List> slist = List.class;
 	public static final Class<String[]> sarray = String[].class;
 	public static final Class<Boolean> bool = Boolean.class;

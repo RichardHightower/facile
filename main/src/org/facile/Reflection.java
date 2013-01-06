@@ -80,6 +80,7 @@ public class Reflection {
 	public static class FuncImpl<T> implements Func<T> {
 		Method method;
 		Object that;
+		
 
 		FuncImpl(Class<T> clazz, Method method, Object that) {
 			method.setAccessible(true);
