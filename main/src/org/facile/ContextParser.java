@@ -314,6 +314,7 @@ public class ContextParser {
 			return copy(arguments);
 		}
 
+		@SuppressWarnings("unchecked")
 		public List<String> args() {
 			return get(slist, arguments, "all");
 		}
