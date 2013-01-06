@@ -64,6 +64,7 @@ public class BinaryEncoder {
 	public static final byte OBJECT_REF = -85;
 	public static final byte MAP = -86;
 	public static final byte MAP_KEYS = -87;
+	public static final byte CLASS_KEYS = -88;
 
 	public static final byte DATE_YEAR_ONLY = -90;
 	public static final byte DATE_YEAR_MONTH_ONLY = -91;
@@ -108,6 +109,8 @@ public class BinaryEncoder {
 
 	Map<String, Long> keyToNum = new HashMap<String, Long>();
 	long keyNum = 0;
+	Map<String, Long> classNameToKey = new HashMap<String, Long>();
+	long classNum = 0;
 
 	public <K, V> void encodeMap(Map<K, V> map) throws IOException {
 		encodeMap(map, true);
@@ -130,16 +133,29 @@ public class BinaryEncoder {
 		for (Map.Entry<K, V> entry : entrySet) {
 			if (entry.getKey() instanceof CharSequence) {
 				Long key = null;
-				if ((key = keyToNum.get(entry.getKey())) == null) {
+				String sKey = entry.getKey().toString();
+				if ((key = keyToNum.get(sKey)) == null) {
 					keyNum++;
 					key = keyNum;
-					keyToNum.put(entry.getKey().toString(), key);
+					keyToNum.put(sKey, key);
 				}
 				encodeLong(key);
+				if (!sKey.equals("class")) {
+					encodeValue(entry.getValue());
+				}else {
+					Long cNum = classNameToKey.get((String)entry.getValue());
+					if (cNum==null) {
+						classNameToKey.put((String)entry.getValue(), this.classNum);
+						encodeValue(this.classNum);
+						this.classNum++;
+					} else {
+						encodeValue(cNum);						
+					}
+				}
 			} else {
 				encodeValue(entry.getKey());
+				encodeValue(entry.getValue());
 			}
-			encodeValue(entry.getValue());
 		}
 
 		
@@ -158,6 +174,17 @@ public class BinaryEncoder {
 
 		keyToNum.clear();
 		keyNum = 0;
+		
+		output.write(CLASS_KEYS);
+		encodeInteger(classNameToKey.size());
+		for (Map.Entry<String, Long> entry : classNameToKey.entrySet()) {
+			encodeLong(entry.getValue());
+			encodeString(entry.getKey());
+		}
+
+		classNameToKey.clear();
+		classNum = 0;
+
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -184,11 +211,14 @@ public class BinaryEncoder {
 
 	}
 
+	
 	public void encodeObject(Object value) throws IOException {
 		System.out.println("encode object " + value.getClass().getName());
 		output.write(OBJECT);
-		encodeMap(Reflection.toMap(value));		
+		Map<String, Object> map = Reflection.toMap(value);
+		encodeMap(map);		
 	}
+
 
 	public void encodeArray(Collection<?> value) throws IOException {
 		Class<?> componentType = Reflection.getComponentType(value);

@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 
 import org.facile.lang.Unsigned3ByteInteger;
 import org.facile.lang.Unsigned5ByteInteger;
@@ -20,6 +21,7 @@ import org.facile.lang.UnsignedByte;
 import org.facile.lang.UnsignedInteger;
 
 public class BinaryDecoder {
+	private static final Logger log = Facile.log(BinaryDecoder.class);
 
 	DataInput input;
 
@@ -53,14 +55,17 @@ public class BinaryDecoder {
 		} else if (type <= BinaryEncoder.UNSIGNED_INT
 				&& type >= BinaryEncoder.LONG) {
 			return new Long(decodeLong(type));
-		} else if (type <= BinaryEncoder.DATE_YEAR_ONLY && type >= BinaryEncoder.DATE_ALL ) {
+		} else if (type <= BinaryEncoder.DATE_YEAR_ONLY
+				&& type >= BinaryEncoder.DATE_ALL) {
 			return decodeDate(type);
-		} else if (type == BinaryEncoder.BIG_DECIMAL){
+		} else if (type == BinaryEncoder.BIG_DECIMAL) {
 			return decodeBigDecimal(type);
-		} else if (type == BinaryEncoder.BIG_INT){
+		} else if (type == BinaryEncoder.BIG_INT) {
 			return decodeBigInteger(type);
-		} else {
+		} else if (type == BinaryEncoder.OBJECT) {
 			return decodeObject(type);
+		} else {
+			return null;
 		}
 	}
 
@@ -68,7 +73,7 @@ public class BinaryDecoder {
 	public Object decodeObject(byte type) throws IOException {
 		@SuppressWarnings("rawtypes")
 		Map map = decodeMap(true);
-		return Reflection.fromMap((Map<String, Object>)map);
+		return Reflection.fromMap((Map<String, Object>) map);
 	}
 
 	public BigInteger decodeBigInteger() throws IOException {
@@ -80,7 +85,7 @@ public class BinaryDecoder {
 			return BigInteger.valueOf(value);
 		}
 	}
-	
+
 	public BigInteger decodeBigInteger(byte type) throws IOException {
 		BigInteger bi = null;
 		byte[] byteArray = decodeByteArray();
@@ -606,16 +611,16 @@ public class BinaryDecoder {
 	}
 
 	int depth = 0;
-	
+
 	@SuppressWarnings("unchecked")
 	public <K, V> Map<K, V> decodeMap(byte type, boolean stringKeys)
 			throws IOException {
 		Map<K, V> map = null;
 
 		boolean root = false;
-		if (depth==0) {
+		if (depth == 0) {
 			root = true;
-		}	
+		}
 		depth++;
 
 		if (type != BinaryEncoder.MAP) {
@@ -637,29 +642,55 @@ public class BinaryDecoder {
 		}
 		if (root) {
 			byte typeMapKeys = input.readByte();
-			if (typeMapKeys != BinaryEncoder.MAP_KEYS) {
-				throw new RuntimeException("Expecting map keys, but got "
-						+ typeMapKeys);
-			}
-			int sizeMapKeys = decodeInteger();
-
-			Map<Long, String> keyToNum = new HashMap<Long, String>();
-
-			for (int index = 0; index < sizeMapKeys; index++) {
-				Long longKey = decodeLong();
-				String actualKey = decodeString();
-				keyToNum.put(longKey, actualKey);
-			}
-
-			for (MapMap mapMap : mappings) {
-				for (Number number : mapMap.sequenceMap.keySet()) {
-					String key = keyToNum.get(number);
-					mapMap.map.put(key, mapMap.sequenceMap.get(number));
-				}
-			}
+			readMapKey(typeMapKeys);
 		}
 		return map;
 
+	}
+
+	private void readMapKey(byte typeMapKeys) throws IOException {
+		if (typeMapKeys != BinaryEncoder.MAP_KEYS) {
+			throw new RuntimeException("Expecting map keys, but got "
+					+ typeMapKeys);
+		}
+		int sizeMapKeys = decodeInteger();
+
+		Map<Long, String> keyToNum = new HashMap<Long, String>();
+
+		for (int index = 0; index < sizeMapKeys; index++) {
+			Long longKey = decodeLong();
+			String actualKey = decodeString();
+			keyToNum.put(longKey, actualKey);
+		}
+
+		Map<Long, String> classNumToClassName = new HashMap<Long, String>();
+
+		try {
+			byte classKeys = input.readByte();
+			if (classKeys == BinaryEncoder.CLASS_KEYS) {
+				int sz = decodeInteger();
+				for (int index = 0; index < sz; index++) {
+					Long longKey = decodeLong();
+					String actualKey = decodeString();
+					classNumToClassName.put(longKey, actualKey);
+				}
+			}
+
+		} catch (IOException ex) {
+			Facile.warning(log, ex, "problem");
+		}
+
+		for (MapMap mapMap : mappings) {
+			for (Number number : mapMap.sequenceMap.keySet()) {
+				String key = keyToNum.get(number);
+				if (!key.equals("class")) {
+					mapMap.map.put(key, mapMap.sequenceMap.get(number));
+				}else {
+					long classNum = Facile.toLong(mapMap.sequenceMap.get(number));
+					mapMap.map.put(key, classNumToClassName.get(classNum));				
+				}
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -685,7 +716,7 @@ public class BinaryDecoder {
 		map.put(key, value);
 
 		for (int index = 1; index < size; index++) {
-			key =  decodeLong();
+			key = decodeLong();
 			value = (V) decodeValue();
 			map.put(key, value);
 		}
@@ -696,8 +727,8 @@ public class BinaryDecoder {
 	public Date decodeDate() throws IOException {
 		byte type = input.readByte();
 		return decodeDate(type);
-	}		
-	
+	}
+
 	public Date decodeDate(byte type) throws IOException {
 		int year = 0;
 		int month = 0;
@@ -812,7 +843,7 @@ public class BinaryDecoder {
 		} else {
 			calendar = Calendar.getInstance();
 		}
-		
+
 		calendar.set(Calendar.YEAR, year);
 		calendar.set(Calendar.MONTH, month);
 		calendar.set(Calendar.DAY_OF_MONTH, day);

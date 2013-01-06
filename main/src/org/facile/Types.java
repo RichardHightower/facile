@@ -239,7 +239,7 @@ public class Types {
 
 		}
 
-		die("Unable to convert %s to a long", obj.getClass());
+		die("Unable to convert %s %s to a long", obj, obj.getClass());
 		return -666; // die throws an exception
 
 	}
