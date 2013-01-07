@@ -6,6 +6,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -404,6 +405,12 @@ public class Reflection {
 							(Collection<Map<?, ?>>) value);
 					continue;
 				} 
+			} else if (value instanceof Map[]) {
+				Map<?,?> [] maps = (Map<?,?>[]) value;
+				List<Map<?,?>> list = Arrays.asList(maps);
+				handleCollectionOfMaps(newInstance, field,
+						list);
+				continue;
 			}
 
 			if (value != null) {

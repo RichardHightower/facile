@@ -1046,7 +1046,7 @@ public class ObjectInputOutputStreamTest {
 	public static class Class1  {
 		private int num = 0;
 		private Class1 parent = null;
-		//private List<Class1> children;
+		private List<Class1> children;
 
 	}
 	
@@ -1057,8 +1057,8 @@ public class ObjectInputOutputStreamTest {
 	public void smallTest() throws IOException, ClassNotFoundException {
 		Class1 cls1 = new Class1();
 		cls1.parent = new Class1();
-		//cls1.children = ls(new Class1());
-		//cls1.children.get(0).num=666;
+		cls1.children = ls(new Class1());
+		cls1.children.get(0).num=33;
 		cls1.num=77;
 		cls1.parent.num=99;
 		output.writeObject(cls1);
@@ -1067,7 +1067,7 @@ public class ObjectInputOutputStreamTest {
 
 		assertEquals(class1.num, 77);
 		assertEquals(class1.parent.num, 99);
-		//assertEquals(class1.children.get(0).num, 99);
+		assertEquals(class1.children.get(0).num, 33);
 
 	}
 
@@ -1081,8 +1081,8 @@ public class ObjectInputOutputStreamTest {
 				"nums2", new Integer[]{12,13,14},
 				"class", "org.facile.ObjectInputOutputStreamTest$Employee",
 				"age", (short)26,
-				"boss", new Employee()
-				//"emps", ls(new Employee(), new Employee(), new Employee())
+				"boss", new Employee(),
+				"emps", ls(new Employee(), new Employee(), new Employee())
 				);
 		Employee employeeOrginal = fromMap(mp, Employee.class);
 
@@ -1100,7 +1100,7 @@ public class ObjectInputOutputStreamTest {
 		assertEquals("Rick", employee.boss.name); 
 		assertEquals(100, employee.boss.age); 
 
-		//assertEquals("Rick", employee.emps.get(0).name);
+		assertEquals("Rick", employee.emps.get(0).name);
 		assertEquals(5, employee.nums3.size());
 		assertEquals(5, idx(employee.nums3, 4).intValue());
 

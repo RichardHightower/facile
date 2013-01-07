@@ -75,6 +75,13 @@ public class BinaryDecoder {
 		Map map = decodeMap(true);
 		return Reflection.fromMap((Map<String, Object>) map);
 	}
+	
+
+	public Object decodeObject() throws IOException {
+		byte type = input.readByte();
+		return decodeObject(type);
+	}
+
 
 	public BigInteger decodeBigInteger() throws IOException {
 		byte type = input.readByte();
@@ -109,16 +116,18 @@ public class BinaryDecoder {
 			return decodeByteArray(type, componentType);
 		} else if (componentType == BinaryEncoder.INT) {
 			return decodeIntArray(type, componentType);
-		}
-		if (componentType == BinaryEncoder.LONG) {
+		} else if (componentType == BinaryEncoder.LONG) {
 			return decodeLongArray(type, componentType);
-		}
-		if (componentType == BinaryEncoder.SHORT) {
+		} else if (componentType == BinaryEncoder.SHORT) {
 			return decodeShortArray(type, componentType);
-		}
-		if (componentType == BinaryEncoder.CHAR) {
+		} else if (componentType == BinaryEncoder.CHAR) {
 			return decodeCharArray(type, componentType);
-		} else {
+		} else if (componentType == BinaryEncoder.OBJECT) {
+			return decodeObjectArray(type, componentType);
+		} else if (componentType == BinaryEncoder.MAP) {
+			return decodeMapArray(type, componentType);
+		} 
+		else {
 			// TODO support dates, big decimal, big int, and strings
 			return null;
 		}
@@ -546,6 +555,50 @@ public class BinaryDecoder {
 		return decodeCharArray(type, componentType);
 	}
 
+
+	@SuppressWarnings("rawtypes")
+	public Map[] decodeMapArray(byte type, byte componentType)
+			throws IOException {
+		Map[] array = null;
+
+		if (type == BinaryEncoder.ARRAY
+				&& componentType == BinaryEncoder.MAP) {
+			int size = decodeInteger();
+			array = new Map[size];
+			for (int index = 0; index < array.length; index++) {
+				byte otype = input.readByte();
+				array[index] = decodeMap(otype);
+			}
+			return array;
+		} else {
+			throw new IOException("Expecting type ARRAY MAP but got " + type
+					+ " " + componentType);
+		}
+	}
+
+	public Object[] decodeObjectArray(byte type, byte componentType)
+			throws IOException {
+		Object[] array = null;
+
+		if (type == BinaryEncoder.ARRAY
+				&& componentType == BinaryEncoder.OBJECT) {
+			int size = decodeInteger();
+			array = new Object[size];
+			for (int index = 0; index < array.length; index++) {
+				byte otype = input.readByte();
+				if (otype == BinaryEncoder.OBJECT) {
+					array[index] = decodeObject(otype);
+				} else if (otype == BinaryEncoder.MAP) {
+					array[index] = decodeMap(otype);					
+				}
+			}
+			return array;
+		} else {
+			throw new IOException("Expecting type ARRAY OBJECT but got " + type
+					+ " " + componentType);
+		}
+	}
+
 	public char[] decodeCharArray(byte type, byte componentType)
 			throws IOException {
 		char[] array = null;
@@ -612,6 +665,10 @@ public class BinaryDecoder {
 
 	int depth = 0;
 
+	public <K, V> Map<K, V> decodeMap(byte type) throws IOException {
+		return decodeMap(type, true);
+    }
+	
 	@SuppressWarnings("unchecked")
 	public <K, V> Map<K, V> decodeMap(byte type, boolean stringKeys)
 			throws IOException {
