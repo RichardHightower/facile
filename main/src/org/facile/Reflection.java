@@ -374,6 +374,10 @@ public class Reflection {
 
 	@SuppressWarnings("unchecked")
 	public static <T> T fromMap(Map<String, Object> map, Class<T> clazz) {
+		
+		if (map.get("class")==null) {
+			map.put("class", clazz.getName());
+		}
 		return (T) fromMap(map);
 	}
 
